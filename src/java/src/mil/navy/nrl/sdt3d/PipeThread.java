@@ -13,8 +13,8 @@ import mil.navy.nrl.sdt3d.sdt3d.AppFrame.CmdParser;
  * TODO Add an option to set the "pipeName" to something else
  * @author Brian Adamson
  */
-
-public class PipeThread extends Thread {
+// We haven't implemented wait time accumulation for pipe threads... LJT TODO: ?
+public class PipeThread extends SocketThread {
 	private boolean stopFlag = false;
 	private ProtoPipe cmdPipe;
 	private sdt3d.AppFrame sdt3dApp;
@@ -22,6 +22,8 @@ public class PipeThread extends Thread {
 
 	public PipeThread(sdt3d.AppFrame theSdtApp)
 	{
+		super(theSdtApp,0);
+
 		sdt3dApp = theSdtApp;
 	}
 	public void stopThread()
@@ -32,9 +34,11 @@ public class PipeThread extends Thread {
 	{
 		stopFlag = false;
 	}	
+
 	public void run()
 	{
-		parser = sdt3dApp.new CmdParser();
+		final CmdParser parser = sdt3dApp.new CmdParser();
+		StringBuilder sb = new StringBuilder();
 		parser.SetPipeCmd(true);
 		try {
 			cmdPipe = new ProtoPipe();
@@ -43,34 +47,19 @@ public class PipeThread extends Thread {
 			e1.printStackTrace();
 		}
 		try {
-			cmdPipe.listen(sdt3dApp.GetPipeName());
+			cmdPipe.listen(sdt3dApp.getPipeName());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		// Now continue forever reading pipe
 		byte cmdBuffer[] = new byte[8192];
-		boolean reading = true;
-		while(reading)
-		{
-			if (stopFlag)
-				return;
+		int numBytes = 0;
+		try {
 
-			int numBytes = -1;
-			try {
-				numBytes = cmdPipe.read(cmdBuffer, 0, 8192);
-			} catch (NullPointerException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IndexOutOfBoundsException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if (numBytes < 0) break;
-			
-			
+		while (((numBytes = cmdPipe.read(cmdBuffer,0,8192)) != -1) && !stopFlag)
+		{
+
 			// This trims off any trailing '\0' character
 			for (int i = (numBytes - 1); i >= 0; i--)
 			{
@@ -79,41 +68,35 @@ public class PipeThread extends Thread {
 			    else
 			        break;
 			}
-			
-			// TODO Auto-generated method stub
-            String str = null;
-            try 
-            {
-                str = new String(cmdBuffer, 0, numBytes, "UTF8");
-            } 
-            catch (UnsupportedEncodingException e) 
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }           
-            final String cmdString = str;
-            
-            // The use of "invokeLater" may be unnecessary if the WWJ code is
-            // sufficiently thread-safe for the SDT manipulations
-            EventQueue.invokeLater(new Runnable()
-            {
 
-                public void run()
-                {
-                    // If we're reading a file from the command line
-                	// suspend further processing until the file
-                	// read is complete.
-                 	if (sdt3dApp.readingCmdInputFile())
-                	{
-                		System.out.println("Reading from input file, ignoring cmd: " + cmdString);
-                		return;
-                	}
-                	sdt3dApp.OnInput(cmdString,parser);
-                    sdt3dApp.getWwd().redraw();
-                }
-            
-            });
-            
+			String cmdString = new String(cmdBuffer, 0, numBytes, "UTF8"); 
+
+           // If we're reading a file from the command line
+        	// suspend further processing until the file
+        	// read is complete.
+         	if (sdt3dApp.readingCmdInputFile())
+        	{
+        		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Reading from input file, ignoring cmd: " + cmdString);
+        		//continue;
+        		//return;
+        	}
+          	sb.append(cmdString,0,cmdString.length());
+         	parseString(sb,parser);
+
+			}
+		} catch (NullPointerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IndexOutOfBoundsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+            
+		
 	}  // end PipeThread::run()
+	
+	
 }  // end class PipeThread

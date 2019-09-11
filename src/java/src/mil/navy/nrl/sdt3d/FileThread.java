@@ -6,9 +6,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedList;
 
+import javax.swing.JSlider;
+
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.CmdParser;
 
-public class FileThread extends Thread
+// We're extending socketThread so we can share the parseString method
+public class FileThread extends SocketThread 
 {
 	private FileReader fIn = null;
 	private BufferedReader brIn = null;
@@ -19,7 +22,7 @@ public class FileThread extends Thread
 	
 	LinkedList<FileReaders> fileStack = new LinkedList<FileReaders>();
 	public boolean isRunning() {return !fileStack.isEmpty();}
-	
+
 	class FileReaders
 	{
 		private FileReader fIn;
@@ -47,6 +50,8 @@ public class FileThread extends Thread
 	
 	public FileThread(sdt3d.AppFrame theSdtApp, String fileName,boolean pipeCmd)
 	{
+		super(theSdtApp,0);
+		
 		sdt3dApp = theSdtApp;
 		try { 
 			fIn = new FileReader(fileName);
@@ -59,16 +64,24 @@ public class FileThread extends Thread
 			e.printStackTrace();
 		}
 	}
+	public void clear()
+	{
+		stopRead();
+		fileStack.clear();
+	}
 	public void stopRead()
 	{
 		// trigger break out of run while loop
 		try {
 			if (fileStack != null && !fileStack.isEmpty())
+			{
 				fileStack.peek().getBufferedReader().close();
+			}
 		} catch (IOException e) {
 			System.out.println("FileThread::stopRead() IOException error");
 			e.printStackTrace();
 		}
+		fileStack.clear();
 		
 	}
 	public void stopThread()
@@ -79,7 +92,10 @@ public class FileThread extends Thread
 	{
 		stopFlag = false;
 	}
-		
+	public boolean isStopped()
+	{
+		return stopFlag;
+	}
 	public void pushFile(String fileName)
 	{
 		try {
@@ -96,17 +112,26 @@ public class FileThread extends Thread
 			e.printStackTrace();
 		}		
 	}
-	public void addLast(String fileName)
+	public void addLast(String fileName,boolean forceAppend)
 	{
 		try {
 			fIn = new FileReader(fileName);
 			brIn = new BufferedReader(fIn);
 			
-			// If we're appending the file, we must have recv'd
-			// the input file command from a pipe.  Set indicator
-			// to ignore further input commands until the file has
-			// been read
-			FileReaders tmp = new FileReaders(fIn,brIn,true);
+			// the forceAppend flag indicates the file is being appended
+			// via the menu option - in which case we don't want to disable
+			// input command processing.  Otherwise, if we've recv'd an 
+			// input command over the command pipe, we DO want to disable
+			// any further input commands until the file is fully processed.
+			FileReaders tmp;
+			if (forceAppend)
+			{
+				tmp = new FileReaders(fIn,brIn,false);
+			}
+			else
+			{
+				tmp = new FileReaders(fIn,brIn,true);
+			}
 			fileStack.addLast(tmp);
 		} catch (IOException e) {
 			System.out.println("IOException error!");
@@ -127,7 +152,6 @@ public class FileThread extends Thread
 		}
 
 		catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 	}
@@ -140,9 +164,12 @@ public class FileThread extends Thread
 		else
 			return false;
 	}
+		
 	public void run()
 	{
-		parser = sdt3dApp.new CmdParser();
+		final CmdParser parser = sdt3dApp.new CmdParser();
+
+	    StringBuilder sb = new StringBuilder();
 		
 		//start thread that opens FileThread and listens for open file
 		String record = null;
@@ -150,61 +177,17 @@ public class FileThread extends Thread
 			while (!fileStack.isEmpty() && (inputFile = fileStack.peek().getBufferedReader()) != null)
 			{	
 				while ((record = inputFile.readLine()) != null && !stopFlag) {
-					if(record.startsWith("wait"))
-					{					
-						try {
-							sleep(Float.valueOf(record.substring(4).trim()).intValue());
-						} catch (NumberFormatException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-					else if (record.startsWith("input"))
-					{
-						final String cmd = record;
-						try { EventQueue.invokeAndWait(new Runnable() {
-							public void run()
-							{
-								if (!stopFlag)
-								{
-									sdt3dApp.OnInput(cmd,parser);	
-								}
-							}
-						});
-						} catch (Exception ex) {
-							ex.printStackTrace();
-						}
-					}
-					else
-					{
-						final String cmd = record;
 
-						try { EventQueue.invokeLater(new Runnable() {
-
-							public void run()
-							{		
-								// So we don't clobber file/pipe state when interleaving 
-								// the two command sets.  Certainly there's a better way, but for now...
-								if (!stopFlag)
-								{
-									sdt3dApp.OnInput(cmd,parser);								
-								}
-							}
-						});
-						} catch (Exception ex) {
-							ex.printStackTrace();
-						}		
-					}	
-				}	
-				fileStack.peek().getFileReader().close();			
-				fileStack.pop();
+						// Reattach eol
+						record = record + '\n';
+						sb.append(record,0,record.length());
+						// parse string 
+						parseString(sb,parser); 
+				}	// end processing file stack
+				popFile();
 			}
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}  // end FileThread::run()

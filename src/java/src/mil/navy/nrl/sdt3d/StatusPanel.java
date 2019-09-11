@@ -1,12 +1,16 @@
 package mil.navy.nrl.sdt3d;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.TitledBorder;
 
@@ -17,84 +21,46 @@ public class StatusPanel extends JPanel{
 	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel statusPanel;
-	private JPanel statusPane;
-	private JLabel textLabel;
-	public ArrayList<JPanel> list;	
-	
+    protected JPanel westPanel;
+	private JTextArea textArea;
+    private Dimension size = new Dimension(200, 50);
+
 	public StatusPanel()
     {
 		// Make a panel at a default size.
         super(new BorderLayout());
-        list = new ArrayList<JPanel>();
-        this.makePanel();
-    }
+        this.makePanel(); 
+     }
     
 	private void makePanel()
     {
-    	this.textLabel = new JLabel();
-		//Create Status Panel and Pane
         this.statusPanel = new JPanel(new GridLayout(0,1,0,0));
-        this.statusPanel.setBorder(new CompoundBorder(BorderFactory.createEmptyBorder(0,0,0,0), new TitledBorder("Status")));
+        this.statusPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0)); 
+        this.statusPanel.setPreferredSize(size);
+		this.textArea = new JTextArea();
+		this.textArea.setWrapStyleWord(true);
+		this.textArea.setLineWrap(true);
+		this.textArea.setEditable(false);
+		this.textArea.setBackground(this.statusPanel.getBackground());
+
+        this.add(statusPanel, BorderLayout.CENTER);
         
-        this.statusPane = new JPanel(new BorderLayout());
-        this.statusPane.add(statusPanel);
-        this.statusPane.setBorder(BorderFactory.createEmptyBorder(9,9,0,9));
-        this.statusPanel.add(textLabel);
-        this.add(statusPane);
+        // Add the status panel to a titled panel that will resize with the main window.
+        westPanel = new JPanel(new GridLayout(0, 1, 0, 10));
+        westPanel.setBorder(
+            new CompoundBorder(BorderFactory.createEmptyBorder(9, 9, 9, 9), new TitledBorder("Status")));
+        westPanel.setToolTipText("Status");
+        westPanel.add(statusPanel);
+        this.add(westPanel, BorderLayout.CENTER);
+           
     }
-    
-    private JPanel getPanel(String aName)
-    {
-    	for(int i =0;i<list.size();i++)
-    	{
-    		String title = ((TitledBorder)((CompoundBorder)list.get(i).getBorder()).getInsideBorder()).getTitle();
-    		if(title.compareTo(aName) == 0)
-    			return list.get(i);
-    	}
-    	return null;
-    }
-	
-	public void setItem(String aItem, String contents)
-    {
-		JPanel aPanel;
-		JLabel aLabel = new JLabel(contents);
-		aPanel = getPanel(aItem);
-		if (aPanel == null)
-    	{
-    		aPanel = new JPanel(new GridLayout(0,1,0,0));
-			aPanel.setBorder(new CompoundBorder(BorderFactory.createEmptyBorder(0,0,0,0), new TitledBorder(aItem)));
-    		aPanel.add(aLabel);
-    		list.add(aPanel);
-    	}
-    	else
-    	{
-    		int index = list.indexOf(aPanel);
-    		aPanel.removeAll();
-    		aPanel.add(aLabel);
-    		list.remove(index);
-    		if(contents.compareTo("") != 0)
-    			list.add(index,aPanel);
-    	}
-		update();
-    }
-	
+
 	public void setText(String aString)
 	{
-		textLabel.setText(aString);
-		update();
+		this.textArea.setText(aString);
+		this.statusPanel.add(this.textArea);
+	   	this.statusPanel.revalidate();		
+		this.statusPanel.repaint();
 	}
-
-    private void update()
-    {
-    	this.statusPanel.removeAll();
-    	if(textLabel.getText().compareTo("") != 0)
-    	this.statusPanel.add(textLabel);
-    	for(int i =0;i<list.size();i++)
-    	{
-    		this.statusPanel.add(list.get(i));
-    	}
-    	this.statusPanel.revalidate();
-    	this.statusPanel.repaint();
-    }
 	    
 }

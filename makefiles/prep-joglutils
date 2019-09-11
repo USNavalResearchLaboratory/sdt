@@ -1,0 +1,694 @@
+#! /bin/sh
+# prep-joglutils - prep for upstream joglutils to build against worldwind
+#   Do in directory without joglutils or joglutils.zip
+# Can also be used as input to patch: patch -p0 < prep-joglutils to patch
+#   unpatched joglutils
+
+# Get joglutils by anonymous git:
+#git clone git://kenai.com/jogl~jogl-utils-git joglutils
+# replacing with github mirror (identical as of 7/8/2015)
+# faster, works on more networks since it's https:// instead of git://
+git clone https://github.com/sgothel/jogl-utils.git joglutils
+
+# Omit .git directory
+rm -rf joglutils/.git
+
+# Change to unix line ends:
+#find joglutils -type f -exec dos2unix {} \;
+find joglutils -name \*.java -exec perl -pi -e 's/\r\n|\n|\r/\n/g' {} \;  # Convert to UNIX
+
+# Patch:
+
+# Patch originally applied manually from diff posted in:
+#   http://forum.worldwindcentral.com/showthread.php?41966-joglutils-and-wwj-2-0-any-update-to-joglutils-available&highlight=joglutils
+# Posting #6 by "elevenette"; 11-07-2013, 08:34 PM
+# Original wouldn't patch because was "diff -r". Derived patch via "diff -ru"
+
+patch --ignore-whitespace -p0 << '===ENDPATCH==='
+diff -ru joglutils-unpatched/demos/src/jgudemos/BouncingText3D.java joglutils/demos/src/jgudemos/BouncingText3D.java
+--- joglutils-unpatched/demos/src/jgudemos/BouncingText3D.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/demos/src/jgudemos/BouncingText3D.java	2014-08-07 20:47:38.000000000 -0400
+@@ -25,7 +25,7 @@
+ 
+ import net.java.joglutils.jogltext.TextRenderer3D;
+ 
+-import com.sun.opengl.util.Animator;
++import com.jogamp.opengl.util.Animator;
+ 
+ /**
+  * Simple class to demonstrate the use of compile/call with
+@@ -445,4 +445,5 @@
+ 		
+ 		gl.glPopMatrix();
+ 	}
+-}
+\ No newline at end of file
++}
++
+diff -ru joglutils-unpatched/demos/src/jgudemos/FontDrawerDemo.java joglutils/demos/src/jgudemos/FontDrawerDemo.java
+--- joglutils-unpatched/demos/src/jgudemos/FontDrawerDemo.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/demos/src/jgudemos/FontDrawerDemo.java	2014-08-07 20:47:38.000000000 -0400
+@@ -44,7 +44,7 @@
+ import javax.swing.*;
+ import javax.media.opengl.*;
+ import javax.media.opengl.glu.*;
+-import com.sun.opengl.util.Animator;
++import com.jogamp.opengl.util.Animator;
+ 
+ /**
+  * This Demo application uses the Lighting class and the FontDrawer class to render 3D text into a GLJFrame.
+diff -ru joglutils-unpatched/demos/src/jgudemos/TestRenderer3D.java joglutils/demos/src/jgudemos/TestRenderer3D.java
+--- joglutils-unpatched/demos/src/jgudemos/TestRenderer3D.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/demos/src/jgudemos/TestRenderer3D.java	2014-08-07 20:47:38.000000000 -0400
+@@ -8,7 +8,7 @@
+ package jgudemos;
+ 
+ import net.java.joglutils.jogltext.TextRenderer3D;
+-import com.sun.opengl.util.Animator;
++import com.jogamp.opengl.util.Animator;
+ 
+ import java.awt.Font;
+ import java.awt.Frame;
+@@ -161,4 +161,4 @@
+         public void dispose(GLAutoDrawable drawable)
+ 	{
+ 	}
+-}
+\ No newline at end of file
++}
+diff -ru joglutils-unpatched/make/build.xml joglutils/make/build.xml
+--- joglutils-unpatched/make/build.xml	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/make/build.xml	2014-08-08 18:54:35.228319313 -0400
+@@ -17,12 +17,15 @@
+     <property name="output.tmp.dir"  value="${top.dir}/build/classes" />
+     <property name="output.jar"      value="${output.dir}/joglutils.jar" />
+     <property name="demos.jar"       value="${output.dir}/joglutils-demos.jar" />
+-    <property name="jogl.jar"        value="${top.dir}/../jogl/build/jogl/jogl.all.jar" />
+-    <property name="nativewindow.jar" value="${top.dir}/../jogl/build/nativewindow/nativewindow.all.jar" />
++    <property name="jogl.jar"        value="${top.dir}/../jogl/build/jogl-all.jar" />
++    <property name="nativewindow.jar" value="${top.dir}/../jogl/build/jogl-all-native.jar" />
++    <property name="gluegen.jar"     value="${top.dir}/../worldwind/gluegen-rt.jar" />
++    <property name="vecmath.jar"     value="/usr/share/java/vecmath.jar" />
+     <property name="swinglayout.jar" value="lib/swing-layout-1.0.jar" />
+     <property name="jogl-demos-util.jar" value="lib/jogl-demos-util.jar" />
+     <path id="build.classpath">
+         <pathelement location="${jogl.jar}" />
++        <pathelement location="${gluegen.jar}" />
+         <pathelement location="${nativewindow.jar}" />
+         <pathelement location="${jogl-demos-util.jar}" />
+         <pathelement location="${swinglayout.jar}" />
+@@ -31,6 +34,7 @@
+         <pathelement location="${jogl.jar}" />
+         <pathelement location="${nativewindow.jar}" />
+         <pathelement location="${jogl-demos-util.jar}" />
++        <pathelement location="${vecmath.jar}" />
+         <pathelement location="${swinglayout.jar}" />
+         <pathelement location="${output.jar}" />
+     </path>
+diff -ru joglutils-unpatched/src/net/java/joglutils/GLJFrame.java joglutils/src/net/java/joglutils/GLJFrame.java
+--- joglutils-unpatched/src/net/java/joglutils/GLJFrame.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/GLJFrame.java	2014-08-07 20:47:38.000000000 -0400
+@@ -39,9 +39,11 @@
+ import javax.media.opengl.*;
+ import javax.media.opengl.awt.*;
+ import javax.swing.*;
++
++import com.jogamp.opengl.util.Animator;
++
+ import java.awt.*;
+ import java.awt.event.*;
+-import com.sun.opengl.util.Animator;
+ 
+ /**
+  * A JFrame containing a heavyweight {@link GLCanvas} with a single attached {@link GLEventListener}. 
+diff -ru joglutils-unpatched/src/net/java/joglutils/jogltext/TextRenderer3D.java joglutils/src/net/java/joglutils/jogltext/TextRenderer3D.java
+--- joglutils-unpatched/src/net/java/joglutils/jogltext/TextRenderer3D.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/jogltext/TextRenderer3D.java	2014-08-07 20:47:38.000000000 -0400
+@@ -57,7 +57,9 @@
+ 
+ import javax.media.opengl.*;
+ import javax.media.opengl.glu.*;
+-import javax.vecmath.Vector3f;
++
++import net.java.joglutils.msg.math.Vec3f;
++//import javax.vecmath.Vector3f;
+ 
+ /**
+  * This class renders a TrueType Font into OpenGL
+@@ -77,9 +79,9 @@
+ 	private boolean calcNormals = true;;
+ 	private float	flatness = 0.0001f;
+ 	
+-	private Vector3f vecA = new Vector3f();
+-	private Vector3f vecB = new Vector3f();
+-	private Vector3f normal = new Vector3f();
++	private Vec3f vecA = new Vec3f();
++	private Vec3f vecB = new Vec3f();
++	private Vec3f normal = new Vec3f();
+ 
+ 	private GLU 	glu = new GLU();
+         private GL2 		gl = GLU.getCurrentGL().getGL2();
+@@ -491,7 +493,7 @@
+ 		vecB.set( x2, y2, z2);
+ 		normal.cross( vecA, vecB );
+ 		normal.normalize();
+-		gl.glNormal3f( normal.x, normal.y, normal.z );
++		gl.glNormal3f( normal.x(), normal.y(), normal.z() );
+ 	}
+ 
+ 	// routine that tesselates the current set of glyphs
+diff -ru joglutils-unpatched/src/net/java/joglutils/model/examples/DisplayListRenderer.java joglutils/src/net/java/joglutils/model/examples/DisplayListRenderer.java
+--- joglutils-unpatched/src/net/java/joglutils/model/examples/DisplayListRenderer.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/model/examples/DisplayListRenderer.java	2014-08-07 20:47:38.000000000 -0400
+@@ -9,15 +9,20 @@
+ 
+ package net.java.joglutils.model.examples;
+ 
+-import net.java.joglutils.model.*;
+-import com.sun.opengl.util.texture.*;
+-import com.sun.opengl.util.texture.awt.*;
++import com.jogamp.opengl.util.texture.Texture;
++import com.jogamp.opengl.util.texture.TextureCoords;
++//import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
++
++import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
++
+ import java.awt.image.BufferedImage;
+ import java.io.IOException;
+ import java.net.URL;
+ import java.util.HashMap;
++
+ import javax.imageio.ImageIO;
+ import javax.media.opengl.*;
++
+ import net.java.joglutils.model.ResourceRetriever;
+ import net.java.joglutils.model.geometry.Bounds;
+ import net.java.joglutils.model.geometry.Material;
+@@ -262,7 +267,7 @@
+                 return;
+             }
+             
+-            texture.put(id, AWTTextureIO.newTexture(bufferedImage, true));
++            texture.put(id, AWTTextureIO.newTexture(GLProfile.getDefault(), bufferedImage, true));
+         }
+     }
+     
+@@ -306,8 +311,8 @@
+                 gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_REPEAT);
+ 
+                 // enable, bind and get texture coordinates
+-                t.enable();
+-                t.bind();
++                t.enable(gl);
++                t.bind(gl);
+                 coords = t.getImageTexCoords();
+             }
+             
+@@ -383,7 +388,7 @@
+             if (tempObj.hasTexture) {
+                 Texture t = texture.get(tempObj.materialID);
+                 if (t != null)
+-                    t.disable();
++                    t.disable(gl);
+             
+                 gl.glMatrixMode(GL2.GL_TEXTURE);
+                 gl.glPopMatrix();
+diff -ru joglutils-unpatched/src/net/java/joglutils/model/examples/ModelTest.java joglutils/src/net/java/joglutils/model/examples/ModelTest.java
+--- joglutils-unpatched/src/net/java/joglutils/model/examples/ModelTest.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/model/examples/ModelTest.java	2014-08-07 20:47:38.000000000 -0400
+@@ -39,19 +39,27 @@
+ package net.java.joglutils.model.examples;
+ 
+ import net.java.joglutils.model.*;
+-import com.sun.opengl.util.Animator;
++
++import com.jogamp.opengl.util.AnimatorBase;
++
+ import java.awt.Frame;
+ import java.awt.event.KeyEvent;
+ import java.awt.event.KeyListener;
+ import java.awt.event.WindowAdapter;
+ import java.awt.event.WindowEvent;
++
+ import javax.media.opengl.awt.GLCanvas;
+ import javax.swing.*;
+ import javax.swing.event.MouseInputAdapter;
++
+ import java.awt.event.MouseEvent;
++
+ import javax.media.opengl.*;
++
+ import java.awt.*;
++
+ import javax.media.opengl.glu.GLU;
++
+ import net.java.joglutils.model.ModelFactory;
+ import net.java.joglutils.model.ModelLoadException;
+ import net.java.joglutils.model.geometry.Model;
+@@ -100,7 +108,7 @@
+         frame.add(canvas);
+         frame.add(canvas);
+         frame.setSize(600, 600);
+-        final Animator animator = new Animator(canvas);
++        final AnimatorBase animator = new com.jogamp.opengl.util.Animator(canvas);
+         frame.addWindowListener(new WindowAdapter() {
+             public void windowClosing(WindowEvent e) {
+               // Run this on another thread than the AWT event queue to
+diff -ru joglutils-unpatched/src/net/java/joglutils/model/loader/LoaderFactory.java joglutils/src/net/java/joglutils/model/loader/LoaderFactory.java
+--- joglutils-unpatched/src/net/java/joglutils/model/loader/LoaderFactory.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/model/loader/LoaderFactory.java	2014-08-07 20:47:38.000000000 -0400
+@@ -52,9 +52,9 @@
+ 	int type = FILETYPE_UNKNOWN;
+ 	String tokens[] = path.split("\\.");	
+ 	
+-	if(tokens[tokens.length - 1].equals("3ds"))
++	if(tokens[tokens.length - 1].equalsIgnoreCase("3ds"))
+ 	    type = FILETYPE_3DS;
+-	else if(tokens[tokens.length - 1].equals("obj"))
++	else if(tokens[tokens.length - 1].equalsIgnoreCase("obj"))
+ 	    type = FILETYPE_OBJ;
+ 	    
+ 	return type;
+diff -ru joglutils-unpatched/src/net/java/joglutils/model/ModelFactory.java joglutils/src/net/java/joglutils/model/ModelFactory.java
+--- joglutils-unpatched/src/net/java/joglutils/model/ModelFactory.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/model/ModelFactory.java	2014-08-07 20:47:38.000000000 -0400
+@@ -30,8 +30,8 @@
+             modelCache.put(source, model);
+         }
+         
+-        if (model == null)
+-            throw new ModelLoadException();
++        // ljt if (model == null)
++        //    throw new ModelLoadException();
+         
+         return model;
+     }
+diff -ru joglutils-unpatched/src/net/java/joglutils/msg/elements/GLTextureElement.java joglutils/src/net/java/joglutils/msg/elements/GLTextureElement.java
+--- joglutils-unpatched/src/net/java/joglutils/msg/elements/GLTextureElement.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/msg/elements/GLTextureElement.java	2014-08-07 20:47:38.000000000 -0400
+@@ -38,9 +38,11 @@
+ package net.java.joglutils.msg.elements;
+ 
+ import java.nio.*;
++
+ import javax.media.opengl.*;
+ import javax.media.opengl.glu.*;
+-import com.sun.opengl.util.texture.*;
++
++import com.jogamp.opengl.util.texture.Texture;
+ 
+ import net.java.joglutils.msg.misc.*;
+ import net.java.joglutils.msg.nodes.*;
+@@ -79,21 +81,21 @@
+     Texture curTexture  = null;
+     int texEnvMode = 0;
+     if (prev != null) {
+-      prevTexture = prev.getTexture();
++      prevTexture = prev.getTexture(gl);
+     }
+     if (texture != null) {
+-      curTexture = texture.getTexture();
++      curTexture = texture.getTexture(gl);
+       texEnvMode = texture.getTexEnvMode();
+     }
+ 
+     // FIXME: should be smarter about this; if the target is the same
+     // for the previous and current textures, just bind the new one
+     if (prevTexture != null) {
+-      prevTexture.disable();
++      prevTexture.disable(gl);
+     }
+     if (curTexture != null) {
+-      curTexture.enable();
+-      curTexture.bind();
++      curTexture.enable(gl);
++      curTexture.bind(gl);
+       int glEnvMode = 0;
+       switch (texEnvMode) {
+         case Texture2.MODULATE:   glEnvMode = GL2.GL_MODULATE; break;
+diff -ru joglutils-unpatched/src/net/java/joglutils/msg/impl/BufferFactory.java joglutils/src/net/java/joglutils/msg/impl/BufferFactory.java
+--- joglutils-unpatched/src/net/java/joglutils/msg/impl/BufferFactory.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/msg/impl/BufferFactory.java	2014-08-07 20:47:38.000000000 -0400
+@@ -39,14 +39,15 @@
+ 
+ import java.nio.*;
+ import java.util.*;
+-import com.sun.opengl.util.*;
++
++import com.jogamp.common.nio.Buffers;
+ 
+ /** Assists in allocation of direct Buffers. On some platforms when a
+     small direct Buffer is allocated there is a large amount of
+     rounding up which occurs. This BufferFactory allocates direct
+     Buffers in chunks and hands out slices of those chunks to
+     clients. */
+-
++// LJT replaced some BufferUtil references to BufferFactory & Buffers
+ public class BufferFactory {
+   private static ByteBuffer   curByteBuf;
+   private static ShortBuffer  curShortBuf;
+@@ -58,14 +59,14 @@
+   private static final int CHUNK_SIZE = 8 * 1024;
+ 
+   public static synchronized ByteBuffer newByteBuffer(int numElements) {
+-    int sz = numElements * BufferUtil.SIZEOF_BYTE;
++    int sz = numElements * Buffers.SIZEOF_BYTE;
+     if (sz > CHUNK_SIZE) {
+       // Just allocate a fresh ByteBuffer and don't worry about
+       // rounding up its allocation size and re-using the end portion
+-      return BufferUtil.newByteBuffer(numElements);
++      return BufferFactory.newByteBuffer(numElements);
+     }
+     if (curByteBuf == null || curByteBuf.remaining() < numElements) {
+-      curByteBuf = BufferUtil.newByteBuffer(CHUNK_SIZE / BufferUtil.SIZEOF_BYTE);
++      curByteBuf = BufferFactory.newByteBuffer(CHUNK_SIZE / Buffers.SIZEOF_BYTE);
+     }
+     curByteBuf.limit(curByteBuf.position() + numElements);
+     ByteBuffer res = curByteBuf.slice();
+@@ -74,14 +75,14 @@
+   }
+ 
+   public static synchronized ShortBuffer newShortBuffer(int numElements) {
+-    int sz = numElements * BufferUtil.SIZEOF_SHORT;
++    int sz = numElements * Buffers.SIZEOF_SHORT;
+     if (sz > CHUNK_SIZE) {
+       // Just allocate a fresh ShortBuffer and don't worry about
+       // rounding up its allocation size and re-using the end portion
+-      return BufferUtil.newShortBuffer(numElements);
++      return BufferFactory.newShortBuffer(numElements);
+     }
+     if (curShortBuf == null || curShortBuf.remaining() < numElements) {
+-      curShortBuf = BufferUtil.newShortBuffer(CHUNK_SIZE / BufferUtil.SIZEOF_SHORT);
++      curShortBuf = BufferFactory.newShortBuffer(CHUNK_SIZE / Buffers.SIZEOF_SHORT);
+     }
+     curShortBuf.limit(curShortBuf.position() + numElements);
+     ShortBuffer res = curShortBuf.slice();
+@@ -90,14 +91,14 @@
+   }
+ 
+   public static synchronized IntBuffer newIntBuffer(int numElements) {
+-    int sz = numElements * BufferUtil.SIZEOF_INT;
++    int sz = numElements * Buffers.SIZEOF_INT;
+     if (sz > CHUNK_SIZE) {
+       // Just allocate a fresh IntBuffer and don't worry about
+       // rounding up its allocation size and re-using the end portion
+-      return BufferUtil.newIntBuffer(numElements);
++      return BufferFactory.newIntBuffer(numElements);
+     }
+     if (curIntBuf == null || curIntBuf.remaining() < numElements) {
+-      curIntBuf = BufferUtil.newIntBuffer(CHUNK_SIZE / BufferUtil.SIZEOF_INT);
++      curIntBuf = BufferFactory.newIntBuffer(CHUNK_SIZE / Buffers.SIZEOF_INT);
+     }
+     curIntBuf.limit(curIntBuf.position() + numElements);
+     IntBuffer res = curIntBuf.slice();
+@@ -106,14 +107,14 @@
+   }
+ 
+   public static synchronized FloatBuffer newFloatBuffer(int numElements) {
+-    int sz = numElements * BufferUtil.SIZEOF_FLOAT;
++    int sz = numElements * Buffers.SIZEOF_FLOAT;
+     if (sz > CHUNK_SIZE) {
+       // Just allocate a fresh FloatBuffer and don't worry about
+       // rounding up its allocation size and re-using the end portion
+-      return BufferUtil.newFloatBuffer(numElements);
++      return BufferFactory.newFloatBuffer(numElements);
+     }
+     if (curFloatBuf == null || curFloatBuf.remaining() < numElements) {
+-      curFloatBuf = BufferUtil.newFloatBuffer(CHUNK_SIZE / BufferUtil.SIZEOF_FLOAT);
++      curFloatBuf = BufferFactory.newFloatBuffer(CHUNK_SIZE / Buffers.SIZEOF_FLOAT);
+     }
+     curFloatBuf.limit(curFloatBuf.position() + numElements);
+     FloatBuffer res = curFloatBuf.slice();
+@@ -122,14 +123,14 @@
+   }
+ 
+   public static synchronized DoubleBuffer newDoubleBuffer(int numElements) {
+-    int sz = numElements * BufferUtil.SIZEOF_DOUBLE;
++    int sz = numElements * Buffers.SIZEOF_DOUBLE;
+     if (sz > CHUNK_SIZE) {
+       // Just allocate a fresh DoubleBuffer and don't worry about
+       // rounding up its allocation size and re-using the end portion
+-      return BufferUtil.newDoubleBuffer(numElements);
++      return BufferFactory.newDoubleBuffer(numElements);
+     }
+     if (curDoubleBuf == null || curDoubleBuf.remaining() < numElements) {
+-      curDoubleBuf = BufferUtil.newDoubleBuffer(CHUNK_SIZE / BufferUtil.SIZEOF_DOUBLE);
++      curDoubleBuf = BufferFactory.newDoubleBuffer(CHUNK_SIZE / Buffers.SIZEOF_DOUBLE);
+     }
+     curDoubleBuf.limit(curDoubleBuf.position() + numElements);
+     DoubleBuffer res = curDoubleBuf.slice();
+diff -ru joglutils-unpatched/src/net/java/joglutils/msg/nodes/Texture2.java joglutils/src/net/java/joglutils/msg/nodes/Texture2.java
+--- joglutils-unpatched/src/net/java/joglutils/msg/nodes/Texture2.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/msg/nodes/Texture2.java	2014-08-07 20:47:38.000000000 -0400
+@@ -43,9 +43,12 @@
+ import java.util.*;
+ 
+ import javax.media.opengl.*;
+-import com.sun.opengl.util.awt.*;
+-import com.sun.opengl.util.texture.*;
+-import com.sun.opengl.util.texture.awt.*;
++
++import com.jogamp.opengl.util.awt.TextureRenderer;
++import com.jogamp.opengl.util.texture.Texture;
++import com.jogamp.opengl.util.texture.TextureData;
++import com.jogamp.opengl.util.texture.TextureIO ;
++import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
+ 
+ import net.java.joglutils.msg.actions.*;
+ import net.java.joglutils.msg.elements.*;
+@@ -84,7 +87,7 @@
+     // Enable the elements this node affects for known actions
+     GLTextureElement.enable(GLRenderAction.getDefaultState());
+ 
+-    TextureElement  .enable(RayPickAction.getDefaultState());
++    TextureElement.enable(RayPickAction.getDefaultState());
+   }
+ 
+   /** Represents the OpenGL MODULATE texture environment mode. */
+@@ -101,7 +104,7 @@
+       fetched. */
+   public void setTexture(File file, boolean mipmap, String fileSuffix) throws IOException {
+     disposeTextureRenderer();
+-    data = TextureIO.newTextureData(file, mipmap, fileSuffix);
++    data = TextureIO.newTextureData(GLProfile.getDefault(), file, mipmap, fileSuffix);
+     dirty = true;
+   }
+ 
+@@ -110,7 +113,7 @@
+       Texture is fetched. */
+   public void setTexture(InputStream stream, boolean mipmap, String fileSuffix) throws IOException {
+     disposeTextureRenderer();
+-    data = TextureIO.newTextureData(stream, mipmap, fileSuffix);
++    data = TextureIO.newTextureData(GLProfile.getDefault(), stream, mipmap, fileSuffix);
+     dirty = true;
+   }
+ 
+@@ -119,7 +122,7 @@
+       fetched. */
+   public void setTexture(URL url, boolean mipmap, String fileSuffix) throws IOException {
+     disposeTextureRenderer();
+-    data = TextureIO.newTextureData(url, mipmap, fileSuffix);
++    data = TextureIO.newTextureData(GLProfile.getDefault(), url, mipmap, fileSuffix);
+     dirty = true;
+   }
+ 
+@@ -128,7 +131,7 @@
+       Texture is fetched. */
+   public void setTexture(BufferedImage image, boolean mipmap) {
+     disposeTextureRenderer();
+-    data = AWTTextureIO.newTextureData(image, mipmap);
++    data = AWTTextureIO.newTextureData(GLProfile.getDefault(), image, mipmap);
+     dirty = true;
+   }
+   
+@@ -241,8 +244,8 @@
+       each frame during rendering. An OpenGL context must be current
+       at the time this method is called or a GLException will be
+       thrown. */
+-  public Texture getTexture() throws GLException {
+-    lazyDispose();
++  public Texture getTexture(GL2 gl) throws GLException {
++    lazyDispose(gl);
+ 
+     if (textureRenderer != null) {
+       return textureRenderer.getTexture();
+@@ -250,7 +253,7 @@
+ 
+     if (dirty) {
+       if (texture != null) {
+-        texture.dispose();
++        texture.destroy(gl);
+         texture = null;
+       }
+       texture = TextureIO.newTexture(data);
+@@ -258,7 +261,7 @@
+       dirty = false;
+     }
+     if (subImageDirty) {
+-      texture.updateSubImage(subImageData,
++      texture.updateSubImage(gl, subImageData,
+                              subImageMipmapLevel,
+                              subImageDstX,
+                              subImageDstY,
+@@ -297,7 +300,8 @@
+   public void dispose() throws GLException {
+     disposeTexture();
+     disposeTextureRenderer();
+-    lazyDispose();
++// ljt needs gl context but nothing was appearing to call dispose() to get it.
++    lazyDispose(null);
+     data = null;
+     subImageData = null;
+     dirty = false;
+@@ -340,13 +344,13 @@
+     }
+   }
+ 
+-  private void lazyDispose() {
++  private void lazyDispose(GL2 gl) {
+     while (!disposedTextures.isEmpty()) {
+       Texture t = null;
+       synchronized (this) {
+         t = disposedTextures.remove(disposedTextures.size() - 1);
+       }
+-      t.dispose();
++      t.destroy(gl);
+     }
+ 
+     while (!disposedRenderers.isEmpty()) {
+diff -ru joglutils-unpatched/src/net/java/joglutils/msg/nodes/TriangleSet.java joglutils/src/net/java/joglutils/msg/nodes/TriangleSet.java
+--- joglutils-unpatched/src/net/java/joglutils/msg/nodes/TriangleSet.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/msg/nodes/TriangleSet.java	2014-08-07 20:47:38.000000000 -0400
+@@ -41,7 +41,9 @@
+ import java.util.*;
+ 
+ import javax.media.opengl.*;
+-import com.sun.opengl.util.texture.*;
++
++import com.jogamp.opengl.util.texture.Texture;
++import com.jogamp.opengl.util.texture.TextureCoords;
+ 
+ import net.java.joglutils.msg.actions.*;
+ import net.java.joglutils.msg.elements.*;
+@@ -82,7 +84,7 @@
+           GLTextureCoordinateElement.isEnabled(state)) {
+         Texture2 texNode = GLTextureElement.get(state);
+         if (texNode != null) {
+-          tex = texNode.getTexture();
++          tex = texNode.getTexture(gl);
+         }
+         haveTexCoords = (GLTextureCoordinateElement.get(state) != null);
+       }
+diff -ru joglutils-unpatched/src/net/java/joglutils/msg/test/DisplayShelfRenderer.java joglutils/src/net/java/joglutils/msg/test/DisplayShelfRenderer.java
+--- joglutils-unpatched/src/net/java/joglutils/msg/test/DisplayShelfRenderer.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/msg/test/DisplayShelfRenderer.java	2014-08-07 20:47:38.000000000 -0400
+@@ -40,6 +40,8 @@
+ import java.awt.BasicStroke;
+ import java.awt.Color;
+ import java.awt.Graphics2D;
++import java.awt.GraphicsDevice;
++import java.awt.GraphicsEnvironment;
+ import java.awt.event.*;
+ import java.awt.image.*;
+ import java.net.*;
+@@ -47,10 +49,11 @@
+ 
+ import javax.swing.*;
+ import javax.swing.event.*;
+-
++import javax.media.nativewindow.AbstractGraphicsDevice;
+ import javax.media.opengl.*;
+ import javax.media.opengl.awt.*;
+-import com.sun.opengl.util.awt.*;
++
++import com.jogamp.opengl.util.awt.TextureRenderer;
+ 
+ import net.java.joglutils.msg.actions.*;
+ import net.java.joglutils.msg.collections.*;
+@@ -155,8 +158,12 @@
+     // Create a small pbuffer with which we share textures and display
+     // lists to avoid having to reload textures during repeated calls
+     // to init()
+-    sharedPbuffer = GLDrawableFactory.getFactory(GLProfile.getDefault()).createGLPbuffer(new GLCapabilities(GLProfile.getDefault()), null, 1, 1, null);
++    GraphicsDevice dev = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
++    // LJT not sure the dev arg is correct?
++    sharedPbuffer = GLDrawableFactory.getFactory(GLProfile.getDefault()).createGLPbuffer((AbstractGraphicsDevice) dev, new GLCapabilities(GLProfile.getDefault()), null, 1, 1, null);
+     sharedPbuffer.display();
++AbstractGraphicsDevice agd;
++
+ 
+     this.fetcher = new BasicFetcher<Integer>();
+     fetcher.addProgressListener(new DownloadListener());
+diff -ru joglutils-unpatched/src/net/java/joglutils/msg/test/Test.java joglutils/src/net/java/joglutils/msg/test/Test.java
+--- joglutils-unpatched/src/net/java/joglutils/msg/test/Test.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/msg/test/Test.java	2014-08-07 20:47:38.000000000 -0400
+@@ -43,7 +43,6 @@
+ 
+ import javax.media.opengl.*;
+ import javax.media.opengl.awt.*;
+-import com.sun.opengl.util.texture.*;
+ 
+ import net.java.joglutils.msg.actions.*;
+ import net.java.joglutils.msg.collections.*;
+diff -ru joglutils-unpatched/src/net/java/joglutils/test3ds/Main.java joglutils/src/net/java/joglutils/test3ds/Main.java
+--- joglutils-unpatched/src/net/java/joglutils/test3ds/Main.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/test3ds/Main.java	2014-08-07 20:47:38.000000000 -0400
+@@ -36,14 +36,16 @@
+ 
+ package net.java.joglutils.test3ds;
+ 
+-import com.sun.opengl.util.Animator;
+ import java.awt.Frame;
+ import java.awt.event.WindowAdapter;
+ import java.awt.event.WindowEvent;
++
+ import javax.media.opengl.*;
+ import javax.media.opengl.awt.*;
+ import javax.media.opengl.glu.GLU;
+ 
++import com.jogamp.opengl.util.Animator;
++
+ public class Main {
+     /** Creates a new instance of Main */
+     public Main() {
+diff -ru joglutils-unpatched/src/net/java/joglutils/test3ds/MyModel.java joglutils/src/net/java/joglutils/test3ds/MyModel.java
+--- joglutils-unpatched/src/net/java/joglutils/test3ds/MyModel.java	2014-08-08 19:33:22.000000000 -0400
++++ joglutils/src/net/java/joglutils/test3ds/MyModel.java	2014-08-07 20:47:38.000000000 -0400
+@@ -37,9 +37,9 @@
+ package net.java.joglutils.test3ds;
+ 
+ import net.java.joglutils.ThreeDS.*;
+-import com.sun.opengl.util.texture.Texture;
+-import com.sun.opengl.util.texture.TextureCoords;
+-import com.sun.opengl.util.texture.TextureIO;
++import com.jogamp.opengl.util.texture.Texture;
++import com.jogamp.opengl.util.texture.TextureCoords;
++import com.jogamp.opengl.util.texture.TextureIO;
+ import java.io.File;
+ import java.io.IOException;
+ import javax.media.opengl.*;
+@@ -111,8 +111,8 @@
+         for (int i=0; i<objects.size(); i++) {
+             Obj tempObj = objects.get(i);
+             if(tempObj.hasTexture) {
+-                texture[tempObj.materialID].enable();
+-                texture[tempObj.materialID].bind();
++                texture[tempObj.materialID].enable(gl);
++                texture[tempObj.materialID].bind(gl);
+                 coords = texture[tempObj.materialID].getImageTexCoords();
+             }
+             
+@@ -137,7 +137,7 @@
+             gl.glEnd();
+             
+             if (tempObj.hasTexture)
+-                texture[tempObj.materialID].disable();
++                texture[tempObj.materialID].disable(gl);
+         }
+     }
+ }
+===ENDPATCH===
+
+# Pack up:
+zip -q -r joglutils.zip joglutils
+

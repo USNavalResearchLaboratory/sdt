@@ -1,21 +1,29 @@
-#########################################################################
+########################################################################
 # COMMON MAKEFILE STUFF
 #
-
+JDK=1.7
 SHELL=/bin/sh
 
 .SUFFIXES: .cpp $(.SUFFIXES)
+PREFIX:=/usr/local
 
 SRC_DIR = ../src/java/src
+IMAGE_DIR = ../src/java/src/images
+OSX_SRC_DIR = ../src/macos
 WORK_DIR = build
 BLD_DIR = $(WORK_DIR)/build
+WWJ_DIR = $(WORK_DIR)/worldwind
 BIN_DIR = $(WORK_DIR)/bin
 DL_DIR = $(WORK_DIR)/download
 DST_DIR = $(WORK_DIR)/sdt3d
 LIB_DIR = $(DST_DIR)/lib
 JAR_DIR = $(DST_DIR)/jars
+JOGL_DIR = $(BLD_DIR)/jogl
+JOGL_BLD_DIR = $(JOGL_DIR)/build
+JOGLUTILS_DIR = $(BLD_DIR)/joglutils
+JOGLUTILS_MK_DIR = $(JOGLUTILS_DIR)/make
 
-PROTOLIB = ../protolib
+PROTOLIB = $(BLD_DIR)/protolib
 PROTOLIBJNI = $(BLD_DIR)/protolib
 COMMON = ../src/common
 INCLUDE = ../include
@@ -41,14 +49,13 @@ SRC = $(COMMON)/sdt.cpp $(PROTOLIB)/src/wx/wxProtoApp.cpp
           
 OBJ = $(SRC:.cpp=.o)
 
-all:	sdt
+all:	sdt3d sdtcmd sdt 
 
 $(LIBPROTO): 
 	$(MAKE) -C $(PROTOLIB)/makefiles -f Makefile.$(SYSTEM)    
 
 sdt:        $(DL_DIR) $(BLD_DIR) $(PROTOLIB) $(OBJ) $(LIBPROTO) 
-	$(CC) $(WX_CFLAGS) -o $@ $(OBJ) $(LIBPROTO) $(WX_LIBS) $(LIBS)
-	mkdir -p ../bin
+	$(CC) $(WX_CFLAGS) -o $@ $(OBJ) $(LIBPROTO) $(WX_LIBS) $(LIBS)	
 	cp $@ ../bin/$@
 
 sdt.app: sdt ../src/macos/Info.plist.in
@@ -60,10 +67,21 @@ sdt.app: sdt ../src/macos/Info.plist.in
 	echo "APPL????" >sdt.app/Contents/PkgInfo
 	$(CC) $(WX_CFLAGS) -o $@/Contents/MacOS/sdt $(OBJ) $(LIBPROTO) $(LIBS) $(WX_LIBS)
 	mkdir -p ../bin
-	cp -r $@ ../bin/$@
+	cp -R $@ ../bin/$@
+
+sdt3d.app: sdt3d 
+	cp $(OSX_SRC_DIR)/sdt3d.app.zip .
+	unzip -q sdt3d.app.zip
+	cp Info.plist sdt3d.app/Contents
+	cp bulkDownload-osx-app-script.sh sdt3d.app/Contents/bulkDownload.sh
+	cp bulkDownload.jar sdt3d.app/Contents/Resources/Java
+	cp -R $(JAR_DIR)/* sdt3d.app/Contents/Resources/Java
+	cp -R $(LIB_DIR)/* sdt3d.app/Contents/Resources/Java
+	zip -q -r sdt3d.zip sdt3d.app
 
 PLAYER_SRC = $(COMMON)/sdtPlayer.cpp
 PLAYER_OBJ = $(PLAYER_SRC:.cpp=.o)
+
 
 sdtplay:	$(PLAYER_OBJ) $(LIBPROTO)
 	$(CC) $(CFLAGS) -o $@ $(PLAYER_OBJ) $(LIBPROTO) $(LIBS)
@@ -76,30 +94,29 @@ sdtcmd:   $(CMD_OBJ) $(LIBPROTO)
 
 APP_NAME = sdt3d
 
-PROTOLIB_OBJS = $(LIB_DIR)/libProtolibJni.$(DYLIBEXT)\
+PROTOLIB_OBJS = $(LIB_DIR)/libProtolibJni.$(PROTO_SO_EXT)\
 				$(JAR_DIR)/protolib-jni.jar
 
-WORLDWIND_OBJS = $(LIB_DIR)/libgluegen-rt.so\
-				 $(LIB_DIR)/libjogl.so\
-				 $(LIB_DIR)/libjogl_awt.so\
-				 $(LIB_DIR)/libjogl_cg.so\
+WORLDWIND_OBJS = $(JAR_DIR)/gluegen-rt-natives-$(PLATFORM).jar\
+				 $(JAR_DIR)/jogl-all-natives-$(PLATFORM).jar\
 				 $(JAR_DIR)/gluegen-rt.jar\
-			   	 $(JAR_DIR)/jogl.jar\
-				 $(JAR_DIR)/worldwind.jar
+			   	 $(JAR_DIR)/jogl-all.jar\
+				 $(JAR_DIR)/worldwind.jar\
+				 $(JAR_DIR)/worldwindx.jar\
+				 $(JAR_DIR)/gdal.jar
 
 JOGLUTILS_OBJS = $(JAR_DIR)/joglutils.jar
 
+sdt3d: $(WORK_DIR) $(BLD_DIR) $(BIN_DIR) $(DL_DIR) $(WWJ_DIR) $(DST_DIR) $(LIB_DIR) $(JAR_DIR) $(JOGL_DIR) $(JOGL_BLD_DIR) $(JOGLUTILS_DIR) $(JOGLUTILS_MK_DIR) $(JAR_DIR)/sdt3d.jar sdt3d.zip
+
 .PHONY:        sdt3d clean distclean 
-all: $(WORK_DIR) $(BLD_DIR) $(BIN_DIR) $(DL_DIR) $(DST_DIR) $(LIB_DIR) $(JAR_DIR) sdt3d.zip
-sdt3d: $(WORK_DIR) $(BLD_DIR) $(BIN_DIR) $(DL_DIR) $(DST_DIR) $(LIB_DIR) $(JAR_DIR) sdt3d.zip
+all: $(WORK_DIR) $(BLD_DIR) $(BIN_DIR) $(DL_DIR) $(DST_DIR) $(LIB_DIR) $(JAR_DIR) $(JOGL_DIR) $(JOGL_BLD_DIR) $(JOGLUTILS_DIR) $(JOGLUTILS_MK_DIR) sdt3d.zip 
 
 $(WORK_DIR):
 	mkdir -p $@
-
-#$(WORK_DIR)/%:
-#	mkdir -p $@
-# The above breaks sdt compile for some reason...
 $(BLD_DIR):
+	mkdir -p $@
+$(WWJ_DIR):
 	mkdir -p $@
 $(BIN_DIR):
 	mkdir -p $@
@@ -111,25 +128,33 @@ $(LIB_DIR):
 	mkdir -p $@
 $(JAR_DIR):
 	mkdir -p $@
-
+$(JOGL_DIR):
+	mkdir -p $@
+$(JOGL_BLD_DIR):
+	mkdir -p $@
+$(JOGLUTILS_DIR):
+	mkdir -p $@
+$(JOGLUTILS_MK_DIR):
+	mkdir -p $@
 
 ## SDT3D ##
 sdt3d.zip: $(JAR_DIR)/sdt3d.jar
-	cp sdt3d.sh $(DST_DIR)/
-#	rsync -aC $(SRC_DIR)/images $(DST_DIR)/
-	cd $(WORK_DIR) && zip -r $@ sdt3d
+	cp sdt3d-distribution.sh $(DST_DIR)/sdt3d.sh
+	cp bulkDownload-linux-app-script.sh $(DST_DIR)/bulkDownload.sh
+	cp bulkDownload.jar $(JAR_DIR)/bulkDownload.jar
+	rsync -aC $(SRC_DIR)/images $(DST_DIR)/
+	cd $(WORK_DIR) && zip -q -r $@ sdt3d
 	mv $(WORK_DIR)/$@ $@
 
 $(JAR_DIR)/sdt3d.jar: $(PROTOLIBJNI) $(PROTOLIB_OBJS) $(WORLDWIND_OBJS) $(JOGLUTILS_OBJS)
-	javac -d $(BIN_DIR) -sourcepath $(SRC_DIR) -classpath $(JAR_DIR)/protolib-jni.jar:$(JAR_DIR)/worldwind.jar:$(JAR_DIR)/joglutils.jar $(SRC_DIR)/mil/navy/nrl/sdt3d/sdt3d.java
-	jar cfm $@ Manifest.txt -C $(BIN_DIR) mil
+	javac -d $(BIN_DIR) -sourcepath $(SRC_DIR) -classpath $(JAR_DIR)/protolib-jni.jar:$(JAR_DIR)/worldwindx.jar:$(JAR_DIR)/worldwind.jar:$(JAR_DIR)/joglutils.jar:build/sdt3d/jars/jogl-all.jar:build/sdt3d/jars/gdal.jar:build/sdt3d/jars/gluegen-rt.jar $(SRC_DIR)/mil/navy/nrl/sdt3d/sdt3d.java
+	jar cfm $@ Manifest-$(PLATFORM).txt -C $(BIN_DIR) mil -C $(SRC_DIR) images
 
-## / SDT3D ##
 
 ## Protolib ##
 
-../protolib:
-	if test -d $@; then echo using local $@ tree; else mkdir -p $@; wget -O ../protolib.tgz http://downloads.pf.itd.nrl.navy.mil/protolib/nightly_snapshots/protolib-svnsnap.tgz; tar xf ../protolib.tgz -C ..; cd $@ && ./waf configure; cd $@ && ./waf build; echo downloaded protolib.tgz; fi
+#../protolib:
+#	if test -d $@; then echo using local $@ tree; else mkdir -p $@; wget -O ../protolib.tgz http://downloads.pf.itd.n#rl.navy.mil/protolib/nightly_snapshots/protolib-svnsnap.tgz; tar xf ../protolib.tgz -C ..; cd $@ && ./waf configure;# cd $@ && ./waf build; echo downloaded protolib.tgz; fi
 
 $(PROTOLIB_OBJS): $(BLD_DIR)/protolib
 	cp -L $(BLD_DIR)/protolib/build/$(notdir $@) $@
@@ -139,42 +164,68 @@ $(BLD_DIR)/protolib: $(DL_DIR)/protolib.tgz
 	cd $(BLD_DIR)/protolib && ./waf configure --build-java
 	cd $(BLD_DIR)/protolib && ./waf build
 
-$(DL_DIR)/protolib.tgz:
-	wget -O $@ http://downloads.pf.itd.nrl.navy.mil/protolib/nightly_snapshots/protolib-svnsnap.tgz
+$(DL_DIR)/protolib.tgz: protolib.tgz
+	cp -P protolib.tgz $(DL_DIR)/protolib.tgz
+
 ## / Protolib ##
+
+protolib.tgz:
+	wget -O $@ http://downloads.pf.itd.nrl.navy.mil/protolib/nightly_snapshots/protolib-svnsnap.tgz
 
 ## Worldwind (and jogl, etc) ##
 $(WORLDWIND_OBJS): $(BLD_DIR)/worldwind
 	cp $(BLD_DIR)/worldwind/$(notdir $@) $@
 
 $(BLD_DIR)/worldwind: $(DL_DIR)/worldwind.zip
-	unzip -d $(BLD_DIR) $<
+	unzip -q -d $(BLD_DIR) $<
+	cd $(BLD_DIR)/worldwind && ant
 
-$(DL_DIR)/worldwind.zip: 
-        # 0.6 release
+$(DL_DIR)/worldwind.zip: worldwind.zip
+        # 1.5 release
 	cp -P worldwind.zip $(DL_DIR)/worldwind.zip
-#	wget -O $@ http://builds.worldwind.arc.nasa.gov/releases/worldwind-0.6.158.12011.zip
+
+worldwind.zip:
+	echo $(JDK)
+	./prep-wwj $(JDK)
+
 ## / Worldwind ##
+
 
 ## JOGL Utilities ##
 $(JOGLUTILS_OBJS): $(BLD_DIR)/joglutils
 	cp $(BLD_DIR)/joglutils/build/joglutils.jar $@
 
-$(BLD_DIR)/joglutils: $(DL_DIR)/joglutils.zip
-	unzip -d $(BLD_DIR) $<
+$(BLD_DIR)/joglutils: $(DL_DIR)/joglutils.zip $(BLD_DIR)/worldwind
+	unzip -q -d $(BLD_DIR) $<
+	cp $(BLD_DIR)/worldwind/jogl-all.jar $(JOGL_BLD_DIR)/jogl-all.jar
+	cp $(BLD_DIR)/worldwind/jogl-all-natives-$(PLATFORM).jar $(JOGL_BLD_DIR)/jogl-all-native.jar
+	cd $(JOGLUTILS_MK_DIR) && ant
+	cp $(JOGLUTILS_DIR)/build/joglutils.jar $(JAR_DIR)
+	
 
-$(DL_DIR)/joglutils.zip:
+$(DL_DIR)/joglutils.zip: joglutils.zip
 	cp -P joglutils.zip $(DL_DIR)/joglutils.zip
-#	wget -O $@ http://projectkenai.com/projects/jogl/sources/jogl-utils-git/content/src/net/java/joglutils/model/examples/joglutils.zip
+
+joglutils.zip:
+	./prep-joglutils
+
+## / JOGL Utilities ##
 
 clean: 
-	rm -rf *.o ../src/common/*.o sdt sdt.app sdtcmd sdtplay;
-	$(MAKE) -C $(PROTOLIB)/makefiles -f Makefile.$(SYSTEM) clean
-	-rm -rf sdt3d.zip $(BLD_DIR) $(BIN_DIR) $(DST_DIR) $(LIB_DIR) $(JAR_DIR)
+	rm -rf *.o ../src/common/*.o sdt sdt.app sdtcmd sdtplay sdt3d.app sdt3d.zip;
+	-rm -rf sdt3d.zip $(BLD_DIR) $(BIN_DIR) $(DST_DIR) $(LIB_DIR) $(JAR_DIR) $(JOGL_DIR) $(JOGL_BLD_DIR) $(JOGLUTILS_DIR) $(JOGLUTILS_MK_DIR)
+#	$(MAKE) -C $(PROTOLIB)/makefiles -f Makefile.$(SYSTEM) clean
 
 
 distclean:   clean
-	-rm -rf $(WORK_DIR)
+	-rm -rf $(WORK_DIR) joglutils worldwind
+#	rm -rf joglutils.zip 
+#	rm -rf worldwind.zip 
+	rm -rf worldwind-v2.1.0.zip
+
+install:
+	/usr/bin/install -o root -g ${PLATFORM_GROUP} sdt3d-${SYSTEM}.sh ${PREFIX}/bin/sdt3d.sh
+	/usr/bin/install -o root -g ${PLATFORM_GROUP} sdtcmd ${PREFIX}/bin/sdtcmd
 
 # DO NOT DELETE THIS LINE -- mkdep uses it.
 # DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.

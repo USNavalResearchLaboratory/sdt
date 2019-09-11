@@ -1,5 +1,0 @@
-Manifest-Version: 1.0
-Class-Path: protolib.jar protolib-jni.jar gluegen-rt.jar jogl.jar world
- wind.jar joglutils.jar
-Main-Class: mil.navy.nrl.sdt3d.sdt3d
-

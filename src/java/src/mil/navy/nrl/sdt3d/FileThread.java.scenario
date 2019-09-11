@@ -1,0 +1,291 @@
+package mil.navy.nrl.sdt3d;
+
+import java.awt.EventQueue;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Hashtable;
+import java.util.LinkedList;
+
+import javax.swing.BoundedRangeModel;
+import javax.swing.JSlider;
+
+import mil.navy.nrl.sdt3d.sdt3d.AppFrame.CmdParser;
+
+public class FileThread extends Thread
+{
+	private FileReader fIn = null;
+	private BufferedReader brIn = null;
+	private sdt3d.AppFrame sdt3dApp;
+	private boolean stopFlag = false;
+	boolean pause = false;
+	BufferedReader inputFile = null;
+	CmdParser parser = null;
+	
+	LinkedList<FileReaders> fileStack = new LinkedList<FileReaders>();
+	//public boolean isRunning() {return !fileStack.isEmpty();}
+	public boolean isRunning() 
+	{
+		return (!fileStack.isEmpty() && 
+		(inputFile = fileStack.peek().getBufferedReader()) != null);		
+	}
+	
+	class FileReaders
+	{
+		private FileReader fIn;
+		private BufferedReader brIn;
+		private boolean pipeInputFile = false;
+		
+		public FileReaders() {};
+		public FileReaders(FileReader theFile, BufferedReader theReader,boolean pipeInput)
+		{
+			this.fIn = theFile;
+			this.brIn = theReader;
+			this.pipeInputFile = pipeInput;
+		}
+		public boolean readingPipeInputFile() {return this.pipeInputFile;}
+	
+		public FileReader getFileReader()
+		{
+			return fIn;
+		}
+		public BufferedReader getBufferedReader()
+		{
+			return brIn;
+		}
+	}
+	
+	public FileThread(sdt3d.AppFrame theSdtApp, String fileName,boolean pipeCmd)
+	{
+		sdt3dApp = theSdtApp;
+		try { 
+			fIn = new FileReader(fileName);
+			brIn = new BufferedReader(fIn);
+			
+			FileReaders tmp = new FileReaders(fIn,brIn,pipeCmd);			
+			fileStack.add(tmp);
+		} catch (IOException e) { 
+			System.out.println("IOException error!");
+			e.printStackTrace();
+		}
+	}
+	public void clear()
+	{
+		stopRead();
+		fileStack.clear();
+	}
+	public void stopRead()
+	{
+		// trigger break out of run while loop
+		try {
+			if (fileStack != null && !fileStack.isEmpty())
+			{
+				fileStack.peek().getBufferedReader().close();
+			}
+		} catch (IOException e) {
+			System.out.println("FileThread::stopRead() IOException error");
+			e.printStackTrace();
+		}
+		fileStack.clear();
+		
+	}
+	public void stopThread()
+	{
+		stopFlag = true;
+	}
+	public void startThread()
+	{
+		stopFlag = false;
+	}
+		
+	public void pushFile(String fileName)
+	{
+		try {
+			fIn = new FileReader(fileName);
+			brIn = new BufferedReader(fIn);
+			
+			// If we're processing the file immediately, we recv'd
+			// the command from the file menu
+			FileReaders tmp = new FileReaders(fIn,brIn,false);
+			fileStack.push(tmp);
+			inputFile = fileStack.peek().getBufferedReader();
+		} catch (IOException e) {
+			System.out.println("IOException error!");
+			e.printStackTrace();
+		}		
+	}
+	public void addLast(String fileName,boolean forceAppend)
+	{
+		try {
+			fIn = new FileReader(fileName);
+			brIn = new BufferedReader(fIn);
+			
+			// the forceAppend flag indicates the file is being appended
+			// via the menu option - in which case we don't want to disable
+			// input command processing.  Otherwise, if we've recv'd an 
+			// input command over the command pipe, we DO want to disable
+			// any further input commands until the file is fully processed.
+			FileReaders tmp;
+			if (forceAppend)
+			{
+				tmp = new FileReaders(fIn,brIn,false);
+			}
+			else
+			{
+				tmp = new FileReaders(fIn,brIn,true);
+			}
+			fileStack.addLast(tmp);
+		} catch (IOException e) {
+			System.out.println("IOException error!");
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void popFile()
+	{
+		try {
+			if (!fileStack.isEmpty()) 
+			{
+				fileStack.peek().getFileReader().close();	
+				fileStack.peek().getBufferedReader().close();
+				fileStack.pop();
+			}
+		}
+
+		catch (IOException e) {
+			e.printStackTrace();
+		}		
+	}
+	// We want to ignore command line input if we are still reading
+	// a command line file
+	public boolean readingCmdInputFile() 
+	{
+		if (fileStack.peek() != null)
+			return fileStack.peek().readingPipeInputFile();
+		else
+			return false;
+	}
+	public void run()
+	{
+		parser = sdt3dApp.new CmdParser();
+		
+		//start thread that opens FileThread and listens for open file
+		String record = null;
+		try {
+			while (!fileStack.isEmpty() && (inputFile = fileStack.peek().getBufferedReader()) != null)
+			{	
+			// ljt-scenario	Float testTime = Float.valueOf(0);
+			// ljt-scenario	JSlider timeSlider = sdt3dApp.getTimeSlider();
+			// ljt-scenario	timeSlider.setValue(timeSlider.getMinimum());
+				while ((record = inputFile.readLine()) != null && !stopFlag) {
+					// Check if we've been paused
+				/* ljt-scenario	synchronized(this) 
+					{
+						while (pause) {
+							try {
+								wait();
+							} catch (Exception e) {
+								
+							}
+						}
+					} */
+					if(record.startsWith("wait"))
+					{					
+						try {
+							long time, sleepTime = 0;
+							long wait = Float.valueOf(record.substring(4).trim()).intValue();
+
+						/*	ljt-scenario if (sdt3dApp.getReplaySpeed() > 0)
+							{
+								//sleep(Float.valueOf(record.substring(4).trim()).intValue());
+							
+								//long speed = (long) .5;
+
+								sleepTime =  (long) (sdt3dApp.getReplaySpeed() * wait);
+
+								time = sleepTime;
+								sleep(time);
+							}	else
+							{
+								System.out.println("Replay speed ! > 0");
+								time = wait;
+								sleep(time); // ljt??
+ 							}*/
+							
+						//	System.out.println(" slept " + time + " wait " + wait + " replaySpeed scale " + sdt3dApp.getReplaySpeed() + " sleepTime " + sleepTime);
+
+							//int time = Float.valueOf(record.substring(4).trim()).intValue();
+							//time = sleepTime;
+
+							//sleep(sleepTime);
+							
+							//testTime = testTime + time;
+						// ljt-scenario	testTime = testTime + wait;
+						//	System.out.println(" Time " + time + " testTime " + testTime + "intValue " + testTime.intValue()/60);
+							
+							// ljt there is probably a way to automate this, but for now...
+						/* ljt-scenario	if (testTime.intValue()/60 > sdt3dApp.getTimeSlider().getMaximum())
+							{
+								timeSlider.setMaximum((int) (timeSlider.getMaximum() + (2*timeSlider.getMajorTickSpacing())));
+								int newInterval = timeSlider.getMaximum()/10;
+								timeSlider.setMajorTickSpacing(newInterval);
+								timeSlider.setMinorTickSpacing(timeSlider.getMajorTickSpacing()/10);
+								// We need to force recreation of labels..
+								Hashtable labelTable = timeSlider.createStandardLabels(newInterval);
+								timeSlider.setLabelTable(labelTable);
+
+							}	
+							sdt3dApp.getTimeSlider().setValue(testTime.intValue()/60); */
+						} catch (NumberFormatException e) {
+							e.printStackTrace();
+						// ljt-scenario } catch (InterruptedException e) {
+						// ljt-scenario	e.printStackTrace();
+						}
+					}
+					else if (record.startsWith("input"))
+					{
+						final String cmd = record;
+						try { EventQueue.invokeAndWait(new Runnable() {
+							public void run()
+							{
+								if (!stopFlag)
+								{
+									sdt3dApp.OnInput(cmd,parser);	
+								}
+							}
+						});
+						} catch (Exception ex) {
+							ex.printStackTrace();
+						}
+					}
+					else
+					{
+						final String cmd = record;
+
+						try { EventQueue.invokeLater(new Runnable() {
+
+							public void run()
+							{		
+								// So we don't clobber file/pipe state when interleaving 
+								// the two command sets.  Certainly there's a better way, but for now...
+								if (!stopFlag)
+								{
+									sdt3dApp.OnInput(cmd,parser);								
+								}
+							}
+						});
+						} catch (Exception ex) {
+							ex.printStackTrace();
+						}		
+					}	
+				}	
+				popFile();
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}  // end FileThread::run()
+}  // end class FileThread
+

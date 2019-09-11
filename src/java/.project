@@ -4,6 +4,8 @@
 	<comment></comment>
 	<projects>
 		<project>joglutils</project>
+		<project>protolib-jni</project>
+		<project>worldwind</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

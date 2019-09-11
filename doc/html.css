@@ -214,14 +214,13 @@ div.footnote {
     font-size: 0.9em;
 }
 
-a:link {
-    text-decoration: none;
-    color: #004668;
-}
-
-a:hover,
+a:link:hover,
 a:visited:hover {
     text-decoration: underline;
+}
+
+a:link {
+    text-decoration: none;
     color: #004668;
 }
 
@@ -257,4 +256,70 @@ span.guiicon,
 span.interface,
 span.guilabel {
     font-weight: bold;
+}
+
+a img {
+    border-style: none;
+}
+
+hr.footnote-hr {
+    width: 100px;
+    margin-left: 0;
+    text-align: left;
+}
+
+/* ------------------------------------------------------------------------
+ | Syntax highlighting
+ +------------------------------------------------------------------------- */
+
+.hl-keyword {
+    font-weight: bold;
+    color: #602060;
+}
+
+.hl-string {
+    color: #A00000;
+}
+
+.hl-number {
+    color: #B08000;
+}
+
+.hl-comment {
+    font-style: italic;
+    color: #808080;
+}
+
+.hl-doccomment {
+    color: #008080;
+}
+
+.hl-directive {
+    color: #00A000;
+}
+
+.hl-annotation {
+    font-weight: bold;
+    color: #808080;
+}
+
+/*
+ * XML
+ */
+
+.hl-tag {
+    font-weight: bold;
+    color: #602060;
+}
+
+.hl-attribute {
+    color: #0050A0;
+}
+
+.hl-value {
+    color: #A00000;
+}
+
+.hl-doctype {
+    color: #008080;
 }

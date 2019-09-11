@@ -1,0 +1,35 @@
+#! /bin/sh
+# prep-wwj - modify wwj 2.1 to open access on getColladaRoot
+
+wget -O worldwind-v2.1.0.zip https://github.com/NASAWorldWind/WorldWindJava/releases/download/v2.1.0/worldwind-v2.1.0.zip
+
+unzip -q -d worldwind worldwind-v2.1.0
+
+# Change to unix line ends:
+#find joglutils -type f -exec dos2unix {} \;
+find worldwind -name \*.java -exec perl -pi -e 's/\r\n|\n|\r/\n/g' {} \;  # Convert to UNIX
+
+patch --ignore-whitespace -p0 << '===ENDPATCH==='
+diff -ru worldwind-fix/src/gov/nasa/worldwind/ogc/kml/impl/KMLModelPlacemarkImpl.java worldwind/src/gov/nasa/worldwind/ogc/kml/impl/KMLModelPlacemarkImpl.java
+--- worldwind-fix/src/gov/nasa/worldwind/ogc/kml/impl/KMLModelPlacemarkImpl.java    2014-04-30 12:59:08.000000000 -0400
++++ worldwind/src/gov/nasa/worldwind/ogc/kml/impl/KMLModelPlacemarkImpl.java        2014-08-09 11:55:52.000000000 -0400
+@@ -136,7 +136,7 @@
+     *
+     * @see #setColladaRoot(gov.nasa.worldwind.ogc.collada.ColladaRoot)
+     */
+-    protected ColladaRoot getColladaRoot()
++    public ColladaRoot getColladaRoot()
+    {
+        return this.colladaRoot.get();
+    }
+@@ -408,4 +408,4 @@
+            return this.address;
+        }
+    }
+-}
+\ No newline at end of file
++}
+===ENDPATCH===
+# Pack up:
+sed -i'.bak' s/worldwind.jdk=1.8/worldwind.jdk=$1/ worldwind/build.properties
+zip -q -r worldwind.zip worldwind

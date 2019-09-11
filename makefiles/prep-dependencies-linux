@@ -1,0 +1,11 @@
+# This helper script will install dependencies using
+# apt-get.  Note that java will need to be installed
+# manually
+#
+apt-get install git
+apt-get install ant
+apt-get install g++
+apt-get install wget
+apt-get install libvecmath-java
+apt-get install libpcap-dev
+apt-get install libnetfilter-queue-dev

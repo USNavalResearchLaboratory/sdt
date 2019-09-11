@@ -23,17 +23,19 @@ heading -17.138033
 zoom 3499.418533
 #
 # Alert the user that there are more 
-status "Zoom out to see 3d models in the air"
+status "Zoom in and out to see all samples. Toggle sdt layers on and off"
 
 #
 # Load sprites and 3d models
 sprite soldier image soldier1.png size 46,79
 sprite warrior image warrior/warrior.3ds size 64,64 length 16
 sprite waterTower image waterTower.png size 124,124 
-sprite stealth image stealth/stealth.3ds size 150,150 length 10.4
+sprite stealth image stealth/stealth.3ds size 150,150 length 20.4 scale 2
 sprite saucer image saucer.gif
 sprite car image car.gif
 sprite satellite image satellite.png
+sprite man image 3D_Man_Walking.kmz length 8
+sprite woman image Female01/doc.kml scale 1 length 10
 
 #
 # Assign sprite types to nodes
@@ -74,9 +76,6 @@ node 28 type none label off
 #
 # Display some background imagery 
 node waterTower type waterTower pos -112.087800,40.490658,0.000000 
-#
-# Position the stealth bomber at 2000 meters above ground level
-node stealth type stealth pos -112.083054,40.491786,2000,agl label on,"2000 agl"
 # 
 # Position the saucer at 2000 meters above mean sea level
 node saucer type saucer pos -112.083054,40.491786,2000,msl label on "2000 msl"
@@ -87,8 +86,14 @@ node 3 symbol sphere label on,"default sphere"
 # Yellow sphere 
 node 7 symbol sphere,yellow label on,"yellow sphere"
 
-# Create a 200 meter "fixed" symbol
-node 14 symbol sphere,x,x,200 label on,"200 meter\nfixed sphere"
+# cone using gdb values absolute orientation
+node 11 symbol cone,blue,x,16s,64s,x,x,0a,0 label on,"cone"
+
+# fixed scaleable cyliner hex color
+node 12 symbol cylinder,0xFFFFFF,x,128s,128s,.90,x,30a label on,"fixed scaleablecylinder"
+
+# Create a 20 meter "fixed" symbol
+node 14 symbol sphere,x,x,20 label on,"20 meter fixed sphere"
 
 # Create a sphere at 99% opacity
 node 21 symbol sphere,x,x,x,x,.99 label on,"sphere at 99% opacity"
@@ -108,17 +113,26 @@ region region3 shape square,white,3,500,500,0.30 center -112.092344,40.5006,1500
 # Create a square region
 region region4 shape cube,red,3,500,500,0.30 center -112.102344,40.5006,2000
 
-# Create a sphere region at altitude 50% opacity
-region region5 shape sphere,cyan,3,500,500,0.50 center -112.072344,40.5006,3000
+# Position the stealth bomber at 2000 meters above ground level
+node stealth type stealth pos -112.072344,40.50066,2000,agl label on,"2000 agl"
 
-# Create a node with just a label
-node info type none position -112.0838,40.4875,0.000000 label red,"Expand the viewport\nto view the regions"
-#
-node sat type satellite label off position -112.062344,40.492057,1000.000000 
+# Create a node with just a label and a symbol
+node info type none position -112.0838,40.4875,50.000000 label red,"Expand the viewport to view the regions" 
+
+# put a "scaleable" fixed symbol around the satellite 
+node sat type satellite label off position -112.062344,40.492057,1000.000000 symbol sphere,yellow,x,128s,x
+
 # Create some links between the car and the satelite
 link 29,sat,wifi1 line blue,3 
 link 29,sat,wifi2 line white,3 
 link 29,sat,wifi3 line red,3 
 link 29,sat,wifi4,dir line green,3 linklabel on
+
+# put an unscaleable 3d man kml sprite next to car
+node man pos -112.072344,40.492057 type man label green,"Unscaleable 3D KML Man"
+
+# put a 3d woman kml sprite next to car
+node woman pos -112.072344,40.491057 type woman label green,"Scaleable 3D KML Woman"
+
 
 input sampler.include

@@ -9,12 +9,18 @@
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/worldwind"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/joglutils"/>
-	<classpathentry kind="lib" path="/worldwind/gluegen-rt.jar"/>
-	<classpathentry kind="lib" path="/worldwind/jogl.jar">
+	<classpathentry kind="lib" path="/worldwind/gluegen-rt.jar">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="worldwind"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/worldwind/worldwind.jar"/>
+	<classpathentry kind="lib" path="/worldwind/worldwind.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="worldwind"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/worldwind/jogl-all-natives-windows-amd64.jar"/>
+	<classpathentry kind="lib" path="/worldwind/gdal.jar"/>
+	<classpathentry kind="lib" path="/worldwind/jogl-all.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

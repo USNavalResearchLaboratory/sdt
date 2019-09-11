@@ -1,0 +1,1 @@
+The Info.plist and JavaApplicationStub files in this directory are retained for historical purposes.  They have been replaced by build scripts that work with  the new makefiles that use a Platypus generated sdt3d.app (sdt3d.app.zip which launches sdt3d.sh)

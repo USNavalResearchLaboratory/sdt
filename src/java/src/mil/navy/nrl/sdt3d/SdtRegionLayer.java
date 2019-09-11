@@ -2,8 +2,9 @@ package mil.navy.nrl.sdt3d;
 
 import java.util.Iterator;
 import java.util.Vector;
-import javax.media.opengl.GL;
 
+import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 
 import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.render.DrawContext;
@@ -41,9 +42,9 @@ public class SdtRegionLayer extends RenderableLayer
 	    		if (region.getAirspaceShape() != null)
 	    			airspaceLayer.removeAirspace(region.getAirspaceShape());
 	    }
-	    private void addRenderable(SdtRegion region)
+	    void addRenderable(SdtRegion region)
 	    {
-			if (region.getSurfaceShape() != null)	
+			if (region.getSurfaceShape() != null) 
 				super.addRenderable(region.getSurfaceShape());
 			else 
 				if (region.getAirspaceShape() != null)
@@ -58,7 +59,9 @@ public class SdtRegionLayer extends RenderableLayer
 	            while (it.hasNext())
 	            {
 	            	SdtRegion region = it.next();
-	            	if (region.hasPosition()) 
+	            	// only render the region if it has a position
+	            	// and any associated layer is visible (e.g. theRegion.isSelected)
+	            	if (region.hasPosition() && region.isSelected()) 
 	            	{
 	            		if (!region.isInitialized())
 	            		{
@@ -70,7 +73,7 @@ public class SdtRegionLayer extends RenderableLayer
             			else
 	            		if (region.getSurfaceShape() != null)
 	            		    super.doRender(dc);
-	            		
+
 	            	}
 	            }
 	        }
@@ -90,21 +93,21 @@ public class SdtRegionLayer extends RenderableLayer
 
 	    protected void beginDraw(DrawContext dc)
 		{
-			GL gl = dc.getGL();
+	        GL2 gl = dc.getGL().getGL2(); // GL initialization checks for GL2 compatibility.
 			Vec4 cameraPosition = dc.getView().getEyePoint();
 
 			if (dc.isPickingMode())
 			{
 				this.pickSupport.beginPicking(dc);
 
-				gl.glPushAttrib(GL.GL_ENABLE_BIT | GL.GL_CURRENT_BIT | GL.GL_TRANSFORM_BIT);
+				gl.glPushAttrib(GL2.GL_ENABLE_BIT | GL2.GL_CURRENT_BIT | GL2.GL_TRANSFORM_BIT);
 				gl.glDisable(GL.GL_TEXTURE_2D);
-				gl.glDisable(GL.GL_COLOR_MATERIAL);
+				gl.glDisable(GL2.GL_COLOR_MATERIAL);
 			}
 			else
 			{
 				gl.glPushAttrib(
-							GL.GL_TEXTURE_BIT | GL.GL_ENABLE_BIT | GL.GL_CURRENT_BIT | GL.GL_LIGHTING_BIT | GL.GL_TRANSFORM_BIT);
+							GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT | GL2.GL_CURRENT_BIT | GL2.GL_LIGHTING_BIT | GL2.GL_TRANSFORM_BIT);
 				gl.glDisable(GL.GL_TEXTURE_2D);
 		            	            	            
 				float[] lightPosition =
@@ -113,28 +116,28 @@ public class SdtRegionLayer extends RenderableLayer
 				float[] lightAmbient = {1.0f, 1.0f, 1.0f, 1.0f};
 				float[] lightSpecular = {1.0f, 1.0f, 1.0f, 1.0f};
 
-				gl.glDisable(GL.GL_COLOR_MATERIAL);
+				gl.glDisable(GL2.GL_COLOR_MATERIAL);
 
-				gl.glLightfv(GL.GL_LIGHT1, GL.GL_POSITION, lightPosition, 0);
-				gl.glLightfv(GL.GL_LIGHT1, GL.GL_DIFFUSE, lightDiffuse, 0);
-				gl.glLightfv(GL.GL_LIGHT1, GL.GL_AMBIENT, lightAmbient, 0);
-				gl.glLightfv(GL.GL_LIGHT1, GL.GL_SPECULAR, lightSpecular, 0);
+				gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, lightPosition, 0);
+				gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_DIFFUSE, lightDiffuse, 0);
+				gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, lightAmbient, 0);
+				gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, lightSpecular, 0);
 
-				gl.glDisable(GL.GL_LIGHT0);
-				gl.glEnable(GL.GL_LIGHT1);
-				gl.glEnable(GL.GL_LIGHTING);
-				gl.glEnable(GL.GL_NORMALIZE);
+				gl.glDisable(GL2.GL_LIGHT0);
+				gl.glEnable(GL2.GL_LIGHT1);
+				gl.glEnable(GL2.GL_LIGHTING);
+				gl.glEnable(GL2.GL_NORMALIZE);
 			}
 
-			gl.glMatrixMode(GL.GL_MODELVIEW);
+			gl.glMatrixMode(GL2.GL_MODELVIEW);
 			gl.glPushMatrix();
 		}
 
 		protected void endDraw(DrawContext dc)
 		{
-			GL gl = dc.getGL();
+	        GL2 gl = dc.getGL().getGL2(); // GL initialization checks for GL2 compatibility.
 
-			gl.glMatrixMode(GL.GL_MODELVIEW);
+			gl.glMatrixMode(GL2.GL_MODELVIEW);
 			gl.glPopMatrix();
 
 			if (dc.isPickingMode())
@@ -143,10 +146,10 @@ public class SdtRegionLayer extends RenderableLayer
 			}
 			else
 			{
-				gl.glDisable(GL.GL_LIGHT1);
-				gl.glEnable(GL.GL_LIGHT0);
-				gl.glDisable(GL.GL_LIGHTING);
-				gl.glDisable(GL.GL_NORMALIZE);
+				gl.glDisable(GL2.GL_LIGHT1);
+				gl.glEnable(GL2.GL_LIGHT0);
+				gl.glDisable(GL2.GL_LIGHTING);
+				gl.glDisable(GL2.GL_NORMALIZE);
 
 			}
 

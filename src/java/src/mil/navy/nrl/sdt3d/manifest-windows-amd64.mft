@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Class-Path: sdt3d.jar gdal.jar gluegen-rt.jar gluegen-rt-natives-windows-amd64.jar jogl-all.jar jogl-all-natives-windows-amd64.jar joglutils.jar protolib-jni.jar worldwind.jar worldwindx.jar
+Main-Class: mil.navy.nrl.sdt3d.sdt3d
+

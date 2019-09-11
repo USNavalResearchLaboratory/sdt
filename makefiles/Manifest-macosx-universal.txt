@@ -1,0 +1,2 @@
+Main-Class: mil.navy.nrl.sdt3d.sdt3d
+Class-Path: gdal.jar gluegen-rt.jar gluegen-rt-natives-macosx-universal.jar jogl-all.jar jogl-all-natives-macosx-universal.jar joglutils.jar protolib-jni.jar worldwind.jar worldwindx.jar 
