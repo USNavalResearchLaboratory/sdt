@@ -1,0 +1,37 @@
+# This script illustrates "flying" to a given globe location
+#
+# Set the path to be used to search for referenced files.  (Change as appropriate for your environment.)
+#
+path "../scripts/sprites/;"
+
+#
+# Set the background bounds
+bgbounds -84.860000,82.143200,-63.705700,79.5262
+
+#
+# Load sprites
+sprite santa image santa.png size 285,119 
+sprite christmasTree image christmasTree.png size 108,126 
+sprite santaCanoe image santaInCanoe.png size 223,86 
+sprite christmasPalmTree image christmasPalmTree.png size 179,261 
+ 
+node santa type santa pos -72.693000,80.990600 label off
+wait 4000.00
+
+#
+# Flyto new location
+flyto -77.036300,38.894800,1000
+wait 4000.00
+
+node santa pos -77.036300,38.894800 label off
+node christmasTree type christmasTree pos -77.036300,38.894800 label off
+wait 7000.00
+
+node christmasTree type none
+node santa type none
+
+flyto -71.812900,21.721200,10000
+wait 4000.00
+
+node christasPalmTree type christmasPalmTree pos -71.812900,21.721200 label off
+node santaCanoe type santaCanoe pos -71.811900,21.721200 label off

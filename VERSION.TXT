@@ -1,3 +1,0 @@
-sdt3d 2.1c
-wwj 2.1
-joglutils kenai with jogl 2.0 extenstions

@@ -22,5 +22,6 @@
 	<classpathentry kind="lib" path="/worldwind/jogl-all-natives-windows-amd64.jar"/>
 	<classpathentry kind="lib" path="/worldwind/gdal.jar"/>
 	<classpathentry kind="lib" path="/worldwind/jogl-all.jar"/>
+	<classpathentry kind="lib" path="/worldwind/worldwindx.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

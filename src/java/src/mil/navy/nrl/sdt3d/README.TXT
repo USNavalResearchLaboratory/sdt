@@ -29,6 +29,16 @@ All Rights Reserved.
 6. on windows both the sdt and sdtCmd must be run as administrator.  Use visual studio to build sdtcmd.
 
 	both sdtcmd and sdt must be built for the same architecture (x86 or x64)
+	
+7.  To build protolib.dll
+
+Open a visual studio cmd window to get the environment (program files, visual studio, tools)
+
+python waf distclean
+python waf configure --build-java --msvc_targets=x64
+python waf
+
+If getting protolib out of svn use the 64 or 32 dll and jar depending on your environment
 
 2.0 NOTES
 

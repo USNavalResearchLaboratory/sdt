@@ -39,7 +39,10 @@ application. See "BUILDING SDT3D UNDER LINUX/OSX" and "BUILDING SDT3D
 JAR FILE IN ECLIPSE" for detailed build instructions.
 
 Eclipse is the easiest way to build the application under windows.
-See "SETTING UP THE SDT3D ECLIPSE PROJECT"
+See "SETTING UP THE SDT3D ECLIPSE PROJECT"  (Short notes:  Add jogl-all.zip
+from worldwind to the joglutils project libraries and the worldwind gdal
+gluegen-rt jogl-all to the worldwind project.  Add the jre system library
+add library add jre system library)
 
 A "sdtcmd" helper utility that will send sdt commands over a command
 pipe to a sdt3d application is included in the release.  Use the
@@ -92,6 +95,13 @@ section on the protean forge website.
 Place in the sdt makefiles directory.  The makefile will unzip and
 process these files.  (Make sure the files are named "worldwind.zip",
 "joglutils.zip", and "protolib.tgz" after the download.)
+
+You may need to add a javac command to the worldwind/build.xml file, e.g:
+
+<project name="worldwind" default="build" basedir=".">
+	<javac srcdir="src" destdir="bin" />
+    <description>
+
 
 2.  A Makefile is provided that will unpack the appropriate jar and
 source files and build a sdt3d application (including a sdt3d.jar):
@@ -268,3 +278,7 @@ may try increasing the airspace geometry cache in
 worldwind.src.config.worldwind.xml
 
 gov.nasa.worldwind.avkey.AirspaceGeometryCacheSize is set to 32000000
+
+Brian Adamson
+<adamson@itd.nrl.navy.mil>
+01 Apr 2014

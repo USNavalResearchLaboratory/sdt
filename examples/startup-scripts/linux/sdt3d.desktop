@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=sdt3d-offline-mode
+Exec=/home/parallels/sdt-2.0/makefiles/sdt3d.sh input /home/parallels/sdt-2.0/examples/startup-scripts/linux/sdt-offline-mode.input
+Icon=/home/parallels/sdt-2.0/src/java/src/mil/navy/nrl/sdt3d/sdtLogo-transparent.jpg
+# Set to true to popup a terminal when launched
+Terminal=false
+Type=Application

@@ -1,0 +1,3584 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<article lang="">
+  <title><inlinemediaobject>
+      <imageobject>
+        <imagedata fileref="sdt3dLogo.gif" role="" scale="15"/>
+      </imageobject>
+    </inlinemediaobject>The Scripted Display Tools ("sdt"/"sdt3d)"</title>
+
+  <titleabbrev>The Scripted Display Tools ("sdt"/"sdt3d")</titleabbrev>
+
+  <articleinfo>
+    <title>The Scripted Display Tools ("sdt"/"sdt3d")</title>
+
+    <abstract>
+      <para>The Scripted Display Tools are open source software developed by
+      the <ulink url="http://www.nrl.navy.mil/">Naval Research
+      Laboratory</ulink> (NRL) PROTocol Engineering Advanced Networking
+      (PROTEAN) group. "sdt" provides a simple 2D visualization capability
+      using standard image files for a background and set of overlaid nodes.
+      "sdt3d" provides a 3D visualization capability using NASA's World Wind
+      3D interactive world viewer and set of overlaid nodes.  Nodes are
+      assigned iconic images for the display sourced from standard format
+      image files (e.g. JPEG, PNG, GIF, etc) or from 3D Model files (3ds). In
+      "sdt" a custom coordinate system can be defined for the background and
+      node positions can be dynamically updated to "move" their associated
+      icons about the background. In "sdt3d" nodes are placed at geographic
+      coordinates that can be dynamically updated to "move" their associated
+      icons about the globe.  </para>
+
+      <para>Displayed nodes can also be dynamically "linked" and "unlinked"
+      with lines of user-specified color and thickness.  This makes the sdt
+      tools well-suited for one of its intended purposes which is to provide a
+      real-time visualization of dynamic, possibly mobile data communication
+      networks.  While the sdt feature set will be centered around supporting
+      this function, sdt capabilities will be left open to other creative
+      uses.  Here are screenshots of <ulink url="sdt-0001.png">"sdt</ulink>"
+      and "sdt3d" <ulink url="sdt3d-0001.png">(1)</ulink> <ulink
+      url="sdt3d-0002.png">(2)</ulink> in action.</para>
+
+      <para>"sdt" is written in C++ using the freely-available, cross-platform
+      wxWidgets library for graphical user interface applications. "sdt3d" is
+      written in Java using WorldWinds opensource JDK. Versions of the
+      libraries are available for most Unix, MacOS, and Win32 platforms in a
+      number of different forms.</para>
+    </abstract>
+  </articleinfo>
+
+  <sect1>
+    <title>Download</title>
+
+    <para>Source code and binary distributions (Linux, Mac OS, and Windows)
+    are available at:</para>
+
+    <para><ulink
+    url="http://downloads.pf.itd.nrl.navy.mil/sdt/">http://downloads.pf.itd.nrl.navy.mil/sdt/</ulink></para>
+
+    <para>The "sdt3d" source has dependencies on NASA's Worldwind JDK,
+    joglutils (a library that provides Java bindings for OpenGL and 3d Model
+    support), and protolib-jni (a library that provides Java native interface
+    to NRL's protolib protoPipe implementation). "sdt" is dependent on NRL's
+    protolib library and wxWidgets.</para>
+  </sect1>
+
+  <sect1>
+    <title>Usage</title>
+
+    <sect2>
+      <title>"sdt3d" Usage</title>
+
+      <para>The "sdt3d" program may be launched from a command-line, the
+      sdt3d.bat windows batch file, a mac application, or the Linux shell
+      script sdt3d.sh. To launch "sdt3d" from the command line, use the
+      following command-line syntax:</para>
+
+      <para><programlisting>java -Xmx512m -Dsun.java2d.noddraw=true -jar sdt3d.jar </programlisting>The
+      sdt3d.jar file used is available in the sdt3d binary distribution or may
+      be built as described in the source code download.</para>
+
+      <para>The "sdt3d" application can either accept <link
+      linkend="real-time">real-time commands over a command pipe</link>, over
+      a <link linkend="udp">UDP socket</link>, or you may use the "Open File"
+      menu option to load an input file containing sdt commands.</para>
+
+      <sect3>
+        <title>File Menu</title>
+
+        <informaltable frame="all">
+          <tgroup cols="2">
+            <tbody>
+              <row>
+                <entry><para><programlisting><link id="openFile"
+                      linkend="openFile">Open File...</link></programlisting></para></entry>
+
+                <entry><para>Causes the "sdt3d" application to to parse the
+                selected &lt;scriptFile&gt; containing sdt commands. This
+                command will <link linkend="reset">reset</link> application
+                state with the exception of any loaded sprites. Note that any
+                user preference or configuration files will be reloaded. To
+                clear the configuration file association use the "clear
+                configuration menu item". See the <link
+                linkend="inputFile">input file</link> section for more
+                details.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Append file...</programlisting></para></entry>
+
+                <entry><para>Cause the "sdt3d" application to either append
+                the selected file to the input file list to be processed
+                sequentially, or, if no input file is currently being
+                processed, to begin processing the file immediately. Neither
+                the user preferences file or the user configuration file is
+                reloaded in either case.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting><link id="softreset"
+                      linkend="softreset">Reset</link></programlisting></para></entry>
+
+                <entry><para>Cause the "sdt3d" application to perform a "soft"
+                reset. As this option does not close sockets it is useful for
+                clearing sdt state when a scenario has been halted and will be
+                restarted.</para><para>A soft reset disables any debug
+                logging, removes any user defined layers and and all system
+                renderables (e.g. nodes, links, regions, etc.), and reloads
+                any <link linkend="configuration">user configuration
+                file</link>. sdt commands that should be reloaded during a
+                soft reset (like sprite assignments, view position) should be
+                added to the user configuration file.</para><para>Any sprite
+                definitions will be retained. </para><para>Note that any input
+                file processing will continue.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting><link id="reset" linkend="reset">Hard Reset</link></programlisting></para></entry>
+
+                <entry><para>A "hard" reset will perform a "soft" reset but
+                also close any open sockets, stop reading any input file,
+                reset system state (e.g. offlineMode, elevationData,
+                stereoMode, background color, uncollapse links, unfollow any
+                nodes, disable node focust, restart the view controller, and
+                reset to basic orbit view).</para><para>Any sprites
+                definitions will be retained.</para><para>Any <link
+                linkend="configuration">sdt setting and configuration
+                files</link> will be reloaded.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting><link id="resetPerspective"
+                      linkend="resetPerspective">Reset perspective</link></programlisting></para></entry>
+
+                <entry><para>Cause the "sdt3d" application to reset the system
+                perspective to the default startup perspective, e.g. view
+                centered on the blue marble, offline mode on, elevation data
+                on, stereo mode off, background color black, collapse links
+                off, layers set to default selections. Sdt objects will NOT be
+                deleted when the perspective is reset.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Delete sprite table</programlisting></para></entry>
+
+                <entry><para>Will delete the sprite table. Note that the
+                "<link linkend="default">default</link>" transparant sprite
+                will not be deleted when the sprite table is emptied. Should
+                it be necessary to remove the <link
+                linkend="default">default</link> sprite the "delete
+                sprite,default" command should be used.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Configuration file options&gt;
+  Load configuration file...
+  Clear configuration</programlisting></para></entry>
+
+                <entry><para>Loading a configuration file will reset all
+                system state (with the exception of deleting the sprite table)
+                and load any userPreferenceFile before processing the selected
+                file. A configuration file can contain any of the sdt commands
+                and will be reloaded every time sdt3d state is reset, e.g.
+                after a "<link linkend="reset">reset</link>" command, when an
+                <link linkend="openFile">input file is loaded via the command
+                menu</link> or a pipe, or when the userConfigFile sdt command
+                is encountered. Only one configuration file can be defined at
+                a time. The clear configuration menu option will reset system
+                state and load any user preferences file, disabling a
+                configuration file association. </para><para>NOTE: Loading and
+                clearing a configuration file will not clear the sprite table.
+                Use the delete sprite table menu option or use the "clear
+                sprite,all" or the "delete sprite,all". Note that the "clear
+                all" command will <emphasis>NOT</emphasis> clear the sprite
+                table while "delete all" will.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>KML&gt;
+  Load KML file...
+  Load KML URL...
+_________________________________________________
+
+  &lt;kml list&gt;
+</programlisting></para></entry>
+
+                <entry><para>Load KML files from a local file or URL
+                respectively. Loaded KML files will be added to the kml list
+                and to a KML panel that is displayed when the KML Panel
+                checkbox is selected. Clicking on the KML entry in the KML
+                panel will "fly to" the selected KML reference location. KML
+                elements are added to the sdt3d KML layer.</para><para>NOTE:
+                The KML standard is not fully supported at this point.
+                Discovering what models fail to load successfully is an
+                exercise for the reader. KML files that cannot be loaded via
+                URL <emphasis>may</emphasis> load successfully when referenced
+                locally.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Save a screenshot</programlisting></para></entry>
+
+                <entry><para>Cause the "sdt3d" application to save a
+                screenshot of the current display to
+                &lt;fileName&gt;</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting id="udp">Listen to UDP port.../UDP Off &lt;port&gt;
+Listen to TCP port.../TCP Off &lt;port&gt;
+</programlisting></para></entry>
+
+                <entry><para>Selecting the "Listen to &lt;protocol&gt;
+                port..." menu items will cause the "sdt3d" application to
+                listen to the requested socket type. A popup window will
+                prompt for the port to listen to and an optional (UDP only)
+                multicast address. </para><para><programlisting>[&lt;addr&gt;/]&lt;port&gt;</programlisting></para><para>Once
+                a socket has been successfully created the menu item will
+                toggle to "&lt;protocol&gt; Off &lt;port&gt;".</para><para>If
+                the application is currently listening on a socket, the menu
+                item will toggle to "Off &lt;port&gt;". Selecting this menu
+                item will close the socket.</para><para>sdt3d sockets will
+                interleave commands, as received, from multiple clients. It is
+                recommended that a gentlemans agreement not to manage links
+                with the same link Id exist amongst clients.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>WWJ offline mode</programlisting></para></entry>
+
+                <entry><para>Turns off worldwind's network tile retrieval
+                process. sdt3d will still be able to display any tiles
+                presently existing in the cache.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Set WWJ cache ...</programlisting></para></entry>
+
+                <entry><para>Sets a non-default cache location for WWJ tiles.
+                This location will be checked for tiles in addition to any
+                located in the default cache. Multiple cache locations may be
+                established. Note that when not in "offline mode", worldWind
+                will continue to update the default cache. A <link
+                linkend="bulkDownload">bulkDownload</link> utility is
+                available that can be used to download worldWind tiles into a
+                local cache.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Exit</programlisting></para></entry>
+
+                <entry>Exits the "sdt3d" application</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </sect3>
+
+      <sect3>
+        <title>View Menu</title>
+
+        <informaltable frame="all">
+          <tgroup cols="2">
+            <tbody>
+              <row>
+                <entry><para><programlisting>Layer Controls&gt;
+  Reset Worldwind layers
+  Remove user defined layers
+  </programlisting></para></entry>
+
+                <entry><para><emphasis>Reset Worldwind Layers</emphasis> will
+                return the Worldwind specific layers to the default
+                configuration. </para><para><emphasis>Remove User Defined
+                Layers</emphasis> will remove all user defined object layer
+                associations and layers.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Bookmarks
+  Bookmark this view
+  Load bookmark
+  Load deafult bookmarks
+_________________________________________________
+
+  &lt;bookmark list&gt;
+</programlisting></para></entry>
+
+                <entry><para>"Bookmark this view" creates a bookmark of the
+                current view. Bookmarked views will be added to the bookmark
+                list and can be subsequently reloaded to return to the saved
+                viewpoint while the application runs.</para><para>Saving the
+                view to disk will prompt the user for a view name and disk
+                location. The saved file will be named &lt;viewName&gt;.xml
+                and can then be subsequently reloaded via the "Load Bookmarks"
+                menu item. If the view is saved to the sdt3d configuration
+                directory (the default location) the view will be loaded when
+                "Load default bookmarks" is invoked. Saved views are available
+                until subsequently deleted. </para><para>Views saved for the
+                current session will only be available until the sdt3d
+                application exits.</para><para>The "Load Default Bookmarks"
+                menu item will load all valid &lt;viewName&gt;.xml files
+                available in the sdt3d configuration
+                directory.</para><para>The "Load Bookmark" menu option will
+                allow a user to load an individual &lt;viewName&gt;.xml file
+                from the file system.</para><para>To load a previously saved
+                or loaded view xml file, select the view from the list of
+                bookmarks.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Globe&gt;
+✓ Round 
+  Flat Earth&gt;
+    Lat/Lon
+    Mercator
+    Sinusoidal
+    ModSinusoidal</programlisting></para></entry>
+
+                <entry><para>Toggles the globe projection between the various
+                options. This is useful when visualizing non geocentric
+                data.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Elevation model</programlisting></para></entry>
+
+                <entry><para>Toggles the elevation model on and
+                off.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Stereo mode</programlisting></para></entry>
+
+                <entry><para>Toggles analglpyh stero mode on and off. (Creates
+                a stereoscopic 3D visualization effect).</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Background color</programlisting></para></entry>
+
+                <entry><para>Changes the background color of the WWJ display.
+                A popup window will prompt for the color. This is useful for
+                non geocentric data visualizations particularly when the
+                Worldwind layers are turned off. Color can be specified by
+                name, rgb, or hex.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Collapse multiple links</programlisting></para></entry>
+
+                <entry><para>Toggles the display of multiple links between two
+                nodes on or off. Multiple links will be collapsed into a
+                single link.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Apply symbol offset</programlisting></para></entry>
+
+                <entry><para>Enabling symbol offset will center the symbol
+                around the node's sprite center rather than around the actual
+                node position point. (Icon images are positioned at node
+                position at image center bottom and so the symbol may not
+                fully "hug" the icon when symbol offset is not
+                enabled.)</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Show 2nd globe</programlisting></para></entry>
+
+                <entry><para>Will popup a window that displays a second globe
+                shared with the main display. This globe can be controlled by
+                an independent view control panel for multiple views of the
+                same globe and its contents. The multiFrame command will also
+                toggle this window.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Log debug output</programlisting></para></entry>
+
+                <entry><para>Toggles whether sdt commands are logged to
+                stdout. If output is currently being logged to an output file
+                it will be stopped. Toggling debugging on via the menu item
+                will direct logging to sdtout. Use the logDebugOutput command
+                to set a debug file name.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Show layer panel</programlisting></para></entry>
+
+                <entry><para>Toggles the layer panel display.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Show sdt panel</programlisting></para></entry>
+
+                <entry><para>Toggles the sdt panel display.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Show status panel</programlisting></para></entry>
+
+                <entry><para>Toggles the status panel display.</para></entry>
+              </row>
+
+              <row>
+                <entry><para><programlisting>Show sdt view controls</programlisting></para></entry>
+
+                <entry><para>Toggles the sdt view controls
+                status.</para></entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </sect3>
+
+      <sect3>
+        <title>SDT view controls checkbox</title>
+
+        <para>Toggles whether automated sdt view controls are disabled. When
+        disabled, sdt view control commands like flyTo and lookAt will be
+        silently ignored. This is useful for when the user wishes to regain
+        control of the view when sdt view commands are being sent via an
+        external mechanism.</para>
+      </sect3>
+
+      <sect3>
+        <title>View Controls</title>
+
+        <para>View Control buttons are available on the bottom left corner of
+        the sdt3d display:</para>
+
+        <para><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="viewControls.png"/>
+            </imageobject>
+          </inlinemediaobject></para>
+
+        <para>Default control keys are also available.</para>
+
+        <para>Mouse with scroll wheel: <informaltable>
+            <tgroup cols="2">
+              <colspec colwidth="12*"/>
+
+              <colspec colwidth="88*"/>
+
+              <tbody>
+                <row>
+                  <entry>Pan</entry>
+
+                  <entry>Left mouse button click &amp; drag - all
+                  directions.</entry>
+                </row>
+
+                <row>
+                  <entry>Zoom</entry>
+
+                  <entry>Use the scroll wheel on the mouse or Left &amp; Right
+                  mouse (both buttons) click &amp; drag - up and down.</entry>
+                </row>
+
+                <row>
+                  <entry>Tilt</entry>
+
+                  <entry>Right mouse button click &amp; drag - up and down or
+                  use "Page Up" and "Page Down" on the keyboard.</entry>
+                </row>
+
+                <row>
+                  <entry>Rotate</entry>
+
+                  <entry>Right mouse button click &amp; drag - left and right.
+                  Note: Crossing the top and bottom half of the screen while
+                  rotating will change direction.</entry>
+                </row>
+
+                <row>
+                  <entry>Stop</entry>
+
+                  <entry>Spacebar</entry>
+                </row>
+
+                <row>
+                  <entry>Reset Heading</entry>
+
+                  <entry>Shift-N</entry>
+                </row>
+
+                <row>
+                  <entry>Reset All</entry>
+
+                  <entry>Shift-R</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </informaltable></para>
+
+        <para>Single button mouse: <informaltable>
+            <tgroup cols="2">
+              <colspec colwidth="12*"/>
+
+              <colspec colwidth="88*"/>
+
+              <tbody>
+                <row>
+                  <entry>Pan</entry>
+
+                  <entry>Left mouse button click &amp; drag - all directions.
+                  L left mouse button click once to center view.</entry>
+                </row>
+
+                <row>
+                  <entry>Zoom</entry>
+
+                  <entry>Hold "Ctrl" on the keyboard and Left mouse button
+                  click &amp; drag - up and down</entry>
+                </row>
+
+                <row>
+                  <entry>Tilt</entry>
+
+                  <entry>Hold "Shift" on the keyboard and Left mouse button
+                  click &amp; drag - up and down or use "Page Up" and "Page
+                  Down" on the keyboard</entry>
+                </row>
+
+                <row>
+                  <entry>Rotate</entry>
+
+                  <entry>Hole "Shift" on the keyboard and Left mouse button
+                  click &amp; drag - left and right</entry>
+                </row>
+
+                <row>
+                  <entry>Stop</entry>
+
+                  <entry>Spacebar</entry>
+                </row>
+
+                <row>
+                  <entry>Reset Heading</entry>
+
+                  <entry>Shift-N</entry>
+                </row>
+
+                <row>
+                  <entry>Reset All</entry>
+
+                  <entry>Shift-R</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </informaltable></para>
+      </sect3>
+    </sect2>
+
+    <sect2>
+      <title>"sdt" Usage</title>
+
+      <para>To run "sdt" with script file "script.sdt":</para>
+
+      <programlisting>sdt input script.sdt</programlisting>
+
+      <para>Alternatively the input script can be loaded from the file menu
+      after "sdt" is invoked.</para>
+
+      <para><anchor id="_MGEN_Script_Format"/>By default, "sdt" monitors stdin
+      for commands.  The user may even type commands and manipulate the "sdt"
+      display manually via sdtin, but it is generally expected that another
+      process will control the "sdt" display, even to the point of providing
+      very dynamic updates to produce animations. "sdt" will also accept
+      commands sent over a protopipe named <emphasis>sdt</emphasis> by
+      default.</para>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title id="real-time"><link id="real-time" linkend="real-time">Sending
+    real time commands to sdt applications.</link></title>
+
+    <para>To send real time commands to a sdt application use the "sdtcmd"
+    utility:</para>
+
+    <para><programlisting>sdtcmd &lt;sdt commands&gt;
+</programlisting></para>
+
+    <para>The "sdtcmd" utility is available in the binary distributions or can
+    be built from within the sdt source distribution.</para>
+
+    <para>By default, sdt creates an input pipe that it monitors for sdt
+    commands. The pipe is named <emphasis>sdt</emphasis> by default. It is
+    generally expected that another process will control the sdt display, even
+    to the point of providing very dynamic updates to produce
+    animations.</para>
+
+    <para>To send any quoted value to an sdt application via "sdtcmd", the
+    string to be quoted must be enclosed in single quotes. Note that nested
+    quotes are not allowed.</para>
+
+    <para>For example:</para>
+
+    <para><programlisting># Update the status of an sdt display
+sdtcmd status "New Status Text"
+
+# Draw a sphere around node m1-node08
+sdtcmd node m1-node08 symbol sphere</programlisting></para>
+
+    <para>To send sdt commands to an sdt instance named other than the
+    default, use the instance command:</para>
+
+    <programlisting># Send sdt commands to an sdt instance named sdt2
+# and move m1-node03 to position X,Y and set the label color to cyan
+sdtcmd instance sdt2 node m1-node03 position -77.005610,38.824472,0.000000 label cyan</programlisting>
+  </sect1>
+
+  <sect1>
+    <title>Passing command line arguments to an application.</title>
+
+    <para>Sdt commands may be passed to sdt3d application via command line
+    arguments. Multiple commands can be sent. From the command line:</para>
+
+    <para>OSX</para>
+
+    <para><programlisting>
+# Option 1: invoke the sdt3d script file in the sdt3d.app bundle, e.g.
+
+# Set and load a user configuration file
+./std3d.app/Contents/Resources/script userConfigFile &lt;fileName&gt;
+
+# Load an input script upon startup
+./sdt3d.app/Contents/Resources/script input &lt;fileName&gt;
+
+# Send a series of sdt commands
+./sdt3d.app/Contents/Resources/script status "some status" node ljt pos -120.8025,35.7528,2.0 symbol sphere
+
+
+# Option 2: invoke the script via the example startup script in examples/startup-scripts/macosx
+
+# Listen to TCP port 50000 on startup
+# You must change the path in the startup script if you are not in the examples/startup-scripts/macosx directory
+./start-sdt3d.sh LISTEN TCP,50000</programlisting></para>
+  </sect1>
+
+  <sect1>
+    <title>sdt Scripts</title>
+
+    <para>sdt scripts are text files containing a sequence of commands.
+    Comments may be embedded within sdt scripts by preceding them with a '#'.
+    Script files can include other scripts with the INPUT command. Script
+    files included this way will be processed "in line", meaning that when the
+    INPUT command is encountered within a script, all commands in the included
+    script will be processed before any subsequent commands in the original
+    script. Note that this is in contrast with input commands received over
+    the command pipe. In this case the files will be processed
+    serially.</para>
+  </sect1>
+
+  <sect1>
+    <title><link linkend="configuration"><link id="configuration"
+    linkend="configuration"><olink
+    id="configuration">Configuration</olink></link></link></title>
+
+    <para>sdt3d configuration files are stored in the
+    &lt;userHomeDir&gt;/.config/sdt3d directory. This directory will be
+    created automatically upon application startup if it does not already
+    exist. The application will also look for the sdt.properties file in this
+    directory and create the file if it does not exist.</para>
+
+    <sect2>
+      <title os="">sdt.properties</title>
+
+      <para>The "sdt.properties" contains a set of key-value pairs that define
+      system-wide sdt properties. Currently only the userPreferencesFile
+      property is supported. This key-value pair should be used to point to a
+      user defined preferences file. By default this file name is set to
+      sdt.settings and should be a regular text file. sdt3d will look for this
+      file in the configuration file directory, as fully qualified, or as
+      defined by the sdt3d file lookup rules. It is not required that the
+      sdt.settings file exists.</para>
+
+      <para><programlisting># Default sdt.properties setting
+userPreferencesFile sdt.settings
+
+</programlisting></para>
+
+      <para>The user may override the sdt.settings filename and/or
+      location:</para>
+
+      <programlisting># The user may override the sdt.settings file name and/or location
+userPreferencesFile /home/nrl/nrl-sdt.settings
+
+</programlisting>
+    </sect2>
+
+    <sect2>
+      <title>userPreferencesFile</title>
+
+      <para>The userPreferencesFile defined in the sdt.properties file can be
+      used to set overall user preferences for the sdt3d application. It may
+      contain any valid sdt command and should be a regular text file. This
+      file will be loaded upon system startup, whenever an input file is
+      loaded, or when the system is reset. In this sample file, a default
+      search path is specified and the application is directed to start
+      listening on tcp port 5000.</para>
+
+      <para><programlisting>#######################################################################
+#
+#  settings.sdt
+#
+#  Use this file to define user preferences
+#
+#######################################################################
+
+
+path "examples/;examples/sprites/;../examples/;../examples/sprites/;/Users/ljt/Projects/sdt/examples/sprites;/Users/ljt/Desktop/demo/dc-models;"
+
+listen tcp,5000
+status "Listening to tcp port 5000"
+</programlisting></para>
+    </sect2>
+
+    <sect2>
+      <title><link id="userConfigurationFile"
+      linkend="configuration">userConfigFile</link></title>
+
+      <para>A "user configuration file" can be defined that associates a sdt
+      script file that will be loaded every time a new sdt input script is
+      loaded via the menu option, when the system command "userConfigFile" is
+      encountered in a sdt command sequence, or when the system is reset. This
+      file can contain any valid sdt commands and should be a regular text
+      file. It can be used, for example, to define sdt configurations
+      particular to a common set of scenarios or run-time operations (e.g.
+      sprite types, terrain overlays, elevation overlays). By default the
+      application will look for this file in the configuration directory, as
+      fully qualified, or as defined by the sdt3d file lookup rules.</para>
+
+      <para>The configuration file menu options or the userConfigFile command
+      can be used to clear a userConfigFile association or associate a
+      different userConfigFile. Note that loading a userConfigFile from the
+      menu will cause the application to:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>stop reading any input file</para>
+        </listitem>
+
+        <listitem>
+          <para>clear all system state with the exception of the sprite
+          table</para>
+        </listitem>
+
+        <listitem>
+          <para>reload any userPreferencesFile</para>
+        </listitem>
+
+        <listitem>
+          <para>load configuration file</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>whereas loading a configuration file via the userConfigFile
+      command will</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>associate the file to be loaded upon subsequent system reset
+          events or when an input script is loaded via the menu command</para>
+        </listitem>
+
+        <listitem>
+          <para>load configuration file</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>NOTE: If the configuration file is being used to change sprite
+      types, use the "delete sprite,all" command to empty the sprite
+      table.<programlisting>#######################################################################
+#
+#  userConfigFile.sdt
+#
+#  Use this file to define user configurations, e.g. sprites, overlays
+#
+#######################################################################
+
+delete sprite,all
+
+sprite uav image uav.png size 72,20
+sprite helo image helo.png size 105,43
+sprite truck image vehicle.gif size 79,73
+
+# Set the background boundary coordinates
+bgbounds -77.028633,38.828533,-77.003298,38.817720
+
+
+# Load itmOverlay tile
+tile radarOverlay tileImage itmOverlay.png sector -77.083194,38.895139,-76.969306,38.778750</programlisting></para>
+    </sect2>
+
+    <sect2>
+      <title>File load sequence</title>
+
+      <para>When an input file is loaded via the menu option the application
+      will:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>stop reading any input file</para>
+        </listitem>
+
+        <listitem>
+          <para>clear all system state with the exception of the sprite
+          table</para>
+        </listitem>
+
+        <listitem>
+          <para>reload any userPreferencesFile</para>
+        </listitem>
+
+        <listitem>
+          <para>load configuration file</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>When an inputFile command is embedded within a sdt script the
+      application will:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>immediately process the input file in its entirety before the
+          next command in the containing script or command sequence</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Similarly, when an inputFile command is received over a pipe the
+      application will:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>process the file in its entirety before any other commands
+          received over the pipe are processed</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>When a configuration file is loaded via the menu option the
+      application will:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>stop reading any input file</para>
+        </listitem>
+
+        <listitem>
+          <para>clear all system state with the exception of the sprite
+          table</para>
+        </listitem>
+
+        <listitem>
+          <para>reload any userPreferencesFile</para>
+        </listitem>
+
+        <listitem>
+          <para>load the specified configuration file</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Clearing a configuration file via menu option will:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>stop reading any input file</para>
+        </listitem>
+
+        <listitem>
+          <para>clear all system state with the exception of the sprite
+          table</para>
+        </listitem>
+
+        <listitem>
+          <para>reload any userPreferencesFile</para>
+        </listitem>
+
+        <listitem>
+          <para>disable any configuration file association</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Clearing a configuration file via a sdt "userConfigFile none"
+      command will:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>simply disable any configuration file association</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Appending a file via the "append file" menu option will process
+      the designated file after any currently loading script is
+      completed.</para>
+    </sect2>
+
+    <sect2>
+      <title>Deleting the sprite table</title>
+
+      <para>As loading sprites can be time consuming the sprite table will not
+      be emptied upon each script load. The sprite table can be emptied as
+      follows:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>when the "Delete sprite table" menu item is invoked</para>
+        </listitem>
+
+        <listitem>
+          <para>via the "delete sprite,all" the "delete all", or the "clear
+          sprite,all" commands. (Note that "clear all" does NOT delete the
+          sprite table).</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>NOTE: If a given named sprite definition already exists in the
+      application, it will not be reloaded when a duplicate sprite definition
+      is encountered. (Assuming the image associated with the sprite type
+      remains the same.) This will reduce system processing when configuration
+      files are used to define sprite types. Any new or changed attributes
+      will be applied to the sprite, but not to any nodes associated with the
+      sprite.)</para>
+
+      <para>Note that the "<link linkend="default">default</link>" sprite will
+      not be deleted when the sprite table is deleted. The "delete
+      sprite,default" command can be used if it is necessary to remove the
+      <link linkend="default">default</link> sprite.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="sdtcommands">
+    <title>sdt Commands</title>
+
+    <para>The sdt command set is made up of key-value pairs separated by white
+    space. Simpler commands (such as commands to control the background, or
+    the WAIT command) are simple key-value pairs. In some cases the value of
+    simple commands may be a comma-delimited list. More complex commands are
+    made up of "objects" (e.g. node, link, sprite) and their "options" (e.g.
+    position, color). "Options" may also have a comma-delimited set of
+    attributes. Options are exclusive to an object type.</para>
+
+    <para>The basic grammar is as follows:</para>
+
+    <para><programlisting>&lt;key&gt; [&lt;value&gt;]</programlisting><programlisting>&lt;objectType&gt; &lt;objectName&gt; [&lt;option&gt; &lt;attributeList&gt;]</programlisting>An
+    option's attribute list need not be fully qualified, but elements omitted
+    <emphasis>within</emphasis> a list should be set to "X" to indicate "use
+    the default value or the last attribute assigned". For example, the
+    default attribute list for a symbol option has the following
+    defaults:<programlisting># color = red
+# outline thickness = 3
+# width = width of sprite
+# height = height of sprite
+# opacity = 0.15
+#symbol &lt;symbolType&gt;[,&lt;color&gt;,[&lt;thickness&gt;[,&lt;width&gt;[,&lt;height&gt;[,opacity]]]]
+</programlisting></para>
+
+    <para>To draw a blue sphere centered around node and sized to the node's
+    sprite with a 15% opacity, the following command may be used:</para>
+
+    <para><programlisting>node node01 symbol sphere,blue</programlisting></para>
+
+    <para>To alter the opacity of the sphere to 95% opacity, in a subsequent
+    command:</para>
+
+    <programlisting>node node01 symbol sphere,X,X,X,X,0.95</programlisting>
+
+    <para>To increase the size of the sphere to 300 meters, retaining other
+    attributes (e.g. color blue, 95% opacity):</para>
+
+    <para><programlisting>node node01 symbol sphere,X,X,300,X,X</programlisting></para>
+
+    <para><emphasis role="bold"><emphasis>To turn the symbol red, 300 meters
+    wide, 95% opacity:</emphasis></emphasis></para>
+
+    <para><programlisting>node node01 symbol sphere,red,X,X,X,X</programlisting><emphasis
+    role="bold"/></para>
+
+    <sect2>
+      <title os="">sdt Objects</title>
+
+      <para>The set of sdt "objects" includes: sprite, node, region, link,
+      tile, kml, view, and popup. The name associated with an object can be
+      any string, with the exception of the link command which must be made up
+      of valid node names being "linked" e.g. "link node01:node02". (See below
+      for more detail on the command).</para>
+
+      <para>Some sdt "objects" may have other "objects" as options. For
+      example:</para>
+
+      <para><programlisting># Define a sprite type
+sprite truck image truck.png size 52,25
+
+# Now define a node and associate it with the sprite "truck"
+node node-01 type truck </programlisting></para>
+
+      <para>If an object with the associated object name already exists, the
+      previously defined object will be used and any attribute changes will be
+      made to the previously defined object. For example:</para>
+
+      <programlisting># Define a node
+node node-01 type truck label blue
+
+# Set the position of node-01, all other attributes remain the same
+node node-01 position -77.025146,38.822059</programlisting>
+
+      <para>sdt "objects" can be deleted with the delete
+      &lt;objectType&gt;,&lt;name&gt; command. Note that delete
+      &lt;objectType&gt;,all will delete all the objects of the specified
+      type.</para>
+
+      <programlisting># Delete node node-01
+delete node,node-01
+
+# Delete all nodes
+delete node,all </programlisting>
+    </sect2>
+
+    <sect2>
+      <title><link id="layers" linkend="layers">User Defined
+      Layers</link></title>
+
+      <para>In addition to Worldwind and the default sdt layers that can be
+      toggled on and off, "sdt3d" supports the creation of "User Defined"
+      layers. A limited set of sdt "objects" and "attributes" can be
+      associated with these layers; the set includes nodes, symbols, labels,
+      links, regions, and tiles. "User Defined" layers are placed
+      automatically in the layer so named.</para>
+
+      <para>The "layer" command will create an empty "User Defined" layer that
+      can then be subsequently associated with objects, e.g. the
+      command:<programlisting>layer "NRL Layer"</programlisting>will create a
+      checkbox associated with a layer called "NRL Layer" under the "User
+      Defined" section on the layer panel. Objects are assigned to user
+      defined layers via the &lt;objectType&gt;Layer attribute. For
+      example:<programlisting>node node1 nodeLayer "NRL Layer"</programlisting>will
+      assign the node named "node1" to the user defined layer "NRL Layer".
+      When "NRL Layer" is toggled on and off, the display of "node1" and all
+      its associated attributes (label, symbol, sprite, links) will be toggled
+      on and off. Likewise,<programlisting>node node2 symbol sphere symbolLayer "NRL Layer"</programlisting>will
+      assign node2's symbol to the "NRL Layer". Toggling the "NRL Layer" then,
+      will toggle node1 and all its attributes and the display of node2's
+      symbol. Once an element of a node has been assigned to a user defined
+      layer, the node itself cannot then be subsequently assigned to another
+      layer. Likewise, once a node is assigned to a layer, none of it's
+      elements may then be assigned to another layer.</para>
+
+      <para>By default the layer will be turned "on" when initially specified.
+      Layers can be toggled on and off via the on-off attribute. The layer
+      on-off attribute defaults to on:<programlisting>layer &lt;layerName&gt;[,on|off]</programlisting></para>
+
+      <para><emphasis role="bold">Note:</emphasis> The layer command need not
+      be used. "User Defined" layers will be created automatically when
+      &lt;object&gt;Layer commands are used if they layer has not already been
+      created.<programlisting>node node2 nodeLayer "NRL Layer"</programlisting>Layers
+      can also be nested. Use double colons to indicate nested
+      layers:<programlisting>node node3 nodeLayer "NRL Layer::Links::wifi
+node node3 nodeLayer "NRL Layer::Links::ethernet</programlisting><emphasis
+      role="bold">Note:</emphasis> When using "nested" layers, sdt objects may
+      only be assigned to the tree "leafs". E.g. in the above example sdt
+      objects may only be assigned to the "wifi" or the "ethernet" layers.
+      Nested layers must be fully specified when assigned to sdt objects, or
+      when the layer is toggled on or off e.g.<programlisting>node node4 nodeLayer "NRL Layer::Links::wifi"
+
+layer "NRL Layer::Links::wifi,off</programlisting>Layer names need not be
+      unique when nested. <emphasis role="bold">NOTE: </emphasis>If an element
+      has been assigned to a layer, further nested layers cannot be
+      assigned.</para>
+
+      <para>At present, only user defined links are in distinct layers from
+      the primary sdt layer assignement. User defined toggles are available to
+      toggle "user defined" link labels, markers, and links on and off. Other
+      sdt objects (nodes, symbols, regions) <emphasis>can</emphasis> be
+      assigned to a user defined layers but the renderable visibility is
+      restricted to the sdt layer toggle. For example:</para>
+
+      <programlisting>node node1 symbol sphere nodeLayer test </programlisting>
+
+      <para>node1 (and all its renderables) will be toggled on and off when
+      the user defined "test" layer is toggled on and off, but the symbol,
+      label, icon associated with node1 will be toggled off via the sdt layers
+      toggle for each attribute. On the other hand when links are put into a
+      link layer, the display links of ethLinks will be controlled by the user
+      defined link layer controlls, not the sdt "network links" checkbox
+      toggle: <programlisting>link node1,node2 linkLayer ethLinks</programlisting></para>
+    </sect2>
+
+    <sect2>
+      <title>sdt Colors</title>
+
+      <para>Valid "sdt3d" named colors are black, white, yellow, green, blue,
+      cyan, red, pink, orange, magenta, purple, and gray. Other colors can be
+      specified by their rgb or hex values. For example:</para>
+
+      <programlisting># Set sphere color to named color "red"
+node node1 symbol sphere,red
+
+# Set sphere color to red rgb value
+node node1 symbol sphere,255:0:0
+
+#Set sphere color to red hex value 
+node node1 symbol sphere,0xff0000</programlisting>
+    </sect2>
+
+    <sect2>
+      <title>Background Commands</title>
+
+      <para>These commands control the display of the sdt background:</para>
+
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><para>bgimage &lt;imageFile&gt;</para></entry>
+
+              <entry><para>The indicated &lt;imageFile&gt; is used as the
+              background image in the sdt display.  A number of standard image
+              formats are supported.  Note the use of a background image is
+              optional. (<emphasis>"sdt" only</emphasis>)</para></entry>
+            </row>
+
+            <row>
+              <entry><para>bgbounds
+              &lt;left&gt;,&lt;upper&gt;,&lt;right&gt;,&lt;lower&gt;</para></entry>
+
+              <entry><para>Sets the background boundary coordinates. In
+              "sdt3d" the display will pan to the center of these
+              latitude/longitude coordinates.</para></entry>
+            </row>
+
+            <row>
+              <entry><para>bgscale &lt;factor&gt;</para></entry>
+
+              <entry><para>The size of the background is proportionally scaled
+              according to the given &lt;factor&gt; value.  Any positive
+              floating point value may be used. (<emphasis>"sdt"
+              only</emphasis>)</para></entry>
+            </row>
+
+            <row>
+              <entry><para>bgsize &lt;width&gt;,&lt;height&gt;</para></entry>
+
+              <entry><para>The background image is scaled to the size
+              specified by the &lt;width&gt; and &lt;height&gt; parameters.
+               If one of the parameters is less than zero, the image's aspect
+              ratio is preserved and the image is scaled to match its
+              corresponding dimension to the non-zero parameter given.
+              ("<emphasis>sdt" only)</emphasis></para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+
+      <para/>
+    </sect2>
+
+    <sect2>
+      <title id="sprite">Sprite Commands</title>
+
+      <para>These commands are used to define a set of sprites (icons) and
+      their characteristics:</para>
+
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><para>sprite &lt;spriteName&gt;</para></entry>
+
+              <entry><para>This creates a new sprite instance of name
+              &lt;spriteName&gt; or addresses a previously created sprite
+              instance for application of other Sprite Commands (i.e. image,
+              scale, size).  The default "size" of a new sprite is 32x32
+              pixels.</para></entry>
+            </row>
+
+            <row>
+              <entry><para>image &lt;imageFile&gt;</para></entry>
+
+              <entry><para>This assigns the &lt;imageFile&gt; given to be
+              displayed for nodes of the given sprite type. (e.g. "sprite Car
+              image car.png"). When an image for the sprite is specified, the
+              image is scaled such that the smallest dimension (width or
+              height) equals the minimum dimension of the sprite (32 by
+              default).</para><para>3D Models and KML Models can also be
+              associated with sprite images. See the <link
+              linkend="sprite-kml-models">Sprite KML Models</link> section for
+              more information specific to kml sprite types. </para><para>The
+              &lt;imageFile&gt; may also be an xml configuration file for a 3d
+              model. The xml file may include the sprite attributes listed
+              here, as well as an orientation command to override the default
+              model positioning in the 3ds and xml files. See the <link
+              linkend="sprite-xml-config-files">3d XML config file</link>
+              section for more information.</para><para>sdt will first attempt
+              to open the imageFile as specified e.g. as fully qualified,
+              relative to the current directory, or in the current directory.
+              If not found, it will search for the file in any path(s)
+              previously specified with the sdt PATH command. Finally, it will
+              look for the file in the same directory as the current input
+              script, if any. ("sdt3d" only)</para><para>Note that changing
+              the sprite's image will not change the image of nodes already
+              assigned the sprite, but any subsequent nodes assigned the
+              sprite will be associated with the new image. </para></entry>
+            </row>
+
+            <row>
+              <entry><para>scale &lt;factor&gt;</para></entry>
+
+              <entry><para>The size of the sprite and its associated image (if
+              given) is proportionally scaled according to the given
+              &lt;factor&gt; value.  Any positive floating point value may be
+              used. </para><para>Note that changing the sprite's scale factor
+              will only be applicable to future nodes assigned to the
+              sprite.</para></entry>
+            </row>
+
+            <row>
+              <entry><para>size &lt;width&gt;,&lt;height&gt;</para></entry>
+
+              <entry><para>This assigns width and height sizes to the given
+              sprite. The dimensions are in pixels for image files and meters
+              for 3D Models.  If an image is already specified, the image is
+              scaled to directly match the given dimensions. If one of the
+              parameters is less than zero, the image's aspect ratio is
+              preserved and the image is scaled to match its corresponding
+              dimension to the non-zero parameter given. Either length or size
+              can be set for 3D sprites but not both. The size attribute takes
+              precedence over the length attribute if both are set and length
+              will be set to the given width.</para></entry>
+            </row>
+
+            <row>
+              <entry><para>light [on|off]</para></entry>
+
+              <entry><para>Controls whether "sdt3d" should apply lighting to a
+              3D sprite. By default, lighting is disabled. Check the 3D
+              model's attributes to determine the correct setting. Note that
+              the last light setting will be applied to all sprites that
+              reference the 3ds model.</para></entry>
+            </row>
+
+            <row>
+              <entry><para>length &lt;lengthInMeters&gt;</para></entry>
+
+              <entry><para>Sets a length in meters for 3D sprites. Either
+              length or size can be specified but not both. The size attribute
+              takes precedence over the length attribute if both are set and
+              length will be set to the given width. If a length is set the
+              model will not scale as the viewport changes.</para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+
+      <para>Note that in Linux environments the names of the 3ds texture files
+      must be the same case as the file name in the 3ds file, otherwise
+      texture will not be applied to the model.</para>
+
+      <sect3>
+        <title><link id="default" linkend="default">Default
+        Sprite</link></title>
+
+        <para>By default a transparant sprite will be assigned to each node if
+        no sprites have been loaded by the user (required to support certain
+        sdt functions that rely on a sprite assignment such as the "follow"
+        command). Note however that the first sprite defined <emphasis>by the
+        user</emphasis> will become the sprite associated with any nodes with
+        no explicit sprite assignment via the "type" command.</para>
+      </sect3>
+
+      <sect3>
+        <title id="sprite-kml-models">Sprite KML Models</title>
+
+        <para>Sprites can be associated with both kmz and kml files.
+        <programlisting>sprite walkingMan image 3D_Man_Walking.kmz scale 15
+
+sprite crowd image crowd/doc.kml length 10</programlisting>kmz files are
+        zipped files containing all the files necessary to render a model. If
+        the kml model is not compressed, the doc.kml file describing the model
+        and it's associated files will be located in a directory.</para>
+
+        <para><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="kml-files.png"/>
+            </imageobject>
+          </inlinemediaobject></para>
+
+        <para>Note that loading many or significantly complex kml/kmz files
+        may impact sdt3d performance. Further note that not all features of
+        the kml standard are currently supported.</para>
+      </sect3>
+
+      <sect3>
+        <title id="sprite-xml-config-files">Sprite XML config files</title>
+
+        <para>Sprites attributes (including any model orientation overrides)
+        for kml and 3ds models can be assigned in an xml configuration file.
+        Overriding the model orientation is useful when the default model
+        orientation does not true up with the best orientation for a scenario.
+        For example, if the default orientation of a 3ds model is due
+        south:<programlisting>sprite stealth image stealth/stealth.3ds scape 20
+node stealth type stealth</programlisting><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="stealth-1.png"/>
+            </imageobject>
+          </inlinemediaobject></para>
+
+        <para>The default model orientation can be changed (and any other
+        sprite attribute listed in the table above) in a model xml
+        configuration file:</para>
+
+        <programlisting># stealth.xml
+
+&lt;?xml version="1.0"?&gt;
+&lt;models&gt;
+  &lt;model&gt;
+    &lt;type&gt;3ds&lt;/type&gt;
+    &lt;file&gt;stealth/stealth.3ds&lt;/file&gt;
+    &lt;length&gt;0&lt;/length&gt;
+    &lt;orientation&gt;0,180,0&lt;/orientation&gt;
+    &lt;scale&gt;10&lt;/scale&gt;
+    &lt;size&gt;-1,-1&lt;/size&gt;
+  &lt;/model&gt;
+&lt;/models&gt;</programlisting>
+
+        <para><programlisting>sprite stealth image stealth.xml 
+node stealth type stealth</programlisting><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="stealth-2.png"/>
+            </imageobject>
+          </inlinemediaobject></para>
+
+        <para>Any subsequent node orientation will be relative to this initial
+        model setting. Node orientation will be calculated by sdt3d by default
+        based on node position settings. The "orientation" command can be used
+        to set either an absolute orientation (meaning the orientation is that
+        provided in the orientattion command) or relative orientation (meaning
+        any orientation is relative to the node heading as calculated by
+        sdt3d).</para>
+
+        <programlisting>node stealth orientation 0,90a,0</programlisting>
+
+        <para><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="stealth-3.png"/>
+            </imageobject>
+          </inlinemediaobject></para>
+
+        <para>In general it is best to set the model's default orientation to
+        due north such that subsequent node and symbol orientation commands
+        are applied correctly.</para>
+
+        <para>Note that loading many or significantly complex kml/kmz files
+        may impact sdt3d performance. Further note that not all features of
+        the kml standard are currently supported.</para>
+
+        <sect4>
+          <title>Sprite XML Document Description</title>
+
+          <para>The sprite xml document can be used to set sprite attributes
+          and model orientation. Like other XML files the document starts
+          withi xml tags. The model definition is embedded within the "model"
+          xml tag. Support for multiple models in a single xml file is not yet
+          supported.</para>
+
+          <para>For sprite attributes not discussed below refer to the <link
+          linkend="sprite">sprite table</link>.</para>
+
+          <programlisting>&lt;?xml version="1.0"?&gt;
+&lt;model-info&gt;
+  &lt;model&gt;...&lt;/model&gt;
+&lt;/model-info&gt;</programlisting>
+        </sect4>
+
+        <sect4>
+          <title>&lt;type&gt;</title>
+
+          <para>The type parameter identifies the model type.</para>
+
+          <para>Type: String</para>
+
+          <para>Valid values: [KML,3ds]</para>
+
+          <para>XML Format: &lt;type&gt;VALUE&lt;type&gt;</para>
+        </sect4>
+
+        <sect4>
+          <title>&lt;file&gt;</title>
+
+          <para>The file parameter is the name of the kml/or 3ds file. sdt3d
+          will look for the file as specified e.g. as fully qualified,
+          relative to the current directory, or in the current directory. If
+          not found, it will search for the file in any path(s) previously
+          specified with the sdt PATH command. Finally, it will look for the
+          file in the same directory as the current input script, if
+          any.</para>
+
+          <para>Type: String</para>
+
+          <para>Valid values: any 3ds or kml filename (e.g.
+          helicopter/doc.kml, 28HORNET_jet/HORNET_L.3ds, plane.kmz)</para>
+
+          <para>XML Format: &lt;file&gt;VALUE&lt;/file&gt;</para>
+        </sect4>
+
+        <sect4>
+          <title>&lt;length&gt;</title>
+
+          <para>The length sets the length of the 3d model (3ds models only)
+          as described in the sprite attribute table.</para>
+
+          <para>Type: String</para>
+
+          <para>Valid values: int</para>
+
+          <para>XML Format: &lt;length&gt;VALUE&lt;/length&gt;</para>
+        </sect4>
+
+        <sect4>
+          <title>&lt;orientation&gt;</title>
+
+          <para>The orientation command sets the initial model orientation.
+          The yaw attribute can be set to absolute or relative. In general a
+          relative setting should be used - meaning the model yaw will be
+          relative to any node heading. An absolute yaw will always render the
+          model at the provided yaw.</para>
+
+          <para>Type: String</para>
+
+          <para>Valid Values:
+          &lt;pitch&gt;,&lt;yaw&gt;[a|r],&lt;roll&gt;</para>
+
+          <para>XML Format:
+          &lt;orientation&gt;VALUE&lt;/orientation&gt;</para>
+        </sect4>
+
+        <sect4>
+          <title>&lt;light&gt;</title>
+
+          <para>The light boolean sets turns lighting on for the model (3ds
+          models only).</para>
+
+          <para>Type: String</para>
+
+          <para>Valid values: [on,off]</para>
+
+          <para>XML format: &lt;light&gt;VALUE&lt;/light&gt;</para>
+        </sect4>
+      </sect3>
+    </sect2>
+
+    <sect2>
+      <title id="node">Node Commands</title>
+
+      <para>These commands are used to instantiate nodes, assign an image to
+      them, and set their position and other characteristics:</para>
+
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <colspec colwidth="451*"/>
+
+          <colspec colwidth="549*"/>
+
+          <tbody>
+            <row>
+              <entry><para>node &lt;nodeName&gt;</para></entry>
+
+              <entry><para>This creates a new node instance of name
+              &lt;nodeName&gt; or addresses a previously created node instance
+              for application of other Node Commands (i.e. type, position,
+              label).  Multiple Node Commands may be given following the "node
+              &lt;nodeName&gt; specification.  By default, the first sprite in
+              the sdt sprite list is assigned to the node.<emphasis
+              role="bold"/></para></entry>
+            </row>
+
+            <row>
+              <entry><para>type &lt;spriteName|none&gt;</para></entry>
+
+              <entry><para>This assigns the sprite of the indicated
+              &lt;spriteName&gt; as the image used to represent the specified
+              node on the sdt display (e.g. "node Alpha type Car".  A special
+              reserved &lt;spriteName&gt; of "none" is used to indicate the
+              specified node should not be displayed.</para><para><emphasis
+              role="bold"><emphasis>By default a transparant sprite will be
+              assigned to each node if no sprites have been loaded by the user
+              (required to support certain sdt functions that rely on a sprite
+              assignment such as the "follow" command). Note however that the
+              first sprite defined <emphasis>by the user</emphasis> will
+              become the sprite associated with any nodes with no explicit
+              sprite assignment via the "type" command. Specify type "none" to
+              disable the assignment of a default sprite
+              type.</emphasis></emphasis></para></entry>
+            </row>
+
+            <row>
+              <entry><para>position
+              &lt;x&gt;,&lt;y&gt;[,&lt;z&gt;],[{c|g}],[{msl|agl}]]</para></entry>
+
+              <entry><para>This command is used to specify the current
+              position (and altitude if specified) of the given node.  The
+              &lt;x&gt; attribute assigns longitude, the &lt;y&gt; attribute
+              assigns latitude, and the optional &lt;z&gt; attribute sets
+              altitude.</para><para>If no altitude is specified, the node will
+              be positioned at terrain elevation in "sdt3d". Altitude is not
+              useful in "sdt2d" and will be ignored. </para><para>The
+              coordinates can be specified in either the geodesic or cartesian
+              coordinate system. Geodesic is the default. Cartesitan
+              coordinates will be relative to the geodesic position 0,0,0
+              unless the origin command is used. All cartesian coordinates
+              specified after an <link linkend="origin">origin</link> command
+              has been set will be offset from the geodesic
+              origin.</para><para><programlisting># Position node at geodesic coordinates
+node node1 pos -77.005217,38.819009,0
+
+# Explicitly position node at geodesic coordinates
+node node1 pos -77.005216,38.819009,0,g
+
+# Position node at cartesian coordinates 
+# Origin defaults to geodesic coordinate 0,0,0
+node node1 position 0,0,0,c
+
+# Position node at cartesian coordinates relative to 
+# geodesic origin position
+origin -77.005610,38.830373,0.000000
+node node1 position 10,10,0,c</programlisting></para><para>Any altitude
+              specified will position the node at AGL by default (e.g.
+              distance above ground level) or at the default altitude assigned
+              by the <link
+              linkend="defaultAltitudeType">defaultAltitudeType</link>
+              command. The "agl" or "msl" attributes will override the
+              default, and position the node at the given elevation above
+              ground level or at mean sea level respectively. To retain the
+              last assigned elevation set the altitude to "X",
+              e.g.</para><programlisting># set altitude to 300 meters agl (default)
+node node1 position -77.005217, 
+38.819009,300.000000
+
+# change the location, retain the 
+# previously specified altitude
+node node1 position -77.005217,38.820009,x
+
+# position the node at agl
+node node1 position x,x,x,agl
+
+# Position node2 at terrain elevation (default)
+node node2 position -77.005217,38.820009
+
+or
+
+node node2 position -77.005217,38.820009,0</programlisting><para>Note that any
+              nodes positioned below mean sea level will be positioned at seal
+              level for this release of "sdt3d".</para><para>Note that in sdt
+              2D the coordinates are in units of the coordinate system defined
+              by the bgbounds commands. </para></entry>
+            </row>
+
+            <row>
+              <entry><para>orientation
+              &lt;pitch&gt;[,&lt;yaw&gt;[a|r][,&lt;roll&gt;]]</para></entry>
+
+              <entry><para>This command can be used to specify the orientation
+              of any 3D model (KML, 3ds, etc) associated with the node. Set
+              each attribute in degrees [0-360]. The &lt;pitch&gt; attribute
+              changes the vertical direction of the model with respect to the
+              earth's surface. The &lt;yaw&gt;, or "heading", attribute
+              defines the motion of the 3D model from side to side with 0
+              degrees being due north. The &lt;roll&gt; attribute changes the
+              orientation of the model with respect to the downward force of
+              gravity (e.g. around its longitudinal axis), with 0 degrees
+              being "wings level".</para><para>By default the yaw will be
+              relative to the node's heading. Use the "a" attribute to make
+              the model's heading "absolute", e.g. to make a model orient 30
+              degrees regardless of node heading:<programlisting>orientation x,30a</programlisting></para><para>This
+              command will be ignored for 2d sprites.</para></entry>
+            </row>
+
+            <row>
+              <entry><para>label
+              on|&lt;color&gt;|off,[,&lt;text&gt;]</para></entry>
+
+              <entry><para>This indicates whether or not a text label should
+              be displayed for the indicated node.  By default, a cyan label
+              using the node's name is displayed below the node's sprite
+              image. </para><para>To hide the label for a node use the command
+              </para><para><programlisting>node &lt;nodeName&gt; label off</programlisting></para><para>The
+              label can be enabled with either the "on" command or by
+              specifying a color, e.g. (Note the color can be specified by
+              name, rgb, or hex.</para><para><programlisting>node &lt;nodeName&gt; label on,&lt;text&gt;</programlisting></para><para><programlisting>node &lt;nodeName&gt; label blue,&lt;text&gt;</programlisting>Label
+              text that contains spaces or formatting characters must be
+              enclosed in quotes e.g.</para><para><programlisting>node &lt;nodeName&gt; label blue,"Label text"</programlisting></para></entry>
+            </row>
+
+            <row>
+              <entry><para>trail
+              on|&lt;color&gt;|off,[,&lt;trailLength&gt;[,&lt;dirPath|path&gt;</para><para>[,&lt;posScale&gt;[,&lt;outlineWidth&gt;[,&lt;showPositions&gt;]]]]]</para></entry>
+
+              <entry><para>This indicates whether or not a node position trail
+              should be displayed for the node.  By default, a yellow directed
+              trail of unlimited length is displayed for all positions
+              received for the node. The trail will decrease in opacity over
+              the length of the trail.</para><para>dirPath attribute creates a
+              directed path (direction arrows will appear on the path
+              depending on the zoom level)/ The path directive creates a non
+              directed path (no direction arrows).</para><para>posScale
+              controls the scale of the node positions markers relative to the
+              trail outline width.</para><para>outlineWidth controls the width
+              of the position trail.</para><para>showPositions controls
+              whether trail position reports are
+              displayed.</para><para><programlisting># Create a bright green directed path and show position 
+# reports
+node &lt;nodeName&gt; trail 0:233:25,200,dirPath,3,2,y
+
+# Create a position trail with default attributes
+node &lt;nodeName&gt; trail on
+
+# Set trail length to 200 position reports
+node &lt;nodeName&gt; trail on,200
+
+# Create a red trail of unlimited length with no 
+# position reports
+node &lt;nodeName&gt; trail,red,x,path,x,x,n</programlisting></para></entry>
+            </row>
+
+            <row>
+              <entry>symbol &lt;<link
+              linkend="symbolTypes">symbolType</link>|none&gt;[,&lt;<link
+              linkend="color">color</link>&gt;,[&lt;<link
+              linkend="thickness">thickness</link>&gt; [,&lt;<link
+              linkend="x_radius">width</link>[<link
+              linkend="sc">s</link>]&gt;[,&lt;<link
+              linkend="y_radius">height</link>[<link
+              linkend="sca">s</link>]&gt;[,&lt;<link
+              linkend="opacity">opacity</link>&gt;[,&lt;<link
+              linkend="scale">scale</link>&gt; [&lt;<link
+              linkend="orientation">orientation</link>[<link
+              linkend="absolute">a</link>|<link
+              linkend="relative">r</link>]&gt;,[&lt;<link
+              linkend="elevation">elevation</link>&gt;]]]]]]]]</entry>
+
+              <entry>This is used to put a symbol around the node. Valid
+              "sdt3d" <link id="symbolTypes"
+              linkend="symbolTypes">symbolTypes</link> are sphere, ellipse,
+              cube, cylinder, and cone. By default there is no symbol
+              associated with a node. Valid "sdt" symbol types are: circle,
+              ellipse, square, rectangle, rndrectangle (rounded rectangle),
+              rndsquare (rounded square), and none. By default, symbols will
+              be sized to be fit the dimensions of any associated sprite. If
+              no sprite is assigned, a symbol may still be defined for the
+              node that will be sized to the default sprite dimensions of
+              32x32. Use the width and height attributes to override these
+              defaults.<para>NOTE: Symbols cannot yet be sized to KML sprite
+              types. Such symbols will resolve to the default sprite size of
+              32x32, or the scaleable symbol size can be used.</para>The
+              default symbol <link id="color"
+              linkend="color">color</link><emphasis role="bold"> </emphasis>is
+              "red". Colors are specified by name, and a large color set is
+              supported. See the wxWidgets documentation for the "sdt" color
+              set until this user's guide is further revised. Valid "sdt3d"
+              named colors are white, yellow, green, blue, cyan, red, pink,
+              orange, magenta, purple, and gray. Other colors can be specified
+              by their rgb or hex values.<para><computeroutput># Set symbol
+              color to red rgb
+              value</computeroutput></para><para><computeroutput>symbol
+              sphere,255:0:0</computeroutput></para><para><computeroutput>#
+              Set symbol color to red hex
+              value</computeroutput></para><para><computeroutput>symbol
+              sphere,0xff0000</computeroutput> </para><para>The <link
+              id="thickness" linkend="thickness">thickness</link> attribute
+              can be applied to the outline line width of the cube and
+              cylinder symbol types.</para><para>The <link id="x_radius"
+              linkend="x_radius">width</link> and <link id="y_radius"
+              linkend="y_radius">height</link> parameters should be used to
+              set the real world dimensions of the symbol. Values should be in
+              the same units as those of the coordinate system as defined by
+              the bgbounds commands in "sdt" or in meters in the "sdt3d" app.
+              Symbols so defined are "fixed" meaning the symbol size will
+              increase as you zoom in, and decrease as you zoom out. Note that
+              the optional "<link linkend="sc">scalable</link>" attribute can
+              but used to allow scaling of "fixed" dimension symbols. See
+              below for more details.</para><para>The width and height
+              parameters are interpreted as follows for the different symbol
+              types:<informaltable>
+                  <tgroup cols="3">
+                    <colspec colwidth="33*"/>
+
+                    <colspec colwidth="34*"/>
+
+                    <colspec colwidth="33*"/>
+
+                    <tbody>
+                      <row>
+                        <entry>Symbol Type</entry>
+
+                        <entry>width</entry>
+
+                        <entry>height</entry>
+                      </row>
+
+                      <row>
+                        <entry>sphere</entry>
+
+                        <entry>The larger of the x or y dimension defines the
+                        width of the sphere</entry>
+
+                        <entry>The larger of the x or y dimension defines the
+                        width of the sphere</entry>
+                      </row>
+
+                      <row>
+                        <entry>ellipse</entry>
+
+                        <entry>Defines the with of the ellipse on the x
+                        axis.</entry>
+
+                        <entry>Defins the height of the ellipse on the y
+                        axis.</entry>
+                      </row>
+
+                      <row>
+                        <entry>cube</entry>
+
+                        <entry>Defines the width of the cube.</entry>
+
+                        <entry>Defines the height of the cube.</entry>
+                      </row>
+
+                      <row>
+                        <entry>cylinder</entry>
+
+                        <entry>Sets the width of the cylinder extended from
+                        the central position of the cylinder (e.g. node
+                        position).</entry>
+
+                        <entry>Sets the width of the cylinder section offset
+                        above and below the node position.</entry>
+                      </row>
+
+                      <row>
+                        <entry>cone</entry>
+
+                        <entry>Defines the width of the cone "base".</entry>
+
+                        <entry>Defines the length from the cone tip
+                        (positioned at node position) to the center of the
+                        cone "base".</entry>
+                      </row>
+                    </tbody>
+                  </tgroup>
+                </informaltable></para><para>The optional "<link
+              id="scaleable" linkend="scaleable">scalable</link>" attribute
+              can be set for "fixed sized" symbols (symbol that have the width
+              or height set). This attribute will cause the symbol to be sized
+              in meters specified at view distance. E.g. the symbol will scale
+              to the given dimensions as the view changes much like "icon
+              hugging" symbols that default to the size of any associated
+              sprite. The scaleable attribute is defined by tagging the width
+              or height with the letter "s" as
+              follows:</para><para><computeroutput>symbol
+              </computeroutput>sphere,blue,x,32s,300s</para><para>The <link
+              id="opacity" linkend="opacity">opacity</link> parameter is only
+              available in "sdt3d" and will set the opacity of the interior of
+              the symbol. By default the symbol is drawn at opacity
+              .15</para><para>The <link id="scale"
+              linkend="scale">scale</link> parameter will multiply the symbol
+              dimensions by the given scale, whether icon hugging or fixed.
+              </para><para>The <link linkend="orientation">orientation</link>
+              (or "yaw") and <link id="elevation"
+              linkend="elevation">elevation</link> parameters are only
+              applicable to the cone and cylinder symbol types and are
+              interpreted as follows:<informaltable>
+                  <tgroup cols="3">
+                    <colspec colwidth="33*"/>
+
+                    <colspec colwidth="34*"/>
+
+                    <colspec colwidth="33*"/>
+
+                    <tbody>
+                      <row>
+                        <entry>Symbol Type</entry>
+
+                        <entry><link id="orientation"
+                        linkend="orientation">orientation</link></entry>
+
+                        <entry><link id="elevation"
+                        linkend="elevation">elevation</link></entry>
+                      </row>
+
+                      <row>
+                        <entry>cylinder</entry>
+
+                        <entry>Orientation or "yaw" defines the degrees
+                        (0-360) the symbol should orient counterclockwise from
+                        due east. By default the orientation will be
+                        calculated <link linkend="relative">relative</link> to
+                        the node's heading. Use the <link
+                        linkend="absolute">absolute</link> attribute to define
+                        an absolute orientation.</entry>
+
+                        <entry>For cylinder symbols the elevation attribute is
+                        overloaded to refer to the width of the cylinder wedge
+                        in degrees.</entry>
+                      </row>
+
+                      <row>
+                        <entry>cone</entry>
+
+                        <entry>Same as cylinder</entry>
+
+                        <entry>The elevation (or "pitch") of the symbol
+                        defines the degrees (0-360) the cone should be tilted
+                        up or down from the nodes position. Given an
+                        orientation of zero, and viewed from the side, a
+                        symbol with an elevation of 0 degrees would point due
+                        east, 90 degrees skyward, 180 degrees due west, 240
+                        degrees towards earth.</entry>
+                      </row>
+                    </tbody>
+                  </tgroup>
+                </informaltable></para><para>The <link id="absolute"
+              linkend="absolute">absolute</link> attribute should be set when
+              the symbols <link linkend="orientation">orientation</link>
+              should not be relative to the node's
+              heading:</para><para><computeroutput>symbol
+              cone,blue,x,x,x,x,x,x,30a,30</computeroutput></para><para>The
+              <link id="relative" linkend="relative">relative</link> attribute
+              (the default) should be set when the symbols <link
+              linkend="orientation">orientation</link> should be relative to
+              the node's heading:</para><para><computeroutput>symbol
+              cone,blue,x,x,x,x,x,x,30r,30</computeroutput></para><para>If any
+              parameter within the parameter list is omitted, specify a "X"
+              value to use the defaults. See the <link
+              linkend="sdtcommands">sdt Commands</link> section for more
+              information on attribute lists. For example to draw a sphere
+              based on the size of the sprite at a .50
+              opacity:</para><para><programlisting>symbol sphere,blue,X,X,X,0.50</programlisting></para>In
+              "sdt" the circle is drawn as an ellipse so that if you change
+              the aspect ratio with scaling or Ctrl-A, it will flatten out,
+              though it still represents a perfect circle in your coordinate
+              system. You are also allowed to specify x and y radii, in case
+              your coordinate system does not use the same unit on both axes
+              (lat/lon, for instance). If only one radius is given, then the x
+              and y radii will be the same, and the symbol will appear
+              circular until you change one of the scales independently from
+              the other or use Ctrl-A (zooming scales both x and y axes
+              together, so that is not a problem).<para><note>
+                  <para>By default <link
+                  linkend="symbolOffset">symbolOffset</link> is enabled for
+                  sprite icons, meaning the symbol will be centered around the
+                  center of the icon rather than node position.</para>
+                </note><note>
+                  <para>As implied in the above paragraph, the width and
+                  height dimensions set the radius of the symbol.</para>
+                </note></para></entry>
+            </row>
+
+            <row>
+              <entry>nodeLayer &lt;layerName&gt;| symbolLayer
+              &lt;layerName&gt; | labelLayer &lt;layerName&gt;</entry>
+
+              <entry>Assigns the node, the node's symbol, or the node's label
+              to the given layerName. When a node is assigned to a layer all
+              it's attributes (e.g. symbol, label) will be likewise assigned.
+              For example, if a node is assigned to layer X, the node and all
+              its attributes will toggle on and off as layer X is toggled on
+              and off. Once a node is assigned to a layer it's attributes
+              cannot be subsequently assigned. If the layer does not already
+              exist it will be created. See the <link
+              linkend="layers">layer</link> section for more
+              information.</entry>
+            </row>
+
+            <row>
+              <entry><para>delete node,&lt;nodeName&gt;</para><para/></entry>
+
+              <entry><para>This command deletes the specified node and any
+              links associated with it. <emphasis>Note that the legacy delete
+              &lt;nodeName&gt; command is still
+              supported.</emphasis></para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+
+      <para/>
+    </sect2>
+
+    <sect2>
+      <title id="region">Region Commands</title>
+
+      <para>These commands ("sdt3d" only) are used to instantiate regions, and
+      set their position and other characteristics:</para>
+
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><para>region &lt;regionName&gt;</para></entry>
+
+              <entry><para>This creates a new region of name
+              &lt;regionName&gt; or addresses a previously created region for
+              application of other region Commands (i.e. shape, position).
+              </para></entry>
+            </row>
+
+            <row>
+              <entry><para>shape
+              &lt;regionShape|none&gt;[,&lt;color&gt;[,&lt;thickness&gt;[,&lt;width&gt;[,&lt;height&gt;[,&lt;opacity&gt;]]]]</para></entry>
+
+              <entry><para>This assigns the indicated &lt;regionShape&gt; to
+              the region (e.g "region region1 shape circle"). Valid
+              regionShapes are circle,sphere,square,cube, rectangle, box, and
+              none. Circle, square, and rectangle regions are "surface shapes"
+              meaning they will overlay the terrain surface, whereas spheres,
+              cubes, and boxes are 3gl objects that will be centered at the
+              position set with the center attribute.</para><para>The default
+              region color is "grey", the default outline thickness is one,
+              the default size is 300 x 300 meters, and the default opacity is
+              15%. Colors are specified by name, The named color set includes
+              black, white, yellow, green, blue, cyan, red, pink, orange,
+              magenta, purple, and gray. Other colors can be specified by
+              their hex or rgb values.</para><para>The width argument can be
+              used to set the width of the region in meters. The height
+              argument sets the height in meters. Setting the region elevation
+              to 0 will position any 3d regions bottomed at terrain. "Surface
+              shape" regions are always overlayed on the terrain.<emphasis
+              role="bold"/></para></entry>
+            </row>
+
+            <row>
+              <entry><para>center
+              &lt;x&gt;,&lt;y&gt;[,&lt;alt&gt;][,&lt;c,g&gt;]</para></entry>
+
+              <entry><para>This command is used to specify the current
+              position of the region.  In sdt2d the coordinates are in units
+              of the coordinate system defined by the bgbounds commands. In
+              sdt3d the units may be in either geodesic or cartesian
+              coordinates. Geodesic is the default. Cartesian coordinates will
+              be relative to any <link linkend="origin">origin</link> geodesic
+              position specified. Altitude is only relevant for spheres and
+              cubes.</para></entry>
+            </row>
+
+            <row>
+              <entry>regionLayer &lt;layerName&gt;</entry>
+
+              <entry>Assigns the region to the given layerName. If the layer
+              does not already exist it will be created. See the layer section
+              for more information.</entry>
+            </row>
+
+            <row>
+              <entry><para>delete region,&lt;regionName&gt;</para></entry>
+
+              <entry><para>This command removes the specified region.
+              <emphasis role="bold"/></para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+    </sect2>
+
+    <sect2>
+      <title id="link">Link Commands</title>
+
+      <para>These commands are used to define (and undefine) "links" (drawn as
+      lines) between pairs of previously defined nodes. Note that the
+      deprecated link syntax is still supported in the current versions of
+      "sdt"/"sdt3d". <emphasis role="bold"/></para>
+
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><para>link
+              &lt;node1&gt;,&lt;node2&gt;[,&lt;linkID|all&gt;[,&lt;dir,all&gt;]]]</para></entry>
+
+              <entry><para>This indicates that a "link" (drawn line) should be
+              managed and displayed for the given pair of
+              nodes.</para><para>The optional linkID can be used to create
+              multiple links between the node pairs, e.g.<programlisting>link node-01,node-02,eth1
+
+link node-01,node-02,wifi</programlisting></para><para>The dir attribute will
+              create a "uni-directional" link between the two nodes with an
+              arrow anchored on the target node. For
+              example:</para><programlisting># arrow anchored on node-02
+link node-01,node-02,wifi,dir
+</programlisting><para>A new bi-directional link will delete any existing
+              uni-directional links between the two nodes that have the same
+              link id. A new uni-directional link deletes an existing
+              bi-directional link between the same nodes. If such a link was
+              present, then the new command will create an additional
+              uni-directional link in the opposite direction if so indicated.
+              For example:</para><programlisting># Creates a uni-directional link between
+# nodes 1 and 2 with an arrow anchored on
+# node 2
+link 1,2,wifi,dir line blue,3 linklabel on 
+
+# Creates a second uni-directional link 
+# between nodes 1 and 2 with an arrow 
+# anchored on node 1
+link 2,1,wifi,dir line yellow,3 linklabel on
+
+# Deletes existing uni-directional links
+# and creates a single bi-directional
+# (arrowless) link
+link 2,1,wifi line red,3 linklabel on  
+
+# Deletes existing bi-directional link and
+# creates a uni-directional link with an
+# arrow anchored on node 2
+link 1,2,wifi,dir line red,3, linklabel on
+</programlisting><para>The optional linkID "all" keyword can be used to refer
+              to all linkIDs between the two nodes. By default only
+              bidirectional links will be referenced, the default when the
+              directional keyword "dir" is omitted. To reference the set of
+              all directed links specify the "dir" directional keyword, or the
+              "all" keyword to reference all directed and bidirectional links.
+              For example:</para><programlisting># reference the set of all bi-directional
+# links regardless of linkId
+link 1,2,all
+
+# reference the set of all uni-directional 
+# links
+link 1,2,all,dir 
+
+# reference the set of all bi and 
+# uni-directional links
+link 1,2,all,all
+
+# reference the set of all links associated 
+# with linkid wifi
+link 1,2,wifi,all</programlisting>Note that linkids may not be valid sdt
+              colors due to legacy link command support.</entry>
+            </row>
+
+            <row>
+              <entry><para>line
+              color[,&lt;thickness&gt;[,&lt;opacity&gt;[,&lt;stippleFactor&gt;[,&lt;stipplePattern&gt;]]]]</para></entry>
+
+              <entry><para>The color, thickness (1-8) , opacity (0.0-1.0),
+              stippleFactor, and stipplePattern of the line drawn can be
+              optionally specified. The default color is "red" and the default
+              thickness is 1.  Colors can specified by name, rgb, or hex
+              value.  See the wxWidgets documentation for the "sdt" color set.
+              Valid "sdt3d" named colors are white, yellow, green, blue, cyan,
+              red, pink, orange, magenta, purple, and gray.<emphasis
+              role="bold"/></para><para>The stipple facor is the stipple pixel
+              size. 0 indicates no stipple value.</para><para>The
+              stipplePattern is the pixel pattern to apply to the stipple.
+              Number or hex values are accepted. The default pattern is 0xAAA.
+              Example:</para><para>line red,3,0.5,8,0xABAB</para><para>line
+              blue,x,x,x,43947</para></entry>
+            </row>
+
+            <row>
+              <entry><para>linklabel
+              on|&lt;color&gt;|off,[,&lt;text&gt;]</para></entry>
+
+              <entry><para>This indicates whether or not a text label should
+              be displayed for the indicated link.  When turned on with no
+              associated text, a label the color of the link and containing
+              the link's name is created and will be displayed when the link
+              label layer is turned on (the link label layer is not initially
+              displayed by default). If no linklabel command is specified for
+              the link, no linklabel is created. Note that the link line color
+              must be defined before the linklabel in order to default the
+              label color to the link line color.</para><para>To hide the
+              label for a link use the command</para><para><programlisting>link &lt;linkName&gt; linklabel off</programlisting></para><para>Alternatively,
+              the linklabel layer can be toggled on and off with the link
+              labels radio button.</para><para>The linklabel can be enabled
+              with either the "on" command or by specifying a color,
+              e.g.</para><para><programlisting>link &lt;linkName&gt; linklabel on
+link &lt;linkName&gt; linklabel on,&lt;text&gt;
+link &lt;linkName&gt; linklabel blue 
+link &lt;linkName&gt; linklabel blue,&lt;text&gt;</programlisting></para><para><emphasis
+              role="bold"/></para></entry>
+            </row>
+
+            <row>
+              <entry>linkLayer &lt;layerName&gt;</entry>
+
+              <entry>Assigns the link to the given layerName. If the layer
+              does not already exist it will be created. See the layer section
+              for more information.</entry>
+            </row>
+
+            <row>
+              <entry><para>delete
+              link,&lt;node1&gt;,&lt;node2&gt;[,&lt;linkID&gt;]</para><para/></entry>
+
+              <entry><para>This command causes a "link" previously specified
+              to be no longer displayed for the given node pair.  If the node
+              pair is later again linked, any non-default color or thickness
+              attributes will need to be re-specified.</para><para>To delete
+              all links between a node pair set the linkId to
+              "all":<programlisting>delete link,node01,node02,all</programlisting><emphasis>Note
+              that the legacy unlink command is still supported unlink
+              &lt;node1&gt;,&lt;node2&gt;[,&lt;linkID&gt;]</emphasis></para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+
+      <para/>
+
+      <sect3>
+        <title id="deprecated-link-cmd">Link Commands - Deprecated</title>
+
+        <para>These commands are used to define (and undefine) "links" (drawn
+        as lines) between pairs of previously defined nodes.</para>
+
+        <informaltable frame="all">
+          <tgroup cols="2">
+            <tbody>
+              <row>
+                <entry><para>link
+                &lt;node1&gt;,&lt;node2&gt;[,&lt;color&gt;[,&lt;thickness&gt;]]</para></entry>
+
+                <entry><para>This indicates that a "link" (drawn line) should
+                be managed and displayed for the given pair of nodes.  The
+                &lt;color&gt; and &lt;thickness&gt; (1-8) of the line drawn
+                can be optionally specified using the indicated format.  The
+                default color is "red" and the default thickness is 1.  Colors
+                are specified by name, and a large color set is supported.
+                 See the wxWidgets documentation for the color set until this
+                user's guide is further revised.</para></entry>
+              </row>
+
+              <row>
+                <entry><para>unlink &lt;node1&gt;,&lt;node2&gt;</para></entry>
+
+                <entry><para>This command causes a "link" previously specified
+                to be no longer displayed for the given node pair.  If the
+                node pair is later again linked, any non-default color or
+                thickness attributes will need to be
+                re-specified.</para></entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+
+        <para/>
+      </sect3>
+    </sect2>
+
+    <sect2>
+      <title id="geoTiff">geoTIFF Commands ("sdt3d" only)</title>
+
+      <para>The geoTiff command causes the specified geoTiff elevation or
+      image overlay file to be loaded. Note that the deprecated
+      "elevationOverlay &lt;geoTiffName&gt; file &lt;geoTiffFile&gt;" commands
+      are still supported.</para>
+
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><para>geoTiff &lt;geoTiffName&gt; </para></entry>
+
+              <entry><para>Specifies the name of the geoTIFF
+              object.</para></entry>
+            </row>
+
+            <row>
+              <entry><para>geoTiffFile &lt;geoTiffFile&gt; </para></entry>
+
+              <entry><para>The image or elevation geoTIFF file to be overlaid
+              on the terrain surface.</para><para>"sdt3d" will first attempt
+              to open the file as specified e.g. as fully qualified, relative
+              to the current directory, or in the current directory. If not
+              found, it will search for the file in any path(s) previously
+              specified with the sdt PATH command. Finally, it will look for
+              the file in the same directory as the current input script (if
+              any) ("sdt3d" only).</para></entry>
+            </row>
+
+            <row>
+              <entry><para>delete geoTiff,&lt;geoTiffName&gt;</para></entry>
+
+              <entry><para>Removes the specified geoTiff.<emphasis
+              role="bold"/></para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+
+      <para/>
+    </sect2>
+
+    <sect2>
+      <title id="tile">Tile Commands ("sdt3d" only)</title>
+
+      <para>The tile command causes the specified image to be overlaid at the
+      specified lat/lon coordinates.</para>
+
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><para>tile &lt;tileName&gt; </para></entry>
+
+              <entry><para>Specifies the name of the tile
+              object.</para></entry>
+            </row>
+
+            <row>
+              <entry><para>tileImage &lt;imageFile&gt; </para></entry>
+
+              <entry><para>The image file to be overlaid on the terrain
+              surface.</para><para>"sdt3d" will first attempt to open the
+              imageFile as specified e.g. as fully qualified, relative to the
+              current directory, or in the current directory. If not found, it
+              will search for the file in any path(s) previously specified
+              with the sdt PATH command. Finally, it will look for the file in
+              the same directory as the current input script (if any) ("sdt3d"
+              only).</para></entry>
+            </row>
+
+            <row>
+              <entry><para>sector
+              &lt;left&gt;,&lt;upper&gt;,&lt;right&gt;,&lt;lower&gt;</para></entry>
+
+              <entry><para>The surface coordinates for the image
+              file.</para></entry>
+            </row>
+
+            <row>
+              <entry>tileLayer &lt;layerName&gt;</entry>
+
+              <entry>Assigns the tile to the given layerName. If the layer
+              does not already exist it will be created. See the layer section
+              for more information.</entry>
+            </row>
+
+            <row>
+              <entry><para>delete tile,&lt;tileName&gt;</para></entry>
+
+              <entry><para>Removes the specified tile.<emphasis
+              role="bold"/></para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+
+      <para/>
+    </sect2>
+
+    <sect2>
+      <title id="tile">KML Commands ("sdt3d" only)</title>
+
+      <para>The kml command causes the specified kml or kmz file to be
+      loaded.</para>
+
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><para>kml &lt;kmlName&gt; </para></entry>
+
+              <entry><para>Specifies the name of the kml
+              object.</para></entry>
+            </row>
+
+            <row>
+              <entry><para>kmlFile &lt;kmlFileName&gt; </para></entry>
+
+              <entry><para>The kml/kmz file to be overlaid on the terrain
+              surface.</para><para>"sdt3d" will first attempt to open the
+              kmlFile as specified e.g. as fully qualified, relative to the
+              current directory, or in the current directory. If not found, it
+              will search for the file in any path(s) previously specified
+              with the sdt PATH command. Finally, it will look for the file in
+              the same directory as the current input script (if any) ("sdt3d"
+              only).</para></entry>
+            </row>
+
+            <row>
+              <entry><para>delete kml,&lt;kmlName&gt;</para></entry>
+
+              <entry><para>Removes the specified kml object.<emphasis
+              role="bold"/></para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+
+      <para>Loaded KML files will be added to the kml list and to a KML panel
+      that is displayed when the KML Panel checkbox is selected. Clicking on
+      the KML entry in the KML panel will "fly to" the selected KML reference
+      location. KML elements are also added to the sdt3d KML layer.</para>
+
+      <para>Note that loading many or significantly complex kml/kmz files may
+      impact sdt3d performance. Further note that not all features of the kml
+      standard are currently supported.</para>
+    </sect2>
+
+    <sect2>
+      <title id="view">View Commands ("sdt3d" only)</title>
+
+      <para>The kml command causes the specified kml or kmz file to be
+      loaded.</para>
+
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><para>view &lt;viewName&gt; </para></entry>
+
+              <entry><para>Specifies the name of the view. This name that will
+              be associated with the view in the bookmarks list on the
+              bookmarks menu option. If the view xml file has already been
+              loaded, the view will be set to the named view. </para><para>If
+              the view xml file has not already been loaded, use the viewXml
+              command to specify the view xml file. The viewXml command can
+              also be used to associate a different file with the named
+              view.</para></entry>
+            </row>
+
+            <row>
+              <entry><para>viewXml &lt;viewXMLFileName&gt; </para></entry>
+
+              <entry><para>Specifies the name of the view xml file saved via
+              the "Bookmark this view" menu option. These files are saved in
+              the users home directory although may be referenced in any
+              location.</para><para>"sdt3d" will first attempt to open the
+              viewFile as specified e.g. as fully qualified, relative to the
+              current directory, or in the current directory. If not found, it
+              will search for the file in any path(s) previously specified
+              with the sdt PATH command. Finally, it will look for the file in
+              the same directory as the current input script (if any) ("sdt3d"
+              only).</para></entry>
+            </row>
+
+            <row>
+              <entry><para>delete view,&lt;viewName&gt;</para></entry>
+
+              <entry><para>Removes the specified view object.<emphasis
+              role="bold"> </emphasis></para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+
+      <para/>
+    </sect2>
+
+    <sect2>
+      <title id="popup">Popup Commands</title>
+
+      <para>These commands are used to create "popup" windows which contain
+      specified text content. The implementation of these commands is slightly
+      different in "sdt" and "sdt3d".</para>
+
+      <sect3>
+        <title>"sdt" popup commands</title>
+
+        <para>These commands are used to create, update, and destroy "popup"
+        windows which contain specified text content. An example use of these
+        windows is to provide some display of information upon
+        &lt;doubleclick&gt; of a displayed node (Note this requires monitoring
+        the stdout of "sdt" to learn of &lt;doubleclick&gt; events).</para>
+
+        <informaltable frame="all">
+          <tgroup cols="2">
+            <tbody>
+              <row>
+                <entry><para>popup &lt;windowName&gt; </para></entry>
+
+                <entry><para>This specifies a popup window titled with the
+                given &lt;windowName&gt;. The window is not displayed until
+                its "content" is specified. </para></entry>
+              </row>
+
+              <row>
+                <entry><para>content &lt;"contentText"&gt; </para></entry>
+
+                <entry><para>This command specifies the content of the popup
+                window. The content of window can be changed at any time. The
+                content text should be enclosed in quotes.</para></entry>
+              </row>
+
+              <row>
+                <entry><para>resize</para></entry>
+
+                <entry><para>The resize command can be given with or without
+                the "content" command, and results in the window being
+                automatically resized to fit the current text.</para></entry>
+              </row>
+
+              <row>
+                <entry><para>popdown &lt;windowName&gt;</para></entry>
+
+                <entry><para>This command destroys the specified popup
+                window</para></entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+
+        <para>The following example illustrates the use of the "sdt" "popup"
+        commands used in an input script:<programlisting>popup info content "The current time is 10:30AM "
+wait 500
+popup info content "The time is now 10:30AM plus 500 msec"
+wait 5000
+popdown info </programlisting></para>
+      </sect3>
+
+      <sect3>
+        <title>"sdt3d" popup command</title>
+
+        <informaltable frame="all">
+          <tgroup cols="2">
+            <tbody>
+              <row>
+                <entry><para>popup &lt;"contentText"&gt; </para></entry>
+
+                <entry><para>This creates a popup window containing the
+                associated text. Subsequent popup commands will change the
+                content of the window. The window will popdown when the user
+                clicks on the windows ok button or issues the popdown command.
+                </para></entry>
+              </row>
+
+              <row>
+                <entry><para>popdown</para></entry>
+
+                <entry><para>Removes the popup window.</para></entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </sect3>
+    </sect2>
+
+    <sect2>
+      <title>Miscellanceous Commands</title>
+
+      <para/>
+
+      <sect3>
+        <title id="backgroundColor"><link
+        linkend="backgroundColor">backgroundColor &lt;color&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="bgbounds"><link linkend="bgbounds">bgbounds
+        &lt;left&gt;,&lt;upper&gt;,&lt;right&gt;,&lt;lower&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="clear"><link linkend="clear">clear &lt; all | nodes |
+        sprites | symbols | links | labels | regions | tiles |
+        layer,&lt;layerName&gt; &gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="collapseLinks"><link linkend="collapseLinks">collapseLinks
+        &lt;on | off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="defaultAltitudeType"><link
+        linkend="defaultAltitudeType">defaultAltitudeType &lt;msl | agl
+        &gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="delete"><link linkend="delete">delete &lt;
+        [&lt;objectType&gt;| layer | all]
+        &gt;,[&lt;objectName&gt;|&lt;layerName&gt;| all] &gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="elevationData"><link linkend="elevationData">elevationData
+        &lt;on|off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="elevationData"><link
+        linkend="enableSdtViewControls">enableSdtViewControls
+        &lt;on|off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="flatEarth"><link linkend="flatEarth">flatEarth &lt;on |
+        mercator | sinusoidal | modsinusoidal | latLon |
+        off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="flyTo"><link linkend="flyTo">flyto
+        &lt;lon&gt;,&lt;lat&gt;,&lt;alt&gt;[,&lt;heading&gt;[,&lt;pitch&gt;[,&lt;zoom&gt;]]]]</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title><link linkend="focus">focus &lt;nodeName|off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="follow"><link linkend="follow">follow
+        &lt;on|off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="follow"><link linkend="follow">follow
+        &lt;nodeName|all&gt;[,&lt;on,off&gt;]</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="heading"><link linkend="heading">heading
+        &lt;degrees&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="instance"><link linkend="instance">instance
+        &lt;instanceName&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="input"><link linkend="input">input
+        &lt;fileName&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="layer"><link linkend="layer">layer
+        &lt;layerName&gt;[,on|off]</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="listen"><link linkend="listen">listen
+        &lt;udp|tcp|off&gt;[,&lt;addr&gt;[/&lt;port&gt;]]</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="loadCache"><link linkend="loadCache">loadCache
+        &lt;cacheLocation&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="logDebugOutput"><link
+        linkend="logDebugOutput">logDebugOutput
+        &lt;on|off&gt;[,&lt;filename&gt;]</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="lookAt"><link linkend="lookAt">lookAt
+        &lt;lon&gt;,&lt;lat&gt;,&lt;alt&gt;[,&lt;heading&gt;[,&lt;pitch&gt;[,&lt;zoom&gt;]]]</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="lookAt"><link linkend="multiFrame">multiFrame
+        [on|off]</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="path"><link linkend="path">path
+        "&lt;directoryPath&gt;;&lt;directoryPath&gt;:"</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="path"><link linkend="pitch">pitch&lt;degrees&gt;
+        </link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="offlineMode"><link linkend="offlineMode">offlineMode
+        &lt;on|off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="origin"><link linkend="origin">origin
+        &lt;lat&gt;,&lt;lon&gt;[,&lt;alt&gt;]</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="reset"><link linkend="reset-table">reset</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="reset"><link linkend="reset-table">hardReset</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="reset"><link
+        linkend="resetPerspective">resetPerspective</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="showLayerPanel"><link
+        linkend="showLayerPanel">showLayerPanel &lt;on|off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="showSdtPanel"><link linkend="showSdtPanel">showSdtPanel
+        &lt;on|off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="showSdtControlPanel"><link
+        linkend="showSdtControlPanel">showSdtControlPanel
+        &lt;on|off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="showStatusPanel"><link
+        linkend="showStatusPanel">showStatusPanel
+        &lt;on|off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="status"><link linkend="status">status
+        "&lt;theStatus&gt;"</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="stereo"><link linkend="stereo">stereo
+        &lt;on|off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="symbolOffset"><link linkend="symbolOffset">symbolOffset
+        &lt;on|off&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="title"><link linkend="title">title
+        "&lt;theTitle&gt;"</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="userConfigFile"><link
+        linkend="userConfigFile">userConfigFile &lt;none
+        |&lt;fileName&gt;&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="wait"><link linkend="wait">wait &lt;msec&gt;</link></title>
+
+        <para/>
+      </sect3>
+    </sect2>
+
+    <sect2>
+      <title>Miscellaneous Commands Table</title>
+
+      <para>There are some additional commands provided for sdt
+      operation.</para>
+
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><para><link id="backgroundColor"
+              linkend="backgroundColor">backgroundColor
+              &lt;color&gt;</link></para></entry>
+
+              <entry><para>Changes the background color of the WWJ display.
+              This is useful for non geocentric data visualizations
+              particularly when the Worldwind layers are turned
+              off.</para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="bgbounds" linkend="bgbounds">bgbounds
+              &lt;left&gt;,&lt;upper&gt;,&lt;right&gt;,&lt;lower&gt;</link></para></entry>
+
+              <entry><para>Sets the background boundary coordinates. In
+              "sdt3d" the display will pan to the center of these
+              latitude/longitude coordinates.</para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="clear" linkend="clear">clear </link>&lt;
+              all | nodes | sprites | symbols | links | labels | regions |
+              tiles | layer,&lt;layerName&gt; &gt;</para></entry>
+
+              <entry><para>This command deletes the specified object type.
+              <emphasis>clear all</emphasis> will delete all sdt elements with
+              the exception of the sprite table (Use <emphasis>delete all
+              </emphasis>to to clear all state in addition to the the sprite
+              table). <emphasis>clear nodes</emphasis> will delete all nodes
+              and their associated sprites, symbols, links, and labels. See
+              the delete command to delete individual objects by
+              name.</para><para>The "clear layer,&lt;layerName&gt;" command
+              can be used to clear all sdt objects associated with the named
+              layer as opposed to the other clear commands which operate
+              application wide. This may be useful when sdt is displaying data
+              from multiple input sources. </para><para>For example, if input
+              source A assigns all its sdt objects to layer A and input source
+              B assigns all its sdt object to layer B, a "clear layer,A"
+              command will only remove sdt objects created by input source A.
+              Objects created by input source B will remain. Note that the
+              application wide clear commands will apply to all objects
+              regardless of layer assignment.</para><para>NOTE: symbolLayer,
+              labelsLayer, and tileLayer assignments should not be used in
+              layers intended to be cleared. sdt does not retain a handle to
+              symbols, labels or tiles and therefore these sdt object types
+              will NOT be cleared by a clear layer,&lt;layerName&gt;
+              command.</para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="collapseLinks"
+              linkend="collapseLinks">collapseLinks</link>
+              &lt;on|off&gt;</para></entry>
+
+              <entry>Collapses multiple links between two nodes into a single
+              link when "on".</entry>
+            </row>
+
+            <row>
+              <entry><para><link id="defaultAltitudeType"
+              linkend="defaultAltitudeType">defaultAltitudeType</link> &lt;msl
+              | agl &gt;</para></entry>
+
+              <entry><para>This command will change the default altitude type
+              (relative to the terrain or absolute) for location altitude
+              settings. AGL is the system wide default
+              altitude.</para><programlisting># Set the default altitude for all location 
+# assignments to above ground level (relative 
+# altitude)
+defaultAltitudeType agl
+
+# Set the default altitude for all location 
+# assignments to mean sea level (absolute 
+# altitude)
+defaultAltitudeType msl</programlisting></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="delete" linkend="delete">delete</link>
+              &lt;[&lt;objectType&gt; | layer |
+              all]&gt;,[&lt;objectName&gt;|&lt;layerName&gt;|
+              all]&gt;</para></entry>
+
+              <entry><para>Deletes the object type or layer of the specified
+              name. Object types that can be deleted include nodes, regions,
+              links, and tiles. Symbols cannot be deleted by name, the "node
+              &lt;name&gt; symbol none" command should be used to
+              dissassociate a symbol from a specific node. The all key word
+              can be used to delete all objects of the given type. As opposed
+              to the "clear all" command, "delete all" will delete the sprite
+              table. </para><para>Note that deleting a layer will remove any
+              related element associations and all associated elements will be
+              redisplayed.</para><programlisting># Delete node "node01"
+delete node,node01
+# Delete node "a node name with a space"
+delete node,"a node name with a space"
+
+# Delete region "region01"
+delete region,region01
+
+# Delete tile "antenna range overlay"
+delete tile,"antenna range overlay"
+
+# Delete link node01,node02,eth0
+delete link,node01,node02,eth0
+
+# Delete all sprites from the sprite table 
+delete sprite,all
+
+# Delete all object types
+delete all
+
+# Delete layer "myLayer"
+delete layer,myLayer</programlisting></entry>
+            </row>
+
+            <row>
+              <entry><link id="elevationData"
+              linkend="elevationData">elevationData</link>
+              &lt;on|off&gt;</entry>
+
+              <entry>Toggles the elevation model on and off.</entry>
+            </row>
+
+            <row>
+              <entry><link id="enableSdtViewControls"
+              linkend="enableSdtViewControls">enableSdtViewControls</link>
+              &lt;on|off&gt;</entry>
+
+              <entry>Toggles whether sdt view controls are disabled.</entry>
+            </row>
+
+            <row>
+              <entry><link id="flatEarth" linkend="flatEarth">flatEarth</link>
+              &lt; on | mercator | sinusoidal |modsinusoidal | latLon | off
+              &gt;</entry>
+
+              <entry>Toggles the globe projection between the various options.
+              This is useful when visualizing non geocentric data. If
+              unspecified the flat earth projection will default to
+              latLon.<programlisting># Turn flat earth mode on (defaults to latLon)
+flatEarth on
+
+# Turn mercator flat earth mode on
+flatEarth mercator
+
+# Turn off flatEarth mode
+flatEarth off</programlisting></entry>
+            </row>
+
+            <row>
+              <entry><link id="flyTo" linkend="flyTo">flyto</link>
+              &lt;lon&gt;,&lt;lat&gt;,&lt;alt&gt;[,&lt;heading&gt;[,&lt;pitch&gt;[,&lt;zoom&gt;]]]]</entry>
+
+              <entry>This will "fly" to the specified coordinate and center
+              the view around it. An "x" in an attribute will retain the
+              current setting.</entry>
+            </row>
+
+            <row>
+              <entry><link id="focus" linkend="focus"><link id="follow"
+              linkend="folow">f</link>ocus</link> &lt;nodeName|off&gt;</entry>
+
+              <entry>The focus command will center the viewport on the
+              specified node location. Only one node may be focused on at one
+              time. The focus command takes precedence over the <link
+              linkend="follow">follow</link> command.</entry>
+            </row>
+
+            <row>
+              <entry><link id="follow" linkend="folow">follow</link>
+              &lt;on|off&gt;</entry>
+
+              <entry>This command toggles follow node behavior on and off. It
+              does not disable the settings for individual nodes. Use the
+              "follow all,off" command to disable following on all nodes
+              regardless of this global setting.</entry>
+            </row>
+
+            <row>
+              <entry><link linkend="follow">follow</link>
+              node,&lt;nodeName|all&gt;[,&lt;on,off&gt;]</entry>
+
+              <entry>This command will cause the view to be centered around
+              the specified node or all nodes if the <emphasis>all</emphasis>
+              keyword is specified. Use multiple follow commands to follow
+              more than one node. As the node (or nodes) being followed sdt
+              will ensure that the followed nodes are visible within the
+              viewport. The <link id="focus" linkend="focus">focus</link>
+              command takes precedence over the follow
+              command.<programlisting># Follow node01
+follow node01    
+
+# Also follow node02
+follow node02
+
+# Follow all nodes
+follow all 
+
+# stop following all nodes
+follow all,off
+
+# stop following node01
+follow node01,off</programlisting></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="heading" linkend="heading">heading</link>
+              &lt;degrees&gt;</para></entry>
+
+              <entry><para>Sets the view direction (e.g. north, south, east,
+              west) in degrees. Values range for 0 to 360 degrees with 0 being
+              north.</para></entry>
+            </row>
+
+            <row>
+              <entry><link id="instance" linkend="instance">instance</link>
+              &lt;instanceName&gt;</entry>
+
+              <entry>This command will change the application's command pipe
+              name from the default of <emphasis>sdt</emphasis> to
+              &lt;instanceName&gt;.</entry>
+            </row>
+
+            <row>
+              <entry><link id="input" linkend="input">input</link>
+              &lt;fileName&gt;</entry>
+
+              <entry>When specified on the command line or received over the
+              command pipe, this command will load the specified
+              &lt;inputFile&gt; and process the file in its entirety before
+              loading any other input files. For example, all commands in the
+              "spriteDefs" file will be loaded before the "script1" file is
+              loaded.<programlisting>sdtcmd input spriteDefs input script1</programlisting><para>Note
+              that <emphasis>input </emphasis>commands embedded
+              <emphasis>within </emphasis>a script file will cause sdt to
+              process the file in its entirety at the point the input command
+              is encountered. For example:<programlisting>&lt;spriteDefs&gt;
+def 1.1
+def 1.2
+def 1.3
+&lt;/spriteDefs&gt;
+
+&lt;script1&gt;
+
+cmd 1.1
+cmd 1.2
+
+&lt;script2&gt;
+
+cmd 2.1
+cmd 2.2
+
+&lt;/script2&gt;
+
+cmd 1.3
+cmd 1.4
+
+&lt;/script1&gt;</programlisting></para><para>Note that when input files are
+              loaded from the file menu, all previous sdt state will be
+              cleared while input files loaded over the command pipe or via a
+              command within an input script will not clear sdt
+              state.</para></entry>
+            </row>
+
+            <row>
+              <entry><link id="layer" linkend="layer">layer</link>
+              &lt;layerName&gt;[,on|off]</entry>
+
+              <entry><para>The layer command can be used to toggle layers on
+              or off and is also used to create "User Defined" layers. See the
+              <link linkend="layers">layers</link> section for more
+              information on creating user defined layers.</para><para>Layers
+              are heirarchical and are grouped by layer type: "Worldwind"
+              references the set of worldwind layers, "Sdt" references the set
+              of sdt layers, and "User Defined" references the set of any user
+              defined layers. Use "::" to reference layers within a layer
+              group, e.g. "Worldwind::Stars". NOTE that capitalization is
+              important when referencing layers.</para><para>To toggle "All
+              Layers" on or off:<programlisting>layer "All Layers,on"
+layer "All Layers,off"</programlisting></para><para>To toggle "Worldwind"
+              layers:<programlisting># Turn off all the worldwind layers
+layer "Worldwind::off"
+
+# Turn stars layer off, turn open street map layer on
+layer "Worldind::Stars,off"
+layer "Worldwind::Open Street Map,on",</programlisting></para><para>To toggle
+              "Sdt" layers:<programlisting># Turn all sdt layers off
+layer "Sdt,off"
+
+# Turn sdt node labels off
+layer "Sdt::Node Labels,off"</programlisting></para><para>Toggling "User
+              Defined Layers":<programlisting># Turn off all user defined layers
+layer "User Defined,off"
+
+# Create a user defined wifi layer
+layer wifi
+
+# Toggle a user defined layer named "wifi" off
+# NOTE: the layer group prefix is not required
+# for user defined links
+
+layer "User Defined::wifi,off"
+layer "wifi,off"
+
+# Create wifi sub layers wpa and wpa2
+layer wifi::wpa
+layer wifi::wpa2
+
+# Create a wifi sub layer with spaces
+layer "wifi::layer with spaces"
+
+# Toggle sub layers on off
+layer wifi::wpa,on"
+layer "wifi::layer with spaces,off"
+
+# Create nested wifi wpa layer
+layer wifi::wpa::NCS42
+
+# Toggle NCS42 off
+layer "wifi::wpa::NCS42,off"
+
+# Turn all wifi layers off
+layer "wifi,off" </programlisting></para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="listen" linkend="listen">listen</link>
+              &lt;udp|tcp|off&gt;[,&lt;addr&gt;[/&lt;port&gt;]]</para><para>listen
+              off</para></entry>
+
+              <entry><para>Cause the "sdt3d" (only) application to listen to a
+              udp or tcp socket on the specified port. Optionally a UDP
+              multicast address may be specified. UDP is the default protocol
+              if no protocol type is specified.</para><para>When the
+              application is directed to listen to a socket, the protocol
+              listen menu item will toggle to "&lt;protocol&gt; Off
+              &lt;port&gt;". The "listen &lt;protocol&gt;,off" command or the
+              "&lt;protocol&gt; Off &lt;port&gt;" menu item may be used to
+              close the socket. "Listen Off" will close all
+              sockets.</para><para>Note that while only one UDP or TCP socket
+              may currently be created, connections from multiple clients are
+              supported.</para><para>sdt3d sockets will interleave commands,
+              as received, from multiple clients. It is recommended that a
+              gentlemans agreement not to manage links with the same link Id
+              exist amongst tcp clients.</para><para><programlisting># join multicast group 224.0.0.1/5000
+listen 224.0.0.1/5000
+
+# open a udp socket on port 5000
+listen udp,5000
+
+# open a udp socket on port 5000
+listen 5000
+
+# open a tcp socket on port 5000
+listen tcp,5000
+
+# close the udp socket
+listen udp,off
+
+# close the tcp socket
+listen tcp,off
+
+# close all sockets
+listen off</programlisting></para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="loadCache"
+              linkend="loadCache">loadCache</link>
+              &lt;cacheFile&gt;</para></entry>
+
+              <entry><para>Sets a non default cache location for WWJ tiles.
+              This location will be checked for tiles in addition to any
+              located in the default cache. Multiple cache locations may be
+              established. Note that when not in "offline mode", worldWind
+              will continue to update the default
+              cache.</para><programlisting>loadCache &lt;cacheFile&gt;</programlisting></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="logDebugOutput"
+              linkend="logDebugOutput">logDebugOutput</link>
+              &lt;on|off&gt;[,&lt;filename&gt;]</para></entry>
+
+              <entry><para>Controls whether sdt3d logs sdt commands to
+              standard ouput or a file if &lt;filename&gt; is provided.
+              </para><para>The output file can be reloaded and used for
+              scenario "playback".</para>If filename exists, the filename will
+              be incremented e.g. &lt;filename&gt;.n<para>Note that when debug
+              file output is enabled in a <link linkend="configuration">sdt
+              settings, config file</link>, or within a script, multiple debug
+              log files may be generated each time the system is reset or the
+              script file is reloaded.</para><para>sdst3d will generate <link
+              linkend="wait">wait</link> commands based on the delta between
+              sdt key-value pairs received. The wait commands are not logged
+              until the interval between commands is greater than 100
+              milliseconds. Note that the output from all input threads (pipe,
+              tcp, udp, script) will be logged to the same log file.
+              </para><para>The wait interval is reset after any sdt settings
+              or configuration file is loaded. Wait logging then begins with
+              the first command processed. If there are long time deltas
+              between command reception these wait commands may be removed for
+              speed of user playback.</para><para>If no path is provided the
+              debug file will be written to the application working
+              directory.</para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="lookAt" linkend="lookAt">lookAt</link>
+              &lt;lon&gt;,&lt;lat&gt;,&lt;alt&gt;[,&lt;heading&gt;[,&lt;pitch&gt;[,&lt;zoom&gt;]]]</para></entry>
+
+              <entry><para>This command sets the camera position. The
+              attributes correspond roughly to the KML "LookAt" element.
+              </para><para>The &lt;lon&gt;,&lt;lat&gt;,&lt;alt&gt; attributes
+              set the camera center position. (Cartesian coordinate support is
+              not available for the lookAt
+              command)</para><para>&lt;heading&gt; sets the direction (e.g.
+              north, south, east, west) in degrees. Values range from 0 to 360
+              degrees with 0 being north.</para><para>&lt;pitch&gt; is the
+              angle between the direction of the lookAt position and the
+              normal to the surface of the earth. Values range from 0 to 90
+              degrees. A &lt;pitch&gt; value of 0 degrees set the view
+              directly above. A &lt;pitch&gt; of 90 degrees indicates viewing
+              along the horizon.</para><para>&lt;zoom&gt; is the distance in
+              meters from the point specified by
+              &lt;lon&gt;,&lt;lat&gt;,&lt;alt&gt;</para><para>Note that the
+              altitudeMode attribute is not currently supported. An "x" in an
+              attribute will retain the current setting.</para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="multiFrame"
+              linkend="multiFrame">multiFrame</link> [on|off]</para></entry>
+
+              <entry>This command will popup a window that displays a second
+              globe shared with the main display. This globe can be controlled
+              by an independent view control panel for multiple views of the
+              same globe and its contents. A menu item to toggle this display
+              also exists.</entry>
+            </row>
+
+            <row>
+              <entry><para><link id="path" linkend="path">path</link>
+              "&lt;directoryPath&gt;;&lt;directoryPath&gt;:"</para></entry>
+
+              <entry><para>This command sets a directory path to be searched
+              for sdt sprite images, tiles, input files, etc. Each path should
+              be delimited by ";" in a Windows environment. Either ";" or ":"
+              may be used in a *nix environment. The entire path must be
+              included in quotes (") if spaces exist in the path
+              e.g.</para><programlisting>path "/Documents and Settings;/Documents and Settings/A directory/;"</programlisting></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="pitch" linkend="pitch">pitch</link>
+              &lt;degrees&gt;</para></entry>
+
+              <entry><para>Sets the angle between the direction of the view
+              and the normal to the surface of the earth. Values range from 0
+              to 90 degrees. A &lt;pitch&gt; value of 0 will set the view
+              directory above. A &lt;pitch&gt; valud of 90 degress indicates
+              view along the horizon.</para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="offlineMode"
+              linkend="origin">offlineMode</link>
+              &lt;on|off&gt;</para></entry>
+
+              <entry>Toggles the application into "offlineMode". When in
+              offline mode the application will not attempt to contact the
+              Worldwind servers for tiles. Any tiles already downloaded into
+              the local cache will be available. A <link
+              linkend="bulkDownload">bulkDownload</link> utility for
+              downloading worldWind tiles into a local cache is
+              available.</entry>
+            </row>
+
+            <row>
+              <entry><para><link id="origin" linkend="origin">origin</link>
+              &lt;lat&gt;,&lt;lon&gt;[,&lt;alt&gt;]</para></entry>
+
+              <entry>Sets the geodesic origin point to be used as the offset
+              point for any subsequent cartesian positions.</entry>
+            </row>
+
+            <row>
+              <entry><para><link id="reset-table"
+              linkend="reset-table">reset</link></para></entry>
+
+              <entry><para>Cause the "sdt3d" application to perform a "soft"
+              reset. As this option does not close sockets it is useful for
+              clearing sdt state when a scenario has been halted and will be
+              restarted.</para><para>A soft reset disables any debug logging,
+              removes any user defined layers and and all system renderables
+              (e.g. nodes, links, regions, etc.), and reloads any <link
+              linkend="configuration">user configuration file</link>. sdt
+              commands that should be reloaded during a soft reset (like
+              sprite assignments, view position) should be added to the user
+              configuration file.</para><para>Any sprite definitions will be
+              retained.</para><para>Note that any input file processing will
+              continue.</para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="reset-table"
+              linkend="reset-table">hardReset</link></para></entry>
+
+              <entry><para>A "hard" reset will perform a "soft" reset but also
+              close any open sockets, stop reading any input file, reset
+              system state (e.g. offlineMode, elevationData, stereoMode,
+              background color, uncollapse links, unfollow any nodes, disable
+              node focust, restart the view controller, and reset to basic
+              orbit view).</para><para>Any sprites definitions will be
+              retained.</para><para>Any <link linkend="configuration">sdt
+              setting and configuration files</link> will be
+              reloaded.</para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="resetPerspective"
+              linkend="resetPerspective">resetPerspective</link></para></entry>
+
+              <entry>Cause the "sdt3d" application to reset the system
+              perspective to the default startup perspective, e.g. view
+              centered on the blue marble, offline mode on, elevation data on,
+              stereo mode off, background color black, collapse links off,
+              layers set to default selections. Sdt objcts will NOT be deleted
+              when the perspective is reset.</entry>
+            </row>
+
+            <row>
+              <entry><para><link id="showLayerPanel"
+              linkend="log">showLayerPanel</link>
+              &lt;on|off&gt;</para></entry>
+
+              <entry>Toggles the display of the layer panel.</entry>
+            </row>
+
+            <row>
+              <entry><para><link id="showSdtPanel"
+              linkend="showSdtPanel">showSdtPanel</link>
+              &lt;on|off&gt;</para></entry>
+
+              <entry>Toggles the display pf the sdt panel.</entry>
+            </row>
+
+            <row>
+              <entry><para><link id="showSdtControlPanel"
+              linkend="showSdtControlPanel">showSdtControlPanel</link>
+              &lt;on|off&gt;</para></entry>
+
+              <entry>Toggles the display of the sdt control checkbox.</entry>
+            </row>
+
+            <row>
+              <entry><para><link id="showStatusPanel"
+              linkend="showStatusPanel">showStatusPanel</link>
+              &lt;on|off&gt;</para></entry>
+
+              <entry>Toggles the display of the status panel.</entry>
+            </row>
+
+            <row>
+              <entry><para><link id="status" linkend="status">status</link>
+              "&lt;theStatus&gt;"</para></entry>
+
+              <entry><para>This command sets the status content to the text
+              enclosed in quotes. Usage:</para><programlisting>status "A status update"</programlisting></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="stereo" linkend="stereo">stereo</link>
+              [on|off]</para></entry>
+
+              <entry><para>Toggles analglpyh stero mode on and off. (Creates a
+              stereoscopic 3D visualization effect).</para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="symbolOffset"
+              linkend="symbolOffset">symbolOffset</link>
+              &lt;on|off&gt;</para></entry>
+
+              <entry><para>Enabling symbol offset will center the symbol
+              around the node's icon center rather than around the actual node
+              position point. (Icon images are positioned at node position at
+              image center bottom and so the symbol may not fully "hug" the
+              icon when symbol offset is not enabled.) By default symbolOffset
+              is enabled.</para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="title" linkend="title">title</link>
+              "&lt;theTitle&gt;"</para></entry>
+
+              <entry><para>This command sets the title of the main sdt window
+              to the text enclosed in quotes. Usage:</para><programlisting>title "A main window title"</programlisting></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="userConfigFile"
+              linkend="userConfigFile">userConfigFile</link>
+              &lt;none|&lt;fileName&gt;&gt;</para></entry>
+
+              <entry><para>This command will load the given file. The file
+              will subsequently be the associated <link
+              linkend="userConfigurationFile">userConfigFile</link>.</para><programlisting># Associate fileName as the configuration file
+userConfigFile &lt;fileName&gt; 
+
+# Clear any configuration file association
+userConfigFile none</programlisting></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="wait" linkend="wait">wait</link>
+              &lt;msec&gt;</para></entry>
+
+              <entry><para>When this command is encountered in the input, sdt
+              will pause for the number of milliseconds indicated by
+              &lt;msec&gt; before processing other commands in the input.
+               This allows self-contained animations to be created using the
+              sdt script format.  Cheesy sdt animation script
+              example:<programlisting>bgimage roadmap.jpg
+bgbounds 0,0,100,100
+sprite Car image car.png
+node alpha type Car position 10,10
+wait 200
+node Car position 10,20
+wait 200
+node Car position 10,30</programlisting></para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="zoom" linkend="zoom">zoom </link>
+              &lt;meters&gt;</para></entry>
+
+              <entry><para>Sets the zoom level for the view.</para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+
+      <para/>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Examples</title>
+
+    <para>Sample scripts and icons are available in the /sdt/examples/scripts
+    subdirectory.</para>
+
+    <sect2>
+      <title>"sdt3d" Example Script</title>
+
+      <para>This is a simple script to illustrate the use of "sdt3d":</para>
+
+      <para><programlisting>path "/Documents and Settings/nrl/My Documents/sdt3d/examples/:/cygwin/home/nrl/sdt3d/examples/:"
+
+bgbounds -77.028633,38.828533,-77.003298,38.817720
+sprite helo image helo.png size 105,43
+sprite truck image truck.png size 50,25
+sprite uav image uav.png size 72,20
+sprite warrior image warrior/warrior.3ds size 32,32 length 32
+#
+region region01 center -77.025146,38.822059 shape circle,blue,300
+
+node m1-xcom type helo label cyan symbol sphere
+node m1-node01 type truck 
+node m1-node02 type uav label cyan
+node m1-node03 type warrior label cyan
+
+status "GMT&gt;15:53:57"
+node m1-xcom position -77.005342,38.818870,900.000000 label cyan
+node m1-node01 position -77.005620,38.825368,0.000000 
+node m1-node02 position -77.009610,38.828472,400.000000 label cyan
+node m1-node03 position -77.019179,38.824029,0.000000 label cyan
+
+wait 50.0
+
+status "GMT&gt;15:54:37"
+node m1-xcom position -77.005342,38.818870,900.000000 label cyan
+node m1-node01 position -77.005620,38.825368,0.000000 
+node m1-node02 position -77.009610,38.838472,400.000000 label cyan
+node m1-node03 position -77.019179,38.834029,0.000000 label cyan</programlisting></para>
+    </sect2>
+
+    <sect2>
+      <title>"sdt" Example Script</title>
+
+      <para>This is a simple script to illustrate the use of "sdt":</para>
+
+      <para><programlisting>bgimage roadmap.jpg
+bgbounds 0,0,100,100
+sprite Car image car.png
+node alpha type Car pos 10,10
+node beta type Car pos 10,20
+node gamma type Car pos 10,30
+link alpha,beta
+link beta,gamma
+wait 500
+node alpha pos 20,10
+node beta pos 20,20
+wait 500
+node alpha pos 30,10
+node beta pos 30,20
+wait 500
+unlink beta,gamma</programlisting></para>
+
+      <para>Assuming the script is stored in a file named "script.sdt", "sdt"
+      can be launched with either:</para>
+
+      <para><programlisting>cat script.sdt | sdt</programlisting></para>
+
+      <para>or</para>
+
+      <para><programlisting>sdt input script.sdt</programlisting></para>
+
+      <para>to execute the given set of commands.  When input commands are
+      piped into the "sdt" stdin input, the sdt wait command will generally
+      not need to be used if the program providing the input to sdt is
+      providing the commands on a realtime basis.  This makes "sdt"
+      appropriate for realtime visualization given an appropriate controlling
+      program or shell script.</para>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title><link id="bulkDownload" linkend="bulkDownload">WWJ Bulk Download
+    Utility</link></title>
+
+    <para>A WWJ convenience utility is provided that will download a sector of
+    worldWind tiles to a local cache. Tiles will be downloaded into the
+    default cache unless an alternative cache directory location is selected
+    (click the cache button). Note that if tiles are loaded into the default
+    cache they will be subject to timing out whenever sdt3d is not running in
+    off-line mode. sdt3d must be directed to look for any alternative cache
+    location via the <link linkend="loadCache">loadCache</link> command or
+    menu option. The utility will allow you to select a sector of data to
+    download, the tile type(s) to download, and will provide an estimated
+    cache size prior to download. Care should be taken not to download more
+    tiles than allowed by the worldWind daily download quota.</para>
+
+    <para><note>
+        <para>Putting sdt3d into offline mode to prevent worldwind from
+        refreshing tiles.</para>
+      </note></para>
+
+    <para>On OSX platforms this utility is located in the sdt3d.app/Contents
+    directory and in the sdt3d directory under linux. When building from the
+    makefiles the utility in the makefile directory can be used.</para>
+
+    <para>To run the utility: <programlisting>bulkDownload.sh</programlisting></para>
+  </sect1>
+
+  <sect1 id="SDTOutputFormat">
+    <title>"sdt" Only Functionality</title>
+
+    <para>This section is relevant to "sdt" only.</para>
+
+    <sect2>
+      <title>Popups</title>
+
+      <para>When a popup window is closed by the user, the following message
+      is printed to stdout:</para>
+
+      <para><programlisting>popdown &lt;windowName&gt; </programlisting></para>
+
+      <para>If a live program is controlling "sdt"'s input (as is often the
+      case for popups), it should pay attention to this message, and stop
+      sending any more "popup" commands for that window (e.g. if the window is
+      being updated live). If this is not done properly, then a subsequent
+      "popup" command will recreate the window that the user just closed. If a
+      window is being updated live by a timer, etc., it's a good idea to go
+      ahead and re-send "sdt" the "popdown" command to make sure the window
+      stays closed in case another popup message has been issued after the
+      user closed the popup window.</para>
+    </sect2>
+
+    <sect2>
+      <title>Mouse Operations</title>
+
+      <para>You may do a variety of mouse operations in order to output
+      messages that may be fed into another program. First, double-clicking
+      the left mouse button on any node will print a simple message to stdout.
+      The message format is as follows:</para>
+
+      <para><programlisting>node &lt;node_name&gt; doubleclick </programlisting></para>
+
+      <para>Additionally, holding down the shift key while left-clicking a
+      node or position within "sdt" will print another message to stdout, with
+      the coordinate system position of mouse cursor, and an optional node
+      name and position (if a node was clicked). The message format for this
+      is as follows:</para>
+
+      <para><programlisting>shiftclick position &lt;x&gt;,&lt;y&gt; [node &lt;node_name&gt; nodeposition &lt;x&gt;,&lt;y&gt;]</programlisting></para>
+    </sect2>
+
+    <sect2>
+      <title>Background Resizing Options</title>
+
+      <para>Under the Options folder of the Menu bar, you can select one of
+      two options for resizing your background image. The Auto-Size selection
+      maximizes the background to the window while keeping the original
+      dimensions. The Fill Window selection will stretch the background image
+      to fully match the size of the window. You can also resize the
+      background anytime by using the hot key commands:</para>
+
+      <para>CTRL-F for Fill Window (was CTRL-A in 1.0aX, but had to be changed
+      for MacOS)</para>
+
+      <para>CTRL-S for Auto-Size (preserves image aspect ratio)</para>
+
+      <para>You may also resize the background by zooming in and out. This is
+      done by holding the left or right mouse button down and dragging up and
+      down.</para>
+    </sect2>
+
+    <sect2>
+      <title>Miscellaneous Options/Shortcuts</title>
+
+      <para>Holding down CTRL and clicking the mouse on the "sdt" window will
+      center the image. CTRL-P will save the current contents of the "sdt"
+      window in PNG format to a file called "sdt-(sequence number).png" in the
+      directory "sdt" was started from. The sequence number in the file name
+      is padded with zeros to 4 digits, and is reset every time "sdt" is
+      restarted, so be careful, or you will overwrite your captured files!
+      This feature is also available under "Capture Screen" in the Options
+      menu.</para>
+    </sect2>
+  </sect1>
+</article>

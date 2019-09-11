@@ -1,0 +1,322 @@
+This patch contains the changes made to the joglutils 2.0 source code
+required to work with WWJ 2.0.  The original source is hosted at:
+
+https://kenai.com/projects/jogl/sources/jogl-utils-git/show
+
+diff -r src/net/java/joglutils/GLJFrame.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/GLJFrame.java
+41a42,44
+> 
+> import com.jogamp.opengl.util.Animator;
+> 
+44d46
+< import com.sun.opengl.util.Animator;
+diff -r src/net/java/joglutils/jogltext/TextRenderer3D.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/jogltext/TextRenderer3D.java
+60c60,62
+< import javax.vecmath.Vector3f;
+---
+> 
+> import net.java.joglutils.msg.math.Vec3f;
+> //import javax.vecmath.Vector3f;
+80,82c82,84
+< private Vector3f vecA = new Vector3f();
+< private Vector3f vecB = new Vector3f();
+< private Vector3f normal = new Vector3f();
+---
+> private Vec3f vecA = new Vec3f();
+> private Vec3f vecB = new Vec3f();
+> private Vec3f normal = new Vec3f();
+494c496
+< gl.glNormal3f( normal.x, normal.y, normal.z );
+---
+> gl.glNormal3f( normal.x(), normal.y(), normal.z() );
+diff -r src/net/java/joglutils/model/ModelFactory.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/model/ModelFactory.java
+33,34c33,34
+< if (model == null)
+< throw new ModelLoadException();
+---
+> // ljt if (model == null)
+> // throw new ModelLoadException();
+diff -r src/net/java/joglutils/model/examples/DisplayListRenderer.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/model/examples/DisplayListRenderer.java
+12,14c12,17
+< import net.java.joglutils.model.*;
+< import com.sun.opengl.util.texture.*;
+< import com.sun.opengl.util.texture.awt.*;
+---
+> import com.jogamp.opengl.util.texture.Texture;
+> import com.jogamp.opengl.util.texture.TextureCo ords;
+> //import com.jogamp.opengl.util.texture.awt.AWTTe xtureIO;
+> 
+> import com.jogamp.opengl.util.texture.awt.AWTTe xtureIO;
+> 
+18a22
+> 
+20a25
+> 
+265c270
+< texture.put(id, AWTTextureIO.newTexture(bufferedImage, true));
+---
+> texture.put(id, AWTTextureIO.newTexture(GLProfile.getDef ault(),bufferedImage, true));
+309,310c314,315
+< t.enable();
+< t.bind();
+---
+> t.enable(gl);
+> t.bind(gl);
+386c391
+< t.disable();
+---
+> t.disable(gl);
+diff -r src/net/java/joglutils/model/examples/ModelTest.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/model/examples/ModelTest.java
+42c42,44
+< import com.sun.opengl.util.Animator;
+---
+> 
+> import com.jogamp.opengl.util.AnimatorBase;
+> 
+47a50
+> 
+50a54
+> 
+51a56
+> 
+52a58
+> 
+53a60
+> 
+54a62
+> 
+103c111
+< final Animator animator = new Animator(canvas);
+---
+> final AnimatorBase animator = new com.jogamp.opengl.util.Animator(canvas);
+diff -r src/net/java/joglutils/model/loader/LoaderFactory.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/model/loader/LoaderFactory.java
+55c55
+< if(tokens[tokens.length - 1].equals("3ds"))
+---
+> if(tokens[tokens.length - 1].equalsIgnoreCase("3ds"))
+57c57
+< else if(tokens[tokens.length - 1].equals("obj"))
+---
+> else if(tokens[tokens.length - 1].equalsIgnoreCase("obj"))
+diff -r src/net/java/joglutils/msg/elements/GLTextureElement.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/msg/elements/GLTextureElement.java
+40a41
+> 
+43c44,45
+< import com.sun.opengl.util.texture.*;
+---
+> 
+> import com.jogamp.opengl.util.texture.Texture;
+82c84
+< prevTexture = prev.getTexture();
+---
+> prevTexture = prev.getTexture(gl);
+85c87
+< curTexture = texture.getTexture();
+---
+> curTexture = texture.getTexture(gl);
+92c94
+< prevTexture.disable();
+---
+> prevTexture.disable(gl);
+95,96c97,98
+< curTexture.enable();
+< curTexture.bind();
+---
+> curTexture.enable(gl);
+> curTexture.bind(gl);
+diff -r src/net/java/joglutils/msg/impl/BufferFactory.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/msg/impl/BufferFactory.java
+42c42,43
+< import com.sun.opengl.util.*;
+---
+> 
+> import com.jogamp.common.nio.Buffers;
+49c50
+< 
+---
+> // LJT replaced some BufferUtil references to BufferFactory & Buffers
+61c62
+< int sz = numElements * BufferUtil.SIZEOF_BYTE;
+---
+> int sz = numElements * Buffers.SIZEOF_BYTE;
+65c66
+< return BufferUtil.newByteBuffer(numElements);
+---
+> return BufferFactory.newByteBuffer(numElements) ;
+68c69
+< curByteBuf = BufferUtil.newByteBuffer(CHUNK_SIZE / BufferUtil.SIZEOF_BYTE);
+---
+> curByteBuf = BufferFactory.newByteBuffer(CHUNK_SIZE / Buffers.SIZEOF_BYTE);
+77c78
+< int sz = numElements * BufferUtil.SIZEOF_SHORT;
+---
+> int sz = numElements * Buffers.SIZEOF_SHORT;
+81c82
+< return BufferUtil.newShortBuffer(numElements);
+---
+> return BufferFactory.newShortBuffer(numElements );
+84c85
+< curShortBuf = BufferUtil.newShortBuffer(CHUNK_SIZE / BufferUtil.SIZEOF_SHORT);
+---
+> curShortBuf = BufferFactory.newShortBuffer(CHUNK_SIZE / Buffers.SIZEOF_SHORT);
+93c94
+< int sz = numElements * BufferUtil.SIZEOF_INT;
+---
+> int sz = numElements * Buffers.SIZEOF_INT;
+97c98
+< return BufferUtil.newIntBuffer(numElements);
+---
+> return BufferFactory.newIntBuffer(numElements);
+100c101
+< curIntBuf = BufferUtil.newIntBuffer(CHUNK_SIZE / BufferUtil.SIZEOF_INT);
+---
+> curIntBuf = BufferFactory.newIntBuffer(CHUNK_SIZE / Buffers.SIZEOF_INT);
+109c110
+< int sz = numElements * BufferUtil.SIZEOF_FLOAT;
+---
+> int sz = numElements * Buffers.SIZEOF_FLOAT;
+113c114
+< return BufferUtil.newFloatBuffer(numElements);
+---
+> return BufferFactory.newFloatBuffer(numElements );
+116c117
+< curFloatBuf = BufferUtil.newFloatBuffer(CHUNK_SIZE / BufferUtil.SIZEOF_FLOAT);
+---
+> curFloatBuf = BufferFactory.newFloatBuffer(CHUNK_SIZE / Buffers.SIZEOF_FLOAT);
+125c126
+< int sz = numElements * BufferUtil.SIZEOF_DOUBLE;
+---
+> int sz = numElements * Buffers.SIZEOF_DOUBLE;
+129c130
+< return BufferUtil.newDoubleBuffer(numElements);
+---
+> return BufferFactory.newDoubleBuffer(numElement s);
+132c133
+< curDoubleBuf = BufferUtil.newDoubleBuffer(CHUNK_SIZE / BufferUtil.SIZEOF_DOUBLE);
+---
+> curDoubleBuf = BufferFactory.newDoubleBuffer(CHUNK_SIZE / Buffers.SIZEOF_DOUBLE);
+diff -r src/net/java/joglutils/msg/nodes/Texture2.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/msg/nodes/Texture2.java
+46,48c46,51
+< import com.sun.opengl.util.awt.*;
+< import com.sun.opengl.util.texture.*;
+< import com.sun.opengl.util.texture.awt.*;
+---
+> 
+> import com.jogamp.opengl.util.awt.TextureRender er;
+> import com.jogamp.opengl.util.texture.Texture;
+> import com.jogamp.opengl.util.texture.TextureDa ta;
+> import com.jogamp.opengl.util.texture.TextureIO ;
+> import com.jogamp.opengl.util.texture.awt.AWTTe xtureIO;
+104c107
+< data = TextureIO.newTextureData(file, mipmap, fileSuffix);
+---
+> data = TextureIO.newTextureData(GLProfile.getDe fault(),file, mipmap, fileSuffix);
+113c116
+< data = TextureIO.newTextureData(stream, mipmap, fileSuffix);
+---
+> data = TextureIO.newTextureData(GLProfile.getDe fault(),stream, mipmap, fileSuffix);
+122c125
+< data = TextureIO.newTextureData(url, mipmap, fileSuffix);
+---
+> data = TextureIO.newTextureData(GLProfile.getDe fault(),url, mipmap, fileSuffix);
+131c134
+< data = AWTTextureIO.newTextureData(image, mipmap);
+---
+> data = AWTTextureIO.newTextureData(GLProfile.ge tDefault(),image, mipmap);
+244,245c247,248
+< public Texture getTexture() throws GLException {
+< lazyDispose();
+---
+> public Texture getTexture(GL2 gl) throws GLException {
+> lazyDispose(gl);
+253c256
+< texture.dispose();
+---
+> texture.dispose(gl);
+261c264
+< texture.updateSubImage(subImageData,
+---
+> texture.updateSubImage(gl,subImageData,
+300c303,304
+< lazyDispose();
+---
+> // ljt needs gl context but nothing was appearing to call dispose() to get it...
+> lazyDispose(null);
+343c347
+< private void lazyDispose() {
+---
+> private void lazyDispose(GL2 gl) {
+349c353
+< t.dispose();
+---
+> t.dispose(gl);
+diff -r src/net/java/joglutils/msg/nodes/TriangleSet.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/msg/nodes/TriangleSet.java
+44c44,46
+< import com.sun.opengl.util.texture.*;
+---
+> 
+> import com.jogamp.opengl.util.texture.Texture;
+> import com.jogamp.opengl.util.texture.TextureCo ords;
+85c87
+< tex = texNode.getTexture();
+---
+> tex = texNode.getTexture(gl);
+diff -r src/net/java/joglutils/msg/test/DisplayShelfRenderer.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/msg/test/DisplayShelfRenderer.java
+42a43,44
+> import java.awt.GraphicsDevice;
+> import java.awt.GraphicsEnvironment;
+50c52
+< 
+---
+> import javax.media.nativewindow.AbstractGraphic sDevice;
+53c55,56
+< import com.sun.opengl.util.awt.*;
+---
+> 
+> import com.jogamp.opengl.util.awt.TextureRender er;
+158c161,165
+< sharedPbuffer = GLDrawableFactory.getFactory(GLProfile.g etDefault()).createGLPbuffer(new GLCapabilities(GLProfile.getDefault()), null, 1, 1, null);
+---
+> 
+> GraphicsDevice dev = GraphicsEnvironment.getLocalGraphicsEnvi ronment().getDefaultScreenDevice();
+> // LJT not sure the dev arg is correct?
+> sharedPbuffer = GLDrawableFactory.getFactory(GLProfile.g etDefault()).
+> createGLPbuffer((AbstractGraphicsDevice) dev,new GLCapabilities(GLProfile.getDefault()), null, 1, 1, null);
+159a167
+> AbstractGraphicsDevice agd;
+160a169
+> 
+diff -r src/net/java/joglutils/msg/test/Test.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/msg/test/Test.java
+46d45
+< import com.sun.opengl.util.texture.*;
+diff -r src/net/java/joglutils/test3ds/Main.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/test3ds/Main.java
+39d38
+< import com.sun.opengl.util.Animator;
+42a42
+> 
+46a47,48
+> import com.jogamp.opengl.util.Animator;
+> 
+diff -r src/net/java/joglutils/test3ds/MyModel.java /Users/ljt/Documents/sdt3d-sandbox/joglutils/src/net/java/joglutils/test3ds/MyModel.java
+40,42c40
+< import com.sun.opengl.util.texture.Texture;
+< import com.sun.opengl.util.texture.TextureCoord s;
+< import com.sun.opengl.util.texture.TextureIO;
+---
+> 
+44a43
+> 
+46a46,49
+> import com.jogamp.opengl.util.texture.Texture;
+> import com.jogamp.opengl.util.texture.TextureCo ords;
+> import com.jogamp.opengl.util.texture.TextureIO ;
+> 
+114,115c117,118
+< texture[tempObj.materialID].enable();
+< texture[tempObj.materialID].bind();
+---
+> texture[tempObj.materialID].enable(gl);
+> texture[tempObj.materialID].bind(gl);
+140c143
+< texture[tempObj.materialID].disable();
+---
+> texture[tempObj.materialID].disable(gl);

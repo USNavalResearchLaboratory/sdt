@@ -1,0 +1,10 @@
+listen tcp,5000
+
+path "/home/parallels/.config/sdt3d;"
+
+offlineMode on
+layer "All Layers::Worldwind,off"
+layer "All Layers::Worldwind::Earth at Night,on"
+layer "All Layers::User Defined,on"
+
+status "Offline mode.  Listening to TCP port 5000"

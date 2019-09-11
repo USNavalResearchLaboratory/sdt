@@ -1,0 +1,1673 @@
+# This scenario illustrates defining a region and the follow command
+# 
+#
+# Set the path to be used to search for referenced files.  (Change as appropriate for your environment.)
+#
+path "../scripts/sprites/;"
+#
+# Set the background bounds
+bgbounds 32.5013,29.7716,32.5657,29.7272
+
+# Define a region (At the end of the scenario the nodes will move into this
+# region)
+#
+region target shape circle,blue,1,10000,10000,.99 center 32.468999,31.342526
+
+# Load sprites
+#
+sprite enterprise image carrier-enterprise.png 
+sprite aegis image aegis-r.png 
+sprite ddg-destroyer-2 image ddg-destroyer-2.png 
+sprite sub-r image submarine_cartoon.png 
+
+node 1 type aegis label yellow,"cruiser01"
+node 2 type aegis label on,"cruiser02"
+node 5 type sub-r label on,"sub"
+node 0 type enterprise label on,"carrier"
+node 3 type ddg-destroyer-2 label on,"destroyer01"
+node 6 type sub-r label on,"sub"
+node 4 type ddg-destroyer-2 label on,"destroyer02"
+
+# Make the view "follow" the cruiser
+follow 1
+node 0 position 32.533389,29.748086 label white
+node 1 position 32.548023,29.760800 label white
+node 2 position 32.548019,29.735371 label white
+node 3 position 32.518755,29.760800 label white
+node 4 position 32.518758,29.735371 label white
+node 5 position 32.533389,29.766067 label white
+node 6 position 32.533389,29.730104 label white
+
+
+link 0,1
+link 0,2
+link 0,3
+link 0,4
+link 0,5
+link 0,6
+link 1,5
+link 2,6
+link 3,5
+link 4,6
+wait 1000.0000
+
+node 0 position 32.535966,29.754082
+node 1 position 32.538304,29.764071
+node 2 position 32.550167,29.744161
+node 3 position 32.517402,29.752006
+node 4 position 32.529220,29.735315
+node 5 position 32.524003,29.761974
+node 6 position 32.541496,29.735950
+wait 1000.0000
+
+node 0 position 32.539688,29.762741
+node 1 position 32.531119,29.775389
+node 2 position 32.554126,29.757199
+node 3 position 32.520832,29.755212
+node 4 position 32.542720,29.741523
+node 5 position 32.520270,29.768966
+node 6 position 32.551315,29.746363
+wait 1000.0000
+
+node 0 position 32.543409,29.771400
+node 1 position 32.534789,29.787694
+node 2 position 32.558817,29.770053
+node 3 position 32.524552,29.763871
+node 4 position 32.550930,29.752871
+node 5 position 32.523990,29.777625
+node 6 position 32.558923,29.758104
+wait 1000.0000
+
+node 0 position 32.547131,29.780059
+node 1 position 32.538509,29.796353
+node 2 position 32.563975,29.782773
+node 3 position 32.528272,29.772529
+node 4 position 32.555694,29.763635
+node 5 position 32.527710,29.786283
+node 6 position 32.565044,29.770494
+wait 1000.0000
+
+node 0 position 32.550853,29.788718
+node 1 position 32.542229,29.805011
+node 2 position 32.569361,29.795422
+node 3 position 32.531993,29.781188
+node 4 position 32.559417,29.772294
+node 5 position 32.531429,29.794942
+node 6 position 32.570218,29.782364
+wait 1000.0000
+
+node 0 position 32.554574,29.797377
+node 1 position 32.545950,29.813670
+node 2 position 32.573383,29.804777
+node 3 position 32.535713,29.789846
+node 4 position 32.563140,29.780953
+node 5 position 32.535149,29.803600
+node 6 position 32.573941,29.791023
+wait 1000.0000
+
+node 0 position 32.558296,29.806036
+node 1 position 32.549670,29.822329
+node 2 position 32.577106,29.813436
+node 3 position 32.539433,29.798505
+node 4 position 32.566863,29.789612
+node 5 position 32.538869,29.812259
+node 6 position 32.577665,29.799683
+wait 1000.0000
+
+node 0 position 32.559432,29.816244
+node 1 position 32.551961,29.833495
+node 2 position 32.574547,29.823461
+node 3 position 32.548389,29.800049
+node 4 position 32.567652,29.786212
+node 5 position 32.546422,29.821321
+node 6 position 32.575238,29.797107
+wait 1000.0000
+
+node 0 position 32.558385,29.827761
+node 1 position 32.552594,29.846969
+node 2 position 32.567942,29.835657
+node 3 position 32.559481,29.807029
+node 4 position 32.563320,29.773916
+node 5 position 32.552992,29.833444
+node 6 position 32.563186,29.790869
+wait 1000.0000
+
+node 0 position 32.557338,29.839279
+node 1 position 32.552703,29.860454
+node 2 position 32.562962,29.848426
+node 3 position 32.559047,29.820483
+node 4 position 32.562227,29.785501
+node 5 position 32.555136,29.846776
+node 6 position 32.560598,29.803427
+wait 1000.0000
+
+node 0 position 32.556291,29.850796
+node 1 position 32.552416,29.873938
+node 2 position 32.559222,29.861512
+node 3 position 32.557921,29.832870
+node 4 position 32.561180,29.797019
+node 5 position 32.555062,29.860257
+node 6 position 32.559551,29.814944
+wait 1000.0000
+
+node 0 position 32.555244,29.862313
+node 1 position 32.551836,29.887414
+node 2 position 32.556379,29.874769
+node 3 position 32.556874,29.844388
+node 4 position 32.560133,29.808536
+node 5 position 32.554145,29.873719
+node 6 position 32.558503,29.826462
+wait 1000.0000
+
+node 0 position 32.554197,29.873831
+node 1 position 32.552094,29.900874
+node 2 position 32.554154,29.888116
+node 3 position 32.555827,29.855905
+node 4 position 32.559086,29.820053
+node 5 position 32.552979,29.887167
+node 6 position 32.557456,29.837979
+wait 1000.0000
+
+node 0 position 32.553150,29.885348
+node 1 position 32.555190,29.914086
+node 2 position 32.552414,29.901515
+node 3 position 32.554780,29.867422
+node 4 position 32.558039,29.831571
+node 5 position 32.551762,29.900612
+node 6 position 32.556409,29.849496
+wait 1000.0000
+
+node 0 position 32.552103,29.896865
+node 1 position 32.560543,29.926621
+node 2 position 32.554449,29.914813
+node 3 position 32.553733,29.878939
+node 4 position 32.556992,29.843088
+node 5 position 32.550540,29.914056
+node 6 position 32.555362,29.861014
+wait 1000.0000
+
+node 0 position 32.551056,29.908382
+node 1 position 32.571290,29.936325
+node 2 position 32.558426,29.927839
+node 3 position 32.552686,29.890457
+node 4 position 32.555945,29.854605
+node 5 position 32.554932,29.924932
+node 6 position 32.554315,29.872531
+wait 1000.0000
+
+node 0 position 32.550418,29.919881
+node 1 position 32.577577,29.948543
+node 2 position 32.569194,29.937075
+node 3 position 32.551639,29.901974
+node 4 position 32.554898,29.866123
+node 5 position 32.560000,29.934990
+node 6 position 32.553268,29.884048
+wait 1000.0000
+
+node 0 position 32.558798,29.928807
+node 1 position 32.582889,29.961120
+node 2 position 32.578844,29.946908
+node 3 position 32.550592,29.913491
+node 4 position 32.553851,29.877640
+node 5 position 32.569772,29.940000
+node 6 position 32.552221,29.895566
+wait 1000.0000
+
+node 0 position 32.562500,29.939344
+node 1 position 32.589217,29.973262
+node 2 position 32.581013,29.960187
+node 3 position 32.553947,29.923947
+node 4 position 32.552804,29.889157
+node 5 position 32.579999,29.944615
+node 6 position 32.551174,29.907083
+wait 1000.0000
+
+node 0 position 32.575676,29.940067
+node 1 position 32.589984,29.986721
+node 2 position 32.589943,29.971090
+node 3 position 32.560000,29.933686
+node 4 position 32.551757,29.900674
+node 5 position 32.580000,29.956168
+node 6 position 32.550161,29.918601
+wait 1000.0000
+
+node 0 position 32.580000,29.949739
+node 1 position 32.587160,29.999942
+node 2 position 32.590000,29.982757
+node 3 position 32.568268,29.940000
+node 4 position 32.550710,29.912192
+node 5 position 32.585943,29.965943
+node 6 position 32.557818,29.927818
+wait 1000.0000
+
+node 0 position 32.581097,29.961078
+node 1 position 32.583816,30.011645
+node 2 position 32.588803,29.994190
+node 3 position 32.579815,29.943326
+node 4 position 32.552962,29.922962
+node 5 position 32.590000,29.976329
+node 6 position 32.561345,29.938518
+wait 1000.0000
+
+node 0 position 32.589595,29.969947
+node 1 position 32.580612,30.022859
+node 2 position 32.585599,30.005405
+node 3 position 32.580000,29.954864
+node 4 position 32.560000,29.932382
+node 5 position 32.590000,29.987882
+node 6 position 32.574177,29.940000
+wait 1000.0000
+
+node 0 position 32.590000,29.981454
+node 1 position 32.577408,30.034074
+node 2 position 32.582395,30.016619
+node 3 position 32.584958,29.964958
+node 4 position 32.566765,29.940000
+node 5 position 32.587382,29.999165
+node 6 position 32.580000,29.948436
+wait 1000.0000
+
+node 0 position 32.589165,29.992924
+node 1 position 32.574203,30.045289
+node 2 position 32.579190,30.027834
+node 3 position 32.590000,29.975025
+node 4 position 32.579220,29.942135
+node 5 position 32.584178,30.010379
+node 6 position 32.580358,29.959949
+wait 1000.0000
+
+node 0 position 32.585960,30.004139
+node 1 position 32.570999,30.056503
+node 2 position 32.575986,30.039049
+node 3 position 32.590000,29.986578
+node 4 position 32.580000,29.953560
+node 5 position 32.580973,30.021594
+node 6 position 32.588824,29.968835
+wait 1000.0000
+
+node 0 position 32.582756,30.015354
+node 1 position 32.570000,30.067957
+node 2 position 32.572782,30.050263
+node 3 position 32.587743,29.997899
+node 4 position 32.583973,29.963973
+node 5 position 32.577769,30.032809
+node 6 position 32.590000,29.980150
+wait 1000.0000
+
+node 0 position 32.579552,30.026568
+node 1 position 32.570000,30.079510
+node 2 position 32.570000,30.061529
+node 3 position 32.584539,30.009114
+node 4 position 32.590000,29.973722
+node 5 position 32.574565,30.044023
+node 6 position 32.589526,29.991659
+wait 1000.0000
+
+node 0 position 32.576348,30.037783
+node 1 position 32.570000,30.091063
+node 2 position 32.570000,30.073082
+node 3 position 32.581335,30.020328
+node 4 position 32.590000,29.985275
+node 5 position 32.571361,30.055238
+node 6 position 32.586322,30.002874
+wait 1000.0000
+
+node 0 position 32.573144,30.048998
+node 1 position 32.570000,30.102616
+node 2 position 32.570000,30.084635
+node 3 position 32.578131,30.031543
+node 4 position 32.588105,29.996634
+node 5 position 32.570000,30.066653
+node 6 position 32.583118,30.014088
+wait 1000.0000
+
+node 0 position 32.570023,30.060226
+node 1 position 32.570000,30.114169
+node 2 position 32.570000,30.096188
+node 3 position 32.574926,30.042758
+node 4 position 32.584901,30.007848
+node 5 position 32.570000,30.078206
+node 6 position 32.579914,30.025303
+wait 1000.0000
+
+node 0 position 32.570000,30.071778
+node 1 position 32.570000,30.125722
+node 2 position 32.570000,30.107741
+node 3 position 32.571722,30.053972
+node 4 position 32.581696,30.019063
+node 5 position 32.570000,30.089759
+node 6 position 32.576709,30.036518
+wait 1000.0000
+
+node 0 position 32.570000,30.083331
+node 1 position 32.570000,30.137275
+node 2 position 32.570000,30.119294
+node 3 position 32.570000,30.065350
+node 4 position 32.578492,30.030278
+node 5 position 32.570000,30.101312
+node 6 position 32.573505,30.047732
+wait 1000.0000
+
+node 0 position 32.570000,30.094884
+node 1 position 32.570000,30.148828
+node 2 position 32.570000,30.130847
+node 3 position 32.570000,30.076903
+node 4 position 32.575288,30.041492
+node 5 position 32.570000,30.112866
+node 6 position 32.570301,30.058947
+wait 1000.0000
+
+node 0 position 32.570000,30.106437
+node 1 position 32.570000,30.160381
+node 2 position 32.570000,30.142400
+node 3 position 32.570000,30.088456
+node 4 position 32.572084,30.052707
+node 5 position 32.570000,30.124419
+node 6 position 32.570000,30.070474
+wait 1000.0000
+
+node 0 position 32.570000,30.117990
+node 1 position 32.570000,30.171934
+node 2 position 32.570000,30.153953
+node 3 position 32.570000,30.100009
+node 4 position 32.570000,30.064046
+node 5 position 32.570000,30.135972
+node 6 position 32.570000,30.082027
+wait 1000.0000
+
+node 0 position 32.570000,30.129543
+node 1 position 32.570000,30.183488
+node 2 position 32.570000,30.165506
+node 3 position 32.570000,30.111562
+node 4 position 32.570000,30.075599
+node 5 position 32.570000,30.147525
+node 6 position 32.570000,30.093580
+wait 1000.0000
+
+node 0 position 32.570000,30.141096
+node 1 position 32.566627,30.194217
+node 2 position 32.570000,30.177059
+node 3 position 32.570000,30.123115
+node 4 position 32.570000,30.087152
+node 5 position 32.570000,30.159078
+node 6 position 32.570000,30.105134
+wait 1000.0000
+
+node 0 position 32.570000,30.152649
+node 1 position 32.559026,30.203719
+node 2 position 32.569997,30.188612
+node 3 position 32.570000,30.134668
+node 4 position 32.570000,30.098705
+node 5 position 32.570000,30.170631
+node 6 position 32.570000,30.116687
+wait 1000.0000
+
+node 0 position 32.570000,30.164202
+node 1 position 32.551424,30.213220
+node 2 position 32.563255,30.198432
+node 3 position 32.570000,30.146221
+node 4 position 32.570000,30.110258
+node 5 position 32.570000,30.182184
+node 6 position 32.570000,30.128240
+wait 1000.0000
+
+node 0 position 32.570000,30.175756
+node 1 position 32.543823,30.222721
+node 2 position 32.555654,30.207933
+node 3 position 32.570000,30.157774
+node 4 position 32.570000,30.121811
+node 5 position 32.567484,30.193145
+node 6 position 32.570000,30.139793
+wait 1000.0000
+
+node 0 position 32.570000,30.187309
+node 1 position 32.536222,30.232223
+node 2 position 32.548053,30.217435
+node 3 position 32.570000,30.169327
+node 4 position 32.570000,30.133364
+node 5 position 32.559883,30.202646
+node 6 position 32.570000,30.151346
+wait 1000.0000
+
+node 0 position 32.564113,30.197360
+node 1 position 32.530000,30.242184
+node 2 position 32.540451,30.226936
+node 3 position 32.570000,30.180880
+node 4 position 32.570000,30.144917
+node 5 position 32.552282,30.212148
+node 6 position 32.570000,30.162899
+wait 1000.0000
+
+node 0 position 32.556512,30.206861
+node 1 position 32.525142,30.251620
+node 2 position 32.532850,30.236437
+node 3 position 32.568342,30.192073
+node 4 position 32.570000,30.156470
+node 5 position 32.544681,30.221649
+node 6 position 32.570000,30.174452
+wait 1000.0000
+
+node 0 position 32.548910,30.216362
+node 1 position 32.512671,30.255777
+node 2 position 32.529976,30.247308
+node 3 position 32.560741,30.201574
+node 4 position 32.570000,30.168024
+node 5 position 32.537080,30.231151
+node 6 position 32.570000,30.186005
+wait 1000.0000
+
+node 0 position 32.541309,30.225864
+node 1 position 32.500199,30.259934
+node 2 position 32.519610,30.253464
+node 3 position 32.553140,30.211076
+node 4 position 32.570000,30.179577
+node 5 position 32.530039,30.240881
+node 6 position 32.564970,30.196288
+wait 1000.0000
+
+node 0 position 32.533708,30.235365
+node 1 position 32.487728,30.264091
+node 2 position 32.507139,30.257621
+node 3 position 32.545539,30.220577
+node 4 position 32.569190,30.190996
+node 5 position 32.526549,30.251150
+node 6 position 32.557369,30.205789
+wait 1000.0000
+
+node 0 position 32.530000,30.246005
+node 1 position 32.475256,30.268248
+node 2 position 32.494667,30.261778
+node 3 position 32.537937,30.230078
+node 4 position 32.561599,30.200502
+node 5 position 32.514078,30.255308
+node 6 position 32.549768,30.215290
+wait 1000.0000
+
+node 0 position 32.521017,30.252995
+node 1 position 32.462785,30.272405
+node 2 position 32.482195,30.265935
+node 3 position 32.530428,30.239627
+node 4 position 32.553998,30.210004
+node 5 position 32.501606,30.259465
+node 6 position 32.542167,30.224792
+wait 1000.0000
+
+node 0 position 32.508546,30.257152
+node 1 position 32.450313,30.276562
+node 2 position 32.469724,30.270092
+node 3 position 32.527873,30.250535
+node 4 position 32.546396,30.219505
+node 5 position 32.489135,30.263622
+node 6 position 32.534566,30.234293
+wait 1000.0000
+
+node 0 position 32.496074,30.261309
+node 1 position 32.438680,30.281760
+node 2 position 32.457252,30.274249
+node 3 position 32.515485,30.254839
+node 4 position 32.538795,30.229006
+node 5 position 32.476663,30.267779
+node 6 position 32.530000,30.244701
+wait 1000.0000
+
+node 0 position 32.483603,30.265466
+node 1 position 32.431408,30.291457
+node 2 position 32.444781,30.278406
+node 3 position 32.503014,30.258996
+node 4 position 32.531194,30.238508
+node 5 position 32.464192,30.271936
+node 6 position 32.522425,30.252526
+wait 1000.0000
+
+node 0 position 32.471131,30.269623
+node 1 position 32.424135,30.301154
+node 2 position 32.435454,30.286062
+node 3 position 32.490542,30.263153
+node 4 position 32.528942,30.249624
+node 5 position 32.451720,30.276093
+node 6 position 32.509953,30.256683
+wait 1000.0000
+
+node 0 position 32.458660,30.273780
+node 1 position 32.416863,30.310851
+node 2 position 32.428182,30.295758
+node 3 position 32.478071,30.267310
+node 4 position 32.516893,30.254370
+node 5 position 32.439553,30.280699
+node 6 position 32.497482,30.260840
+wait 1000.0000
+
+node 0 position 32.446188,30.277937
+node 1 position 32.409590,30.320547
+node 2 position 32.420909,30.305455
+node 3 position 32.465599,30.271467
+node 4 position 32.504421,30.258527
+node 5 position 32.432228,30.290363
+node 6 position 32.485010,30.264997
+wait 1000.0000
+
+node 0 position 32.436275,30.284968
+node 1 position 32.402317,30.330244
+node 2 position 32.413637,30.315152
+node 3 position 32.453128,30.275624
+node 4 position 32.491949,30.262684
+node 5 position 32.424956,30.300060
+node 6 position 32.472539,30.269154
+wait 1000.0000
+
+node 0 position 32.429002,30.294664
+node 1 position 32.395045,30.339941
+node 2 position 32.406364,30.324849
+node 3 position 32.440697,30.279858
+node 4 position 32.479478,30.266841
+node 5 position 32.417683,30.309756
+node 6 position 32.460067,30.273311
+wait 1000.0000
+
+node 0 position 32.421730,30.304361
+node 1 position 32.387772,30.349638
+node 2 position 32.399091,30.334545
+node 3 position 32.433049,30.289269
+node 4 position 32.467006,30.270998
+node 5 position 32.410411,30.319453
+node 6 position 32.447595,30.277468
+wait 1000.0000
+
+node 0 position 32.414457,30.314058
+node 1 position 32.380503,30.359336
+node 2 position 32.391819,30.344242
+node 3 position 32.425776,30.298966
+node 4 position 32.454535,30.275155
+node 5 position 32.403138,30.329150
+node 6 position 32.437096,30.283873
+wait 1000.0000
+
+node 0 position 32.407185,30.323754
+node 1 position 32.377366,30.370536
+node 2 position 32.384546,30.353939
+node 3 position 32.418504,30.308662
+node 4 position 32.442063,30.279312
+node 5 position 32.395865,30.338847
+node 6 position 32.429823,30.293570
+wait 1000.0000
+
+node 0 position 32.399912,30.333451
+node 1 position 32.374543,30.381830
+node 2 position 32.378937,30.364253
+node 3 position 32.411231,30.318359
+node 4 position 32.433870,30.288175
+node 5 position 32.388593,30.348543
+node 6 position 32.422551,30.303267
+wait 1000.0000
+
+node 0 position 32.392639,30.343148
+node 1 position 32.371719,30.393123
+node 2 position 32.376114,30.375546
+node 3 position 32.403959,30.328056
+node 4 position 32.426597,30.297871
+node 5 position 32.381320,30.358240
+node 6 position 32.415278,30.312964
+wait 1000.0000
+
+node 0 position 32.385367,30.352845
+node 1 position 32.368896,30.404416
+node 2 position 32.373290,30.386839
+node 3 position 32.396686,30.337752
+node 4 position 32.419325,30.307568
+node 5 position 32.377685,30.369262
+node 6 position 32.408005,30.322660
+wait 1000.0000
+
+node 0 position 32.379256,30.362978
+node 1 position 32.366073,30.415710
+node 2 position 32.370467,30.398132
+node 3 position 32.389413,30.347449
+node 4 position 32.412052,30.317265
+node 5 position 32.374861,30.380555
+node 6 position 32.400733,30.332357
+wait 1000.0000
+
+node 0 position 32.376432,30.374272
+node 1 position 32.363249,30.427003
+node 2 position 32.367644,30.409426
+node 3 position 32.382141,30.357146
+node 4 position 32.404779,30.326962
+node 5 position 32.372038,30.391849
+node 6 position 32.393460,30.342054
+wait 1000.0000
+
+node 0 position 32.373609,30.385565
+node 1 position 32.360426,30.438296
+node 2 position 32.364820,30.420719
+node 3 position 32.378003,30.367988
+node 4 position 32.397507,30.336658
+node 5 position 32.369215,30.403142
+node 6 position 32.386187,30.351750
+wait 1000.0000
+
+node 0 position 32.370786,30.396858
+node 1 position 32.352536,30.447464
+node 2 position 32.361997,30.432012
+node 3 position 32.375180,30.379281
+node 4 position 32.390234,30.346355
+node 5 position 32.366391,30.414435
+node 6 position 32.379574,30.361704
+wait 1000.0000
+
+node 0 position 32.367962,30.408151
+node 1 position 32.348635,30.458193
+node 2 position 32.357403,30.442597
+node 3 position 32.372357,30.390574
+node 4 position 32.382961,30.356052
+node 5 position 32.363568,30.425728
+node 6 position 32.376751,30.372997
+wait 1000.0000
+
+node 0 position 32.365139,30.419445
+node 1 position 32.346729,30.469628
+node 2 position 32.349695,30.451830
+node 3 position 32.369533,30.401868
+node 4 position 32.378322,30.366713
+node 5 position 32.360745,30.437022
+node 6 position 32.373928,30.384291
+wait 1000.0000
+
+node 0 position 32.362316,30.430738
+node 1 position 32.344823,30.481064
+node 2 position 32.347789,30.463265
+node 3 position 32.366710,30.413161
+node 4 position 32.375498,30.378007
+node 5 position 32.353523,30.446477
+node 6 position 32.371104,30.395584
+wait 1000.0000
+
+node 0 position 32.358390,30.441610
+node 1 position 32.342917,30.492499
+node 2 position 32.345883,30.474701
+node 3 position 32.363887,30.424454
+node 4 position 32.372675,30.389300
+node 5 position 32.348850,30.456902
+node 6 position 32.368281,30.406877
+wait 1000.0000
+
+node 0 position 32.349994,30.450554
+node 1 position 32.341011,30.503935
+node 2 position 32.343977,30.486136
+node 3 position 32.361063,30.435747
+node 4 position 32.369852,30.400593
+node 5 position 32.346944,30.468338
+node 6 position 32.365458,30.418170
+wait 1000.0000
+
+node 0 position 32.348004,30.461975
+node 1 position 32.337505,30.514990
+node 2 position 32.342071,30.497572
+node 3 position 32.354510,30.445490
+node 4 position 32.367028,30.411887
+node 5 position 32.345038,30.479773
+node 6 position 32.362634,30.429464
+wait 1000.0000
+
+node 0 position 32.346098,30.473410
+node 1 position 32.332201,30.525599
+node 2 position 32.340165,30.509007
+node 3 position 32.349065,30.455612
+node 4 position 32.364205,30.423180
+node 5 position 32.343132,30.491209
+node 6 position 32.359362,30.440612
+wait 1000.0000
+
+node 0 position 32.344192,30.484846
+node 1 position 32.324871,30.535130
+node 2 position 32.335152,30.519696
+node 3 position 32.347159,30.467047
+node 4 position 32.361382,30.434473
+node 5 position 32.341226,30.502644
+node 6 position 32.350657,30.449389
+wait 1000.0000
+
+node 0 position 32.342286,30.496281
+node 1 position 32.316119,30.543881
+node 2 position 32.329723,30.530248
+node 3 position 32.345253,30.478483
+node 4 position 32.355497,30.444503
+node 5 position 32.338104,30.513792
+node 6 position 32.348219,30.460684
+wait 1000.0000
+
+node 0 position 32.340381,30.507717
+node 1 position 32.307368,30.552632
+node 2 position 32.320989,30.539012
+node 3 position 32.343347,30.489918
+node 4 position 32.349280,30.454321
+node 5 position 32.332799,30.524402
+node 6 position 32.346313,30.472120
+wait 1000.0000
+
+node 0 position 32.335751,30.518499
+node 1 position 32.300000,30.561970
+node 2 position 32.312237,30.547763
+node 3 position 32.341441,30.501354
+node 4 position 32.347374,30.465757
+node 5 position 32.325858,30.534142
+node 6 position 32.344408,30.483555
+wait 1000.0000
+
+node 0 position 32.330446,30.529108
+node 1 position 32.301630,30.573260
+node 2 position 32.303486,30.556514
+node 3 position 32.338703,30.512595
+node 4 position 32.345468,30.477193
+node 5 position 32.317107,30.542894
+node 6 position 32.342502,30.494991
+wait 1000.0000
+
+node 0 position 32.321976,30.538024
+node 1 position 32.306935,30.583870
+node 2 position 32.300000,30.567095
+node 3 position 32.333398,30.523205
+node 4 position 32.343562,30.488628
+node 5 position 32.308355,30.551645
+node 6 position 32.340596,30.506427
+wait 1000.0000
+
+node 0 position 32.313225,30.546775
+node 1 position 32.311563,30.594690
+node 2 position 32.303983,30.577967
+node 3 position 32.326846,30.533155
+node 4 position 32.341656,30.500064
+node 5 position 32.300134,30.560675
+node 6 position 32.336349,30.517301
+wait 1000.0000
+
+node 0 position 32.304473,30.555527
+node 1 position 32.315265,30.605795
+node 2 position 32.309288,30.588577
+node 3 position 32.318094,30.541906
+node 4 position 32.339301,30.511398
+node 5 position 32.301031,30.572063
+node 6 position 32.331045,30.527911
+wait 1000.0000
+
+node 0 position 32.300000,30.565791
+node 1 position 32.318966,30.616899
+node 2 position 32.313205,30.599616
+node 3 position 32.309343,30.550657
+node 4 position 32.333996,30.522007
+node 5 position 32.306336,30.582673
+node 6 position 32.322964,30.537037
+wait 1000.0000
+
+node 0 position 32.303385,30.576769
+node 1 position 32.322035,30.628141
+node 2 position 32.316907,30.610720
+node 3 position 32.300676,30.559464
+node 4 position 32.327833,30.532167
+node 5 position 32.311146,30.593437
+node 6 position 32.314212,30.545788
+wait 1000.0000
+
+node 0 position 32.308690,30.587380
+node 1 position 32.324859,30.639435
+node 2 position 32.320464,30.621856
+node 3 position 32.300434,30.570865
+node 4 position 32.319082,30.540919
+node 5 position 32.314847,30.604542
+node 6 position 32.305461,30.554539
+wait 1000.0000
+
+node 0 position 32.312788,30.598363
+node 1 position 32.327682,30.650730
+node 2 position 32.323288,30.633151
+node 3 position 32.305738,30.581476
+node 4 position 32.310330,30.549670
+node 5 position 32.318549,30.615646
+node 6 position 32.300000,30.564488
+wait 1000.0000
+
+node 0 position 32.316489,30.609467
+node 1 position 32.330506,30.662025
+node 2 position 32.326111,30.644445
+node 3 position 32.310728,30.592184
+node 4 position 32.301579,30.558421
+node 5 position 32.321717,30.626866
+node 6 position 32.302786,30.575572
+wait 1000.0000
+
+node 0 position 32.320145,30.620582
+node 1 position 32.333330,30.673319
+node 2 position 32.328935,30.655740
+node 3 position 32.314430,30.603289
+node 4 position 32.300043,30.569611
+node 5 position 32.324540,30.638161
+node 6 position 32.308091,30.586182
+wait 1000.0000
+
+node 0 position 32.322969,30.631876
+node 1 position 32.336153,30.684614
+node 2 position 32.331759,30.667035
+node 3 position 32.318131,30.614393
+node 4 position 32.305139,30.580279
+node 5 position 32.327364,30.649455
+node 6 position 32.312370,30.597110
+wait 1000.0000
+
+node 0 position 32.325793,30.643171
+node 1 position 32.338977,30.695908
+node 2 position 32.334582,30.678329
+node 3 position 32.321398,30.625592
+node 4 position 32.310310,30.590931
+node 5 position 32.330187,30.660750
+node 6 position 32.316071,30.608214
+wait 1000.0000
+
+node 0 position 32.328616,30.654466
+node 1 position 32.340000,30.707372
+node 2 position 32.337406,30.689624
+node 3 position 32.324222,30.636886
+node 4 position 32.314012,30.602036
+node 5 position 32.333011,30.672045
+node 6 position 32.319773,30.619319
+wait 1000.0000
+
+node 0 position 32.331440,30.665760
+node 1 position 32.340000,30.718925
+node 2 position 32.340000,30.700944
+node 3 position 32.327045,30.648181
+node 4 position 32.317713,30.613140
+node 5 position 32.335835,30.683339
+node 6 position 32.322650,30.630602
+wait 1000.0000
+
+node 0 position 32.334264,30.677055
+node 1 position 32.339880,30.730471
+node 2 position 32.340000,30.712497
+node 3 position 32.329869,30.659476
+node 4 position 32.321079,30.624317
+node 5 position 32.338658,30.694634
+node 6 position 32.325474,30.641896
+wait 1000.0000
+
+node 0 position 32.337087,30.688349
+node 1 position 32.337059,30.741766
+node 2 position 32.340000,30.724050
+node 3 position 32.332693,30.670770
+node 4 position 32.323903,30.635612
+node 5 position 32.340000,30.706068
+node 6 position 32.328298,30.653191
+wait 1000.0000
+
+node 0 position 32.339903,30.699645
+node 1 position 32.334235,30.753062
+node 2 position 32.338630,30.735482
+node 3 position 32.335516,30.682065
+node 4 position 32.326727,30.646906
+node 5 position 32.340000,30.717621
+node 6 position 32.331121,30.664486
+wait 1000.0000
+
+node 0 position 32.340000,30.711193
+node 1 position 32.331411,30.764357
+node 2 position 32.335806,30.746777
+node 3 position 32.338340,30.693359
+node 4 position 32.329550,30.658201
+node 5 position 32.340000,30.729174
+node 6 position 32.333945,30.675780
+wait 1000.0000
+
+node 0 position 32.340000,30.722746
+node 1 position 32.328587,30.775652
+node 2 position 32.332982,30.758072
+node 3 position 32.340000,30.704765
+node 4 position 32.332374,30.669496
+node 5 position 32.337377,30.740492
+node 6 position 32.336769,30.687075
+wait 1000.0000
+
+node 0 position 32.338948,30.734207
+node 1 position 32.325763,30.786947
+node 2 position 32.330158,30.769367
+node 3 position 32.340000,30.716318
+node 4 position 32.335198,30.680790
+node 5 position 32.334553,30.751787
+node 6 position 32.339592,30.698369
+wait 1000.0000
+
+node 0 position 32.336125,30.745502
+node 1 position 32.322939,30.798242
+node 2 position 32.327335,30.780662
+node 3 position 32.340000,30.727871
+node 4 position 32.338021,30.692085
+node 5 position 32.331730,30.763082
+node 6 position 32.340000,30.709889
+wait 1000.0000
+
+node 0 position 32.333301,30.756797
+node 1 position 32.320116,30.809538
+node 2 position 32.324511,30.791957
+node 3 position 32.337696,30.739217
+node 4 position 32.340000,30.703461
+node 5 position 32.328906,30.774377
+node 6 position 32.340000,30.721442
+wait 1000.0000
+
+node 0 position 32.330477,30.768093
+node 1 position 32.319618,30.821078
+node 2 position 32.321687,30.803253
+node 3 position 32.334872,30.750512
+node 4 position 32.340000,30.715014
+node 5 position 32.326082,30.785673
+node 6 position 32.339267,30.732932
+wait 1000.0000
+
+node 0 position 32.327653,30.779388
+node 1 position 32.319220,30.832626
+node 2 position 32.319840,30.814652
+node 3 position 32.332048,30.761808
+node 4 position 32.340000,30.726567
+node 5 position 32.323258,30.796968
+node 6 position 32.336443,30.744228
+wait 1000.0000
+
+node 0 position 32.324829,30.790683
+node 1 position 32.318822,30.844174
+node 2 position 32.319441,30.826200
+node 3 position 32.329224,30.773103
+node 4 position 32.338014,30.737943
+node 5 position 32.320434,30.808263
+node 6 position 32.333619,30.755523
+wait 1000.0000
+
+node 0 position 32.322006,30.801978
+node 1 position 32.318423,30.855722
+node 2 position 32.319043,30.837748
+node 3 position 32.326401,30.784398
+node 4 position 32.335191,30.749238
+node 5 position 32.319663,30.819774
+node 6 position 32.330796,30.766818
+wait 1000.0000
+
+node 0 position 32.319885,30.813349
+node 1 position 32.318025,30.867270
+node 2 position 32.318645,30.849296
+node 3 position 32.323577,30.795693
+node 4 position 32.332367,30.760533
+node 5 position 32.319265,30.831322
+node 6 position 32.327972,30.778113
+wait 1000.0000
+
+node 0 position 32.319486,30.824897
+node 1 position 32.317627,30.878818
+node 2 position 32.318247,30.860844
+node 3 position 32.320753,30.806988
+node 4 position 32.329543,30.771828
+node 5 position 32.318867,30.842870
+node 6 position 32.325148,30.789408
+wait 1000.0000
+
+node 0 position 32.319088,30.836445
+node 1 position 32.317229,30.890366
+node 2 position 32.317849,30.872392
+node 3 position 32.319708,30.818471
+node 4 position 32.326719,30.783123
+node 5 position 32.318468,30.854418
+node 6 position 32.322324,30.800704
+wait 1000.0000
+
+node 0 position 32.318690,30.847993
+node 1 position 32.316831,30.901914
+node 2 position 32.317450,30.883940
+node 3 position 32.319310,30.830019
+node 4 position 32.323895,30.794419
+node 5 position 32.318070,30.865966
+node 6 position 32.319930,30.812046
+wait 1000.0000
+
+node 0 position 32.318292,30.859541
+node 1 position 32.316432,30.913462
+node 2 position 32.317052,30.895488
+node 3 position 32.318912,30.841567
+node 4 position 32.321072,30.805714
+node 5 position 32.317672,30.877515
+node 6 position 32.319531,30.823594
+wait 1000.0000
+
+node 0 position 32.317894,30.871089
+node 1 position 32.316034,30.925010
+node 2 position 32.316654,30.907036
+node 3 position 32.318513,30.853115
+node 4 position 32.319753,30.817168
+node 5 position 32.317274,30.889063
+node 6 position 32.319133,30.835142
+wait 1000.0000
+
+node 0 position 32.317495,30.882637
+node 1 position 32.315636,30.936558
+node 2 position 32.316256,30.918584
+node 3 position 32.318115,30.864663
+node 4 position 32.319355,30.828716
+node 5 position 32.316876,30.900611
+node 6 position 32.318735,30.846690
+wait 1000.0000
+
+node 0 position 32.317097,30.894185
+node 1 position 32.315238,30.948106
+node 2 position 32.315858,30.930132
+node 3 position 32.317717,30.876211
+node 4 position 32.318956,30.840264
+node 5 position 32.316477,30.912159
+node 6 position 32.318337,30.858238
+wait 1000.0000
+
+node 0 position 32.316699,30.905733
+node 1 position 32.314840,30.959654
+node 2 position 32.315459,30.941680
+node 3 position 32.317319,30.887759
+node 4 position 32.318558,30.851812
+node 5 position 32.316079,30.923707
+node 6 position 32.317938,30.869786
+wait 1000.0000
+
+node 0 position 32.316301,30.917281
+node 1 position 32.314441,30.971202
+node 2 position 32.315061,30.953228
+node 3 position 32.316920,30.899307
+node 4 position 32.318160,30.863360
+node 5 position 32.315681,30.935255
+node 6 position 32.317540,30.881334
+wait 1000.0000
+
+node 0 position 32.315902,30.928829
+node 1 position 32.314043,30.982750
+node 2 position 32.314663,30.964776
+node 3 position 32.316522,30.910855
+node 4 position 32.317762,30.874908
+node 5 position 32.315283,30.946803
+node 6 position 32.317142,30.892882
+wait 1000.0000
+
+node 0 position 32.315504,30.940377
+node 1 position 32.313645,30.994298
+node 2 position 32.314265,30.976324
+node 3 position 32.316124,30.922403
+node 4 position 32.317364,30.886456
+node 5 position 32.314884,30.958351
+node 6 position 32.316744,30.904430
+wait 1000.0000
+
+node 0 position 32.315106,30.951925
+node 1 position 32.313247,31.005846
+node 2 position 32.313867,30.987872
+node 3 position 32.315726,30.933951
+node 4 position 32.316965,30.898004
+node 5 position 32.314486,30.969899
+node 6 position 32.316346,30.915978
+wait 1000.0000
+
+node 0 position 32.314708,30.963473
+node 1 position 32.312849,31.017394
+node 2 position 32.313468,30.999420
+node 3 position 32.315328,30.945500
+node 4 position 32.316567,30.909552
+node 5 position 32.314088,30.981447
+node 6 position 32.315947,30.927526
+wait 1000.0000
+
+node 0 position 32.314310,30.975021
+node 1 position 32.312450,31.028942
+node 2 position 32.313070,31.010968
+node 3 position 32.314929,30.957048
+node 4 position 32.316169,30.921100
+node 5 position 32.313690,30.992995
+node 6 position 32.315549,30.939074
+wait 1000.0000
+
+node 0 position 32.313911,30.986569
+node 1 position 32.312052,31.040490
+node 2 position 32.312672,31.022516
+node 3 position 32.314531,30.968596
+node 4 position 32.315771,30.932648
+node 5 position 32.313292,31.004543
+node 6 position 32.315151,30.950622
+wait 1000.0000
+
+node 0 position 32.313513,30.998117
+node 1 position 32.311654,31.052038
+node 2 position 32.312274,31.034064
+node 3 position 32.314133,30.980144
+node 4 position 32.315373,30.944196
+node 5 position 32.312893,31.016091
+node 6 position 32.314753,30.962170
+wait 1000.0000
+
+node 0 position 32.313115,31.009665
+node 1 position 32.311256,31.063586
+node 2 position 32.311875,31.045612
+node 3 position 32.313735,30.991692
+node 4 position 32.314974,30.955744
+node 5 position 32.312495,31.027639
+node 6 position 32.314355,30.973718
+wait 1000.0000
+
+node 0 position 32.312717,31.021213
+node 1 position 32.310857,31.075134
+node 2 position 32.311477,31.057160
+node 3 position 32.313337,31.003240
+node 4 position 32.314576,30.967292
+node 5 position 32.312097,31.039187
+node 6 position 32.313956,30.985266
+wait 1000.0000
+
+node 0 position 32.312319,31.032761
+node 1 position 32.310459,31.086682
+node 2 position 32.311079,31.068708
+node 3 position 32.312938,31.014788
+node 4 position 32.314178,30.978840
+node 5 position 32.311699,31.050735
+node 6 position 32.313558,30.996814
+wait 1000.0000
+
+node 0 position 32.311920,31.044309
+node 1 position 32.310061,31.098230
+node 2 position 32.310681,31.080256
+node 3 position 32.312540,31.026336
+node 4 position 32.313780,30.990388
+node 5 position 32.311301,31.062283
+node 6 position 32.313160,31.008362
+wait 1000.0000
+
+node 0 position 32.311522,31.055857
+node 1 position 32.312717,31.109510
+node 2 position 32.310283,31.091804
+node 3 position 32.312142,31.037884
+node 4 position 32.313382,31.001936
+node 5 position 32.310902,31.073831
+node 6 position 32.312762,31.019910
+wait 1000.0000
+
+node 0 position 32.311124,31.067405
+node 1 position 32.315923,31.120733
+node 2 position 32.310933,31.103266
+node 3 position 32.311744,31.049432
+node 4 position 32.312983,31.013484
+node 5 position 32.310504,31.085379
+node 6 position 32.312364,31.031458
+wait 1000.0000
+
+node 0 position 32.310726,31.078953
+node 1 position 32.319130,31.131955
+node 2 position 32.314139,31.114488
+node 3 position 32.311346,31.060980
+node 4 position 32.312585,31.025033
+node 5 position 32.310106,31.096927
+node 6 position 32.311965,31.043006
+wait 1000.0000
+
+node 0 position 32.310328,31.090501
+node 1 position 32.322336,31.143178
+node 2 position 32.317346,31.125711
+node 3 position 32.310947,31.072528
+node 4 position 32.312187,31.036581
+node 5 position 32.312355,31.108244
+node 6 position 32.311567,31.054554
+wait 1000.0000
+
+node 0 position 32.310571,31.102000
+node 1 position 32.325543,31.154400
+node 2 position 32.320552,31.136933
+node 3 position 32.310549,31.084076
+node 4 position 32.311789,31.048129
+node 5 position 32.315562,31.119466
+node 6 position 32.311169,31.066102
+wait 1000.0000
+
+node 0 position 32.313777,31.113222
+node 1 position 32.328749,31.165623
+node 2 position 32.323759,31.148156
+node 3 position 32.310151,31.095624
+node 4 position 32.311390,31.059677
+node 5 position 32.318768,31.130689
+node 6 position 32.310771,31.077650
+wait 1000.0000
+
+node 0 position 32.316984,31.124444
+node 1 position 32.331956,31.176845
+node 2 position 32.326965,31.159378
+node 3 position 32.311993,31.106978
+node 4 position 32.310992,31.071225
+node 5 position 32.321974,31.141911
+node 6 position 32.310372,31.089198
+wait 1000.0000
+
+node 0 position 32.320190,31.135667
+node 1 position 32.335162,31.188068
+node 2 position 32.330172,31.170601
+node 3 position 32.315200,31.118200
+node 4 position 32.310594,31.082773
+node 5 position 32.325181,31.153134
+node 6 position 32.310210,31.100733
+wait 1000.0000
+
+node 0 position 32.323397,31.146889
+node 1 position 32.338369,31.199290
+node 2 position 32.333378,31.181823
+node 3 position 32.318406,31.129423
+node 4 position 32.310196,31.094321
+node 5 position 32.328387,31.164356
+node 6 position 32.313416,31.111956
+wait 1000.0000
+
+node 0 position 32.326603,31.158112
+node 1 position 32.341575,31.210513
+node 2 position 32.336584,31.193046
+node 3 position 32.321613,31.140645
+node 4 position 32.311631,31.105711
+node 5 position 32.331594,31.175579
+node 6 position 32.316622,31.123178
+wait 1000.0000
+
+node 0 position 32.329810,31.169334
+node 1 position 32.344781,31.221735
+node 2 position 32.339791,31.204268
+node 3 position 32.324819,31.151868
+node 4 position 32.314838,31.116934
+node 5 position 32.334800,31.186801
+node 6 position 32.319829,31.134401
+wait 1000.0000
+
+node 0 position 32.333016,31.180557
+node 1 position 32.347988,31.232958
+node 2 position 32.342997,31.215491
+node 3 position 32.328026,31.163090
+node 4 position 32.318044,31.128156
+node 5 position 32.338007,31.198024
+node 6 position 32.323035,31.145623
+wait 1000.0000
+
+node 0 position 32.336223,31.191779
+node 1 position 32.351629,31.244072
+node 2 position 32.346204,31.226713
+node 3 position 32.331232,31.174313
+node 4 position 32.321251,31.139379
+node 5 position 32.341213,31.209246
+node 6 position 32.326241,31.156846
+wait 1000.0000
+
+node 0 position 32.339429,31.203002
+node 1 position 32.356001,31.255003
+node 2 position 32.349410,31.237936
+node 3 position 32.334438,31.185535
+node 4 position 32.324457,31.150601
+node 5 position 32.344420,31.220469
+node 6 position 32.329448,31.168068
+wait 1000.0000
+
+node 0 position 32.342636,31.214224
+node 1 position 32.360374,31.265934
+node 2 position 32.353568,31.248920
+node 3 position 32.337645,31.196758
+node 4 position 32.327664,31.161824
+node 5 position 32.347626,31.231691
+node 6 position 32.332654,31.179291
+wait 1000.0000
+
+node 0 position 32.345842,31.225447
+node 1 position 32.364746,31.276865
+node 2 position 32.357941,31.259852
+node 3 position 32.340851,31.207980
+node 4 position 32.330870,31.173046
+node 5 position 32.351135,31.242838
+node 6 position 32.335861,31.190513
+wait 1000.0000
+
+node 0 position 32.349048,31.236669
+node 1 position 32.369118,31.287796
+node 2 position 32.362313,31.270783
+node 3 position 32.344058,31.219203
+node 4 position 32.334077,31.184269
+node 5 position 32.355508,31.253769
+node 6 position 32.339067,31.201736
+wait 1000.0000
+
+node 0 position 32.353075,31.247687
+node 1 position 32.373491,31.298727
+node 2 position 32.366685,31.281714
+node 3 position 32.347264,31.230425
+node 4 position 32.337283,31.195491
+node 5 position 32.359880,31.264700
+node 6 position 32.342274,31.212958
+wait 1000.0000
+
+node 0 position 32.357447,31.258618
+node 1 position 32.377863,31.309658
+node 2 position 32.371058,31.292645
+node 3 position 32.350642,31.241605
+node 4 position 32.340490,31.206714
+node 5 position 32.364253,31.275631
+node 6 position 32.345480,31.224181
+wait 1000.0000
+
+node 0 position 32.361820,31.269549
+node 1 position 32.382236,31.320589
+node 2 position 32.375430,31.303576
+node 3 position 32.355014,31.252536
+node 4 position 32.343696,31.217936
+node 5 position 32.368625,31.286562
+node 6 position 32.348687,31.235403
+wait 1000.0000
+
+node 0 position 32.366192,31.280480
+node 1 position 32.386608,31.331520
+node 2 position 32.379803,31.314507
+node 3 position 32.359387,31.263467
+node 4 position 32.346902,31.229159
+node 5 position 32.372997,31.297494
+node 6 position 32.352581,31.246454
+wait 1000.0000
+
+node 0 position 32.371186,31.290629
+node 1 position 32.389597,31.339232
+node 2 position 32.383862,31.322184
+node 3 position 32.362371,31.274293
+node 4 position 32.350492,31.240544
+node 5 position 32.375200,31.306735
+node 6 position 32.357922,31.257119
+wait 1000.0000
+
+node 0 position 32.380373,31.295504
+node 1 position 32.385940,31.326165
+node 2 position 32.388972,31.309488
+node 3 position 32.359049,31.287324
+node 4 position 32.357627,31.252555
+node 5 position 32.369218,31.310747
+node 6 position 32.370045,31.265737
+wait 1000.0000
+
+node 0 position 32.389559,31.300378
+node 1 position 32.393816,31.317658
+node 2 position 32.400038,31.300195
+node 3 position 32.364684,31.299692
+node 4 position 32.366668,31.263590
+node 5 position 32.378403,31.315621
+node 6 position 32.382611,31.273879
+wait 1000.0000
+
+node 0 position 32.398746,31.305252
+node 1 position 32.403473,31.322723
+node 2 position 32.415392,31.299970
+node 3 position 32.376610,31.308424
+node 4 position 32.377238,31.273586
+node 5 position 32.387589,31.320495
+node 6 position 32.395510,31.281633
+wait 1000.0000
+
+node 0 position 32.407933,31.310126
+node 1 position 32.412660,31.327597
+node 2 position 32.428338,31.305989
+node 3 position 32.387388,31.314190
+node 4 position 32.388950,31.282608
+node 5 position 32.396775,31.325369
+node 6 position 32.408647,31.289091
+wait 1000.0000
+
+node 0 position 32.417119,31.315000
+node 1 position 32.421846,31.332472
+node 2 position 32.437525,31.310864
+node 3 position 32.396574,31.319064
+node 4 position 32.401458,31.290814
+node 5 position 32.405960,31.330243
+node 6 position 32.421938,31.296347
+wait 1000.0000
+
+node 0 position 32.426306,31.319875
+node 1 position 32.431032,31.337346
+node 2 position 32.446713,31.315739
+node 3 position 32.405759,31.323937
+node 4 position 32.414475,31.298424
+node 5 position 32.415146,31.335117
+node 6 position 32.435313,31.303491
+wait 1000.0000
+
+node 0 position 32.435493,31.324749
+node 1 position 32.440219,31.342220
+node 2 position 32.455901,31.320613
+node 3 position 32.414945,31.328811
+node 4 position 32.427772,31.305675
+node 5 position 32.424332,31.339991
+node 6 position 32.446512,31.309434
+wait 1000.0000
+
+node 0 position 32.444679,31.329623
+node 1 position 32.449405,31.347095
+node 2 position 32.465089,31.325488
+node 3 position 32.424130,31.333685
+node 4 position 32.439817,31.312078
+node 5 position 32.433517,31.344865
+node 6 position 32.455700,31.314308
+wait 1000.0000
+
+node 0 position 32.453866,31.334497
+node 1 position 32.458592,31.351969
+node 2 position 32.474277,31.330363
+node 3 position 32.433315,31.338559
+node 4 position 32.449004,31.316953
+node 5 position 32.442703,31.349739
+node 6 position 32.464887,31.319183
+wait 1000.0000
+
+node 0 position 32.463052,31.339371
+node 1 position 32.467778,31.356843
+node 2 position 32.483464,31.335237
+node 3 position 32.442501,31.343433
+node 4 position 32.458191,31.321827
+node 5 position 32.451889,31.354613
+node 6 position 32.474075,31.324057
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.472930,31.357282
+node 2 position 32.486251,31.339109
+node 3 position 32.451507,31.346151
+node 4 position 32.464982,31.327743
+node 5 position 32.459540,31.355388
+node 6 position 32.478347,31.329612
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.475135,31.353411
+node 2 position 32.481714,31.337237
+node 3 position 32.457119,31.347833
+node 4 position 32.462802,31.331627
+node 5 position 32.464299,31.353971
+node 6 position 32.473598,31.331053
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.473849,31.346967
+node 2 position 32.474174,31.338349
+node 3 position 32.464684,31.346675
+node 4 position 32.464103,31.338072
+node 5 position 32.468722,31.348638
+node 6 position 32.469195,31.336404
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.468009,31.334439
+node 2 position 32.459527,31.343360
+node 3 position 32.479267,31.341528
+node 4 position 32.469963,31.350593
+node 5 position 32.474961,31.336252
+node 6 position 32.462996,31.348806
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463671,31.325131
+node 2 position 32.448647,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458375,31.358048
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+
+node 0 position 32.468999,31.342526
+node 1 position 32.463670,31.325132
+node 2 position 32.448648,31.347082
+node 3 position 32.489347,31.337971
+node 4 position 32.474329,31.359921
+node 5 position 32.479618,31.327005
+node 6 position 32.458376,31.358047
+wait 1000.0000
+

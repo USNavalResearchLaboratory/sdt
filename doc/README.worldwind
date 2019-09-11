@@ -1,0 +1,6 @@
+The following modification is required to build NASA's latest 2.0 WWJ
+toolkit with sdt3d 2.0:
+
+1.  Change the access mode of KMLModelPlacemarkImpl::getColladaRoot to public:
+
+public KMLModelPlacemarkImpl::getColladaRoot()

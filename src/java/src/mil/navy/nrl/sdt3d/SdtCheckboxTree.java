@@ -7,42 +7,49 @@ import java.awt.event.MouseEvent;
 import javax.swing.JTree;
 import javax.swing.tree.TreeNode;
 
-public class SdtCheckboxTree extends JTree {
-	
+public class SdtCheckboxTree extends JTree
+{
+
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -2524029840989979592L;
-	
-	public SdtCheckboxTree(TreeNode root) {
+
+
+	public SdtCheckboxTree(TreeNode root)
+	{
 
 		super(root);
 		setCellRenderer(new SdtCheckboxCellRenderer(this));
 		addMouseListener(new SdtCheckboxTreeMouseListener());
 	}
-	private class SdtCheckboxTreeMouseListener extends MouseAdapter 
+
+	private class SdtCheckboxTreeMouseListener extends MouseAdapter
 	{
 
-			public SdtCheckboxTreeMouseListener()
-			{				
+		public SdtCheckboxTreeMouseListener()
+		{
+		}
+
+
+		@Override
+		public void mousePressed(MouseEvent e)
+		{
+			int selRow = getRowForLocation(e.getX(), e.getY());
+
+			if (selRow != -1)
+			{
+				if (!isRowSelected(selRow))
+				{
+					setSelectionRow(selRow);
+				}
+				Rectangle rect = getRowBounds(selRow);
+				if (rect.contains(e.getX(), e.getY()))
+				{
+					((SdtCheckboxCellRenderer) getCellRenderer()).mouseEventToggleCheckbox(getPathForRow(selRow), false);
+				}
 			}
-	        public void mousePressed(MouseEvent e) 
-	        {
-	        	int selRow = getRowForLocation(e.getX(), e.getY());
-	            
-	            if (selRow != -1) 
-	            {
-	            	if (!isRowSelected(selRow))
-	                {
-	            		setSelectionRow(selRow);
-	                }
-	            	Rectangle rect = getRowBounds(selRow);
-	                if(rect.contains(e.getX(),e.getY())) 
-	                {
-	                	((SdtCheckboxCellRenderer)getCellRenderer()).mouseEventToggleCheckbox(getPathForRow(selRow),false);
-	                }
-	            }
-	        }
-	}		
+		}
+	}
 
 }

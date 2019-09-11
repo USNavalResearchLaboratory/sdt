@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2012 United States Government as represented by the Administrator of the
+  ~ National Aeronautics and Space Administration.
+  ~ All Rights Reserved.
+  -->
+
+<jnlp codebase="http://192.168.1.6/~ljt/"
+      href="sdt3d.jnlp">
+
+    <!--
+        Provides a description of this application.
+    -->
+    <information>
+        <title>SDT3d</title>
+        <vendor>Naval Research Labratory</vendor>
+        <homepage href="http://127.0.0.1/~ljt/"/>
+        <description>SDT3d</description>
+        <description kind="short">The Scripted Display Tool is open source software developed by the Naval Research Laboratory (NRL) PROTocol Engineering Advanced Networking (PROTEAN) group.</description>
+        <offline-allowed/>
+    </information>
+
+    <!--
+        Requests a trusted application environment. The World Wind SDK core library requires access to the network and
+        the local filesystem. All World Wind JAR files are signed with a digital signature associated with NASA. The
+        application's JAR files must also be signed with a digital signature. The application's signature may be
+        different from the World Wind signature, provided that the World Wind JAR files are loaded by extension as shown
+        below.
+    -->
+    <security>
+      <all-permissions/>
+    </security>
+    <!--
+        Specifies the resources required by the World Wind SDK core library:
+        * Java Runtime Environment version 1.6 or newer, with a maximum heap size of at least 512 MB. The World Wind SDK
+          requires at least 512 MB of heap space. This heap size must be specified in the application's Web Start file.
+        * Application Jar file. This downloads and adds the application's JAR file to the class path at runtime.
+        * World Wind core Java Web Start component. This downloads and adds the World Wind SDK core JAR file and its
+          dependencies ot the class path at runtime.
+    -->
+    <resources>
+        <java version="1.6+" max-heap-size="512m"/>
+        <jar href="sdt3d.jar" main="true"/>
+        <jar href="joglutils.jar"/>
+    </resources>
+
+<!--
+        Specifies the resources required by the World Wind SDK core library:
+        * World Wind core JAR file.
+        * World Wind GDAL JAR file. World Wind must include the GDAL JAR file on its class path, even when the GDAL
+          native libraries are not used. We include the GDAL JAR file at the GDAL webstart site to avoid a version
+          conflict should the application choose to include the GDAL Web Start component.
+        * JOGL version 2.0 Web Start component. World Wind depends on the JOGL library to communicate with the platform
+          native OpenGL libraries.
+        * WebView native library JAR archives for Mac OS X, Windows 32-bit and Windows 64-bit. The WebView native
+          libraries are required by implementations of the World Wind BrowserBalloon class.
+        * Disable the use of DirectDraw by Java2D on Windows. This is necessary for correct operation of JOGL on Windows
+          and is accomplished by setting the sun.java2d.noddraw property to true. See the JOGL Userguide for details:
+          http://jogamp.org/jogl/doc/userguide/
+    -->
+    <resources>
+        <jar href="worldwind.jar"/>
+        <jar href="worldwindx.jar"/>
+        <jar href="gdal.jar"/>
+        <extension name="jogl" href="jogl-all.jnlp"/>
+        <extension name="gluegen-rt" href="gluegen-rt.jnlp"/>
+    </resources>
+    <!-- The main to launch -->
+    <application-desc main-class="mil.navy.nrl.sdt3d.sdt3d"/>
+</jnlp>
