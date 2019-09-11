@@ -24,19 +24,18 @@ UNIX = ../makefiles
 # "Protokit" development library
 LIBPROTO = $(PROTOLIB)/lib/libprotokit.a
     
-FLAGS = $(SYSTEM_FLAGS) $(WX_FLAGS)
-
 INCLUDES =  $(SYSTEM_INCLUDES) $(WX_INCLUDES) -I$(PROTOLIB)/include -I$(INCLUDE) 
 
-CFLAGS = -g -DUNIX -DPROTO_DEBUG -Wall -O -fPIC $(FLAGS) $(INCLUDES) $(SYSTEM_HAVES)
+WX_CFLAGS = -g -DUNIX -DPROTO_DEBUG -Wall -O -fPIC $(SYSTEM_FLAGS) $(WX_FLAGS) $(INCLUDES) $(SYSTEM_HAVES)
+CFLAGS = -g -DUNIX -DPROTO_DEBUG -Wall -O -fPIC $(SYSTEM_FLAGS) $(INCLUDES) $(SYSTEM_HAVES)
 
-LIBS = $(WX_LIBS) $(SYSTEM_LIBS) -lm   
+LIBS = $(SYSTEM_LIBS) -lm   
 
 TARGETS = sdt 
 
 # Rule for C++ .cpp extension
 .cpp.o:
-	$(CC) -c $(CFLAGS) -o $*.o $*.cpp
+	$(CC) -c $(WX_CFLAGS) -o $*.o $*.cpp
          
 SRC = $(COMMON)/sdt.cpp $(PROTOLIB)/src/wx/wxProtoApp.cpp
           
@@ -48,7 +47,7 @@ $(LIBPROTO):
 	$(MAKE) -C $(PROTOLIB)/makefiles -f Makefile.$(SYSTEM)    
 
 sdt:        $(DL_DIR) $(BLD_DIR) $(PROTOLIB) $(OBJ) $(LIBPROTO) 
-	$(CC) -o $@ $(OBJ) $(LIBPROTO) $(LIBS) 
+	$(CC) $(WX_CFLAGS) -o $@ $(OBJ) $(LIBPROTO) $(WX_LIBS) $(LIBS)
 	mkdir -p ../bin
 	cp $@ ../bin/$@
 
@@ -59,28 +58,25 @@ sdt.app: sdt ../src/macos/Info.plist.in
 	cp ../src/macos/Info.plist.in sdt.app/Contents/Info.plist
 	cp ../src/macos/sdtLogo.icns sdt.app/Contents/Resources/
 	echo "APPL????" >sdt.app/Contents/PkgInfo
-	$(CC) -o $@/Contents/MacOS/sdt $(OBJ) $(LIBPROTO) $(LIBS)
+	$(CC) $(WX_CFLAGS) -o $@/Contents/MacOS/sdt $(OBJ) $(LIBPROTO) $(LIBS) $(WX_LIBS)
 	mkdir -p ../bin
 	cp -r $@ ../bin/$@
 
 PLAYER_SRC = $(COMMON)/sdtPlayer.cpp
-
 PLAYER_OBJ = $(PLAYER_SRC:.cpp=.o)
 
 sdtplay:	$(PLAYER_OBJ) $(LIBPROTO)
-	$(CC) -o $@ $(PLAYER_OBJ) $(LIBPROTO) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(PLAYER_OBJ) $(LIBPROTO) $(LIBS)
 
 CMD_SRC   =  $(COMMON)/sdtCmd.cpp
 CMD_OBJ   =  $(CMD_SRC:.cpp=.o)
 
 sdtcmd:   $(CMD_OBJ) $(LIBPROTO)
-	$(CC) -o $@ $(CMD_OBJ) $(LIBPROTO) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CMD_OBJ) $(LIBPROTO) $(LIBS)
 
 APP_NAME = sdt3d
 
-PROTOLIB_OBJS = $(LIB_DIR)/libProtolibJni.so\
-				$(LIB_DIR)/libprotokit.so\
-				$(LIB_DIR)/libprotokit.so.2\
+PROTOLIB_OBJS = $(LIB_DIR)/libProtolibJni.$(DYLIBEXT)\
 				$(JAR_DIR)/protolib-jni.jar
 
 WORLDWIND_OBJS = $(LIB_DIR)/libgluegen-rt.so\
@@ -133,14 +129,14 @@ $(JAR_DIR)/sdt3d.jar: $(PROTOLIBJNI) $(PROTOLIB_OBJS) $(WORLDWIND_OBJS) $(JOGLUT
 ## Protolib ##
 
 ../protolib:
-	if test -d $@; then echo using local $@ tree; else mkdir -p $@; wget -O ../protolib.tgz http://downloads.pf.itd.nrl.navy.mil/protolib/nightly_snapshots/protolib-svnsnap.tgz; tar xf ../protolib.tgz -C ..; cd $@ && ./waf configure --disable-wx; cd $@ && ./waf build; echo downloaded protolib.tgz; fi
+	if test -d $@; then echo using local $@ tree; else mkdir -p $@; wget -O ../protolib.tgz http://downloads.pf.itd.nrl.navy.mil/protolib/nightly_snapshots/protolib-svnsnap.tgz; tar xf ../protolib.tgz -C ..; cd $@ && ./waf configure; cd $@ && ./waf build; echo downloaded protolib.tgz; fi
 
 $(PROTOLIB_OBJS): $(BLD_DIR)/protolib
-	cp -L $(BLD_DIR)/protolib/build/default/$(notdir $@) $@
+	cp -L $(BLD_DIR)/protolib/build/$(notdir $@) $@
 
 $(BLD_DIR)/protolib: $(DL_DIR)/protolib.tgz
 	tar xf $< -C $(BLD_DIR)
-	cd $(BLD_DIR)/protolib && ./waf configure --disable-wx --build-java
+	cd $(BLD_DIR)/protolib && ./waf configure --build-java
 	cd $(BLD_DIR)/protolib && ./waf build
 
 $(DL_DIR)/protolib.tgz:
@@ -156,7 +152,7 @@ $(BLD_DIR)/worldwind: $(DL_DIR)/worldwind.zip
 
 $(DL_DIR)/worldwind.zip: 
         # 0.6 release
-	cp -d worldwind.zip $(DL_DIR)/worldwind.zip
+	cp -P worldwind.zip $(DL_DIR)/worldwind.zip
 #	wget -O $@ http://builds.worldwind.arc.nasa.gov/releases/worldwind-0.6.158.12011.zip
 ## / Worldwind ##
 
@@ -168,11 +164,11 @@ $(BLD_DIR)/joglutils: $(DL_DIR)/joglutils.zip
 	unzip -d $(BLD_DIR) $<
 
 $(DL_DIR)/joglutils.zip:
-	cp -d joglutils.zip $(DL_DIR)/joglutils.zip
+	cp -P joglutils.zip $(DL_DIR)/joglutils.zip
 #	wget -O $@ http://projectkenai.com/projects/jogl/sources/jogl-utils-git/content/src/net/java/joglutils/model/examples/joglutils.zip
 
 clean: 
-	rm -rf *.o ../src/common/*.o sdt sdt.app;
+	rm -rf *.o ../src/common/*.o sdt sdt.app sdtcmd sdtplay;
 	$(MAKE) -C $(PROTOLIB)/makefiles -f Makefile.$(SYSTEM) clean
 	-rm -rf sdt3d.zip $(BLD_DIR) $(BIN_DIR) $(DST_DIR) $(LIB_DIR) $(JAR_DIR)
 

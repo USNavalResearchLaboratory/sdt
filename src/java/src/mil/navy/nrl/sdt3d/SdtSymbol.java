@@ -302,9 +302,6 @@ public class SdtSymbol {
 					|| airspaceShape == null)
 			{
 				airspaceShape = new Polygon(latLonList);
-				System.out.println("Initializing cube airspace!");
-
-
 			}
 			((Polygon)airspaceShape).setLocations(getPolyCoordinates(dc));
 			break;

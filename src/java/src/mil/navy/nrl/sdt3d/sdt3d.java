@@ -56,7 +56,11 @@ import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -145,6 +149,9 @@ public class sdt3d extends ApplicationTemplate {
 		    "+listen",
 		    "-off",
 		    "+popup",
+		    "+view",
+		    "+viewSource",
+		    "+viewXml",
 		 //   "+popup",
 		  //  "+popdown",
 		  //  "+content",
@@ -161,6 +168,8 @@ public class sdt3d extends ApplicationTemplate {
 		private SdtRegion currentRegion = null;
 		private SdtSymbol currentSymbol = null;
 		private String currentTile = null;
+		private String currentView = null;
+
 		private List<SdtLink> currentLinkSet = new ArrayList<SdtLink>();
         private ArrayList<Marker> markers = new ArrayList<Marker>();
         
@@ -214,7 +223,7 @@ public class sdt3d extends ApplicationTemplate {
 	    Hashtable<String, SdtNode> nodeTable = new Hashtable<String, SdtNode>();
 		Hashtable<String, SdtSprite> spriteTable = new Hashtable<String, SdtSprite>();
 	    Hashtable<String, SdtRegion> regionTable = new Hashtable<String, SdtRegion>();
-		Hashtable<JMenuItem, String> viewTable = new Hashtable<JMenuItem, String>();
+		Hashtable<String, String> viewTable = new Hashtable<String, String>();
 		Hashtable<String, SurfaceImage> imageTable = new Hashtable<String, SurfaceImage>();
 		private String viewState;
 
@@ -238,6 +247,7 @@ public class sdt3d extends ApplicationTemplate {
 			private SdtRegion currentRegion = null;
 			private SdtSymbol currentSymbol = null;
 			private String currentTile = null;
+		        private String currentView = null;
 			boolean pipeCmd = false;
 			StringWriter buffer = new StringWriter();
 			PrintWriter out = new PrintWriter(buffer);
@@ -512,9 +522,10 @@ public class sdt3d extends ApplicationTemplate {
 	            // an icon's screen rectangle is known even when the icon is outside
 	            // the view frustrum.  When set to "true" the view jumps up and down.
 	            nodeIconLayer.setViewClippingEnabled(false);
-
+	            
 				this.getSdtLayerPanel().update(getWwd(), "sdt");
 		
+				SetInputFile("sdtConfigFile.txt");
 				// Create select listener - ljt make items draggable?
 				getWwd().addSelectListener(new SelectListener() 
 				{
@@ -822,13 +833,31 @@ public class sdt3d extends ApplicationTemplate {
 		        	JMenuItem newItem;
 		        	bookmarkMenu.add(newItem = new JMenuItem(str));
 					newItem.addActionListener(this);
-		        	viewTable.put(newItem,viewState);
+		        	viewTable.put(str,viewState);
+		        	int value = JOptionPane.showConfirmDialog(null, "Save to disk?");
+		       		        	
+		        	if (JOptionPane.YES_OPTION == value) 
+		        	{
+
+		        		try {
+		        		
+		        			BufferedWriter out = new BufferedWriter(new FileWriter(str + ".xml"));
+		        			out.write(viewState);
+		        			out.close();
+		        		} catch (IOException e) {
+		        			System.out.println("Error saving view state to file " + str);
+		        		}
+		        	}
+
 		        }
 
-			} else if (viewTable.get(event.getSource()) != null)	
+			} else if (viewTable.get(event.getActionCommand()) != null)	
 			{
-				String theView = viewTable.get(event.getSource());
-				((OrbitView) getWwd().getView()).restoreState(theView);
+				String theView = viewTable.get(event.getActionCommand());
+				if (theView != null)
+				    ((OrbitView) getWwd().getView()).restoreState(theView);
+				getWwd().redraw();
+				getWwd().redraw();
  			
 			} else if (event.getSource() == exitItem) {
 				System.exit(0);
@@ -860,6 +889,34 @@ public class sdt3d extends ApplicationTemplate {
 				}
 				
 			}
+		}
+		private String loadState(String val)
+		{
+			StringBuilder contents = new StringBuilder();
+			try {
+				// use buffering, reading one line at a atime
+				// FileReader always assumed default encoding is OK!
+				BufferedReader input = new BufferedReader(new FileReader(val));
+				try {
+					String line = null; 
+
+					while ((line = input.readLine()) != null)
+					{
+						contents.append(line);
+						contents.append(System.getProperty("line.separator"));
+					}
+				}
+				finally {
+					input.close();
+				}
+			}
+			catch (IOException e) {
+				System.out.println("Error reading " + val + " state from file " ); 
+				return null;
+			}
+			
+			return contents.toString();
+				
 		}
 		private void refreshLinks()
 		{
@@ -1182,7 +1239,7 @@ public class sdt3d extends ApplicationTemplate {
 			if (!f1.exists()) 
 			{
 				// finally check in the current dir
-				imageFilePath = fc.getCurrentDirectory() + "\\" + val;
+				imageFilePath = fc.getCurrentDirectory() + File.separator + val;
 				imageFilePath.trim();
 				f1 = new File(imageFilePath);
 				if (!f1.exists())
@@ -1232,6 +1289,7 @@ public class sdt3d extends ApplicationTemplate {
 		}
 		private boolean SetTile(String val)
 		{
+		    if (0 == val.length()) return false;
 			currentTile = val; // temporary until we get file image rework!
 			return true;
 		}
@@ -1412,19 +1470,19 @@ public class sdt3d extends ApplicationTemplate {
 			}
 
 			boolean firstPosition = !currentNode.hasPosition();
-			Float lon = 0.0f;			
-			Float lat = 0.0f;
+			Double lon = 0.0;			
+			Double lat = 0.0;
 			if (!coord[1].equalsIgnoreCase("x"))
-				lat = new Float(coord[1]);
+				lat = new Double(coord[1]);
 			else 
 				if (!firstPosition)
-					lat = new Float(currentNode.getPosition().getLatitude().degrees);
+					lat = new Double(currentNode.getPosition().getLatitude().degrees);
 			
 			if (!coord[0].equalsIgnoreCase("x"))
-				lon = new Float(coord[0]);
+				lon = new Double(coord[0]);
 			else
 				if (!firstPosition)
-					lon = new Float(currentNode.getPosition().getLongitude().degrees);
+					lon = new Double(currentNode.getPosition().getLongitude().degrees);
 			
 			if ((lat == -9999.0 || lon == -9999.0))
 			{
@@ -2262,6 +2320,9 @@ public class sdt3d extends ApplicationTemplate {
 		}
 		private boolean SetLink(String val)
 		{
+			// Here we build a currentLinkSet of all links selected in the
+			// link command (e.g. link x,y,all) for subsequent attribute
+			// changes
 			if (0 == val.length()) return false;			
 			
 			// TODO: account for ipv6 ip addresses (contain :'s)
@@ -2729,6 +2790,48 @@ public class sdt3d extends ApplicationTemplate {
         JOptionPane.showMessageDialog(null, scroll); // with JTextArea
 		return true;
 	}
+	public boolean SetView(String val)
+	{
+		if (0 == val.length()) return false;		
+		String theView = viewTable.get(val);
+		
+		if (theView != null)
+			((OrbitView) getWwd().getView()).restoreState(theView);
+		
+		return true;
+	}
+	public boolean SetViewSource(String val)
+	{
+		if (0 == val.length()) return false;
+		currentView = val;
+	
+		return true;
+	}
+	public boolean SetViewXml(String val)
+	{
+		if (0 == val.length() || currentView == null) return false;
+		
+		String fileName = FindFile(val);
+		if (fileName == null) 
+		{
+			System.out.println("View xml " + val + " not found.");
+			return false;		
+		}
+		String viewState = loadState(val);
+		if (viewState == null)
+		{
+			System.out.println("Loading view state for " + val + " failed.");
+			currentView = null;
+			return false;
+		}
+
+    	JMenuItem newItem;
+    	bookmarkMenu.add(newItem = new JMenuItem(currentView));
+		newItem.addActionListener(this);
+    	viewTable.put(currentView,viewState);		
+		currentView = null;
+		return true;
+	}
 	public boolean SetListen(String val)
 	{
 		if (0 == val.length())
@@ -2918,7 +3021,16 @@ public class sdt3d extends ApplicationTemplate {
 			if (pendingCmd.equals("shape"))
 				return SetShape(val);
 			if (pendingCmd.equals("link"))
-				return SetLink(val);
+			{
+				// Spurious link commands should not be generated as 
+				// performance may be impacted due to refreshing links...
+				if (SetLink(val)) 
+				{ 
+					refreshLinks();
+					return true;
+				}
+				return false;
+			}
 			if (pendingCmd.equals("linklabel"))
 				return SetLinkLabel(val);
 			if (pendingCmd.equals("unlink"))
@@ -2943,6 +3055,12 @@ public class sdt3d extends ApplicationTemplate {
 				return SetListen(val);
 			if (pendingCmd.equals("popup"))
 				return SetPopup(val);
+			if (pendingCmd.equals("view"))
+				return SetView(val);
+			if (pendingCmd.equals("viewSource"))
+				return SetViewSource(val);
+			if (pendingCmd.equals("viewXml"))
+				return SetViewXml(val);
 			return false;
 		}  // end ProcessCmd
 		
@@ -2956,6 +3074,7 @@ public class sdt3d extends ApplicationTemplate {
 			currentRegion = parser.currentRegion;
 			currentSymbol = parser.currentSymbol;
 			currentTile = parser.currentTile;
+			currentView = parser.currentView;
 			// We handle input file processing differently for piped input
 			pipeCmd = parser.pipeCmd;
 			String cmd = str.concat(" ");
@@ -2968,6 +3087,7 @@ public class sdt3d extends ApplicationTemplate {
 			parser.currentRegion = currentRegion;
 			parser.currentSymbol = currentSymbol;
 			parser.currentTile = currentTile;
+			parser.currentView = currentView;
 			// Start the timer that will update the display			
 			if (!pollTimer.isRunning())
 				pollTimer.start();	

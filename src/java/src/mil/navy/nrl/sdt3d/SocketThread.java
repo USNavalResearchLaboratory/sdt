@@ -50,7 +50,14 @@ public class SocketThread extends Thread {
 	            }
 	            String str = null;
 	            DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
-	            socket.receive(dp);
+	            try {
+	            	socket.receive(dp);
+	            } catch (IOException ex)
+	            {
+					ex.printStackTrace();
+
+	            }
+	            //System.out.println("Socket recvd " + dp.getData() + " len " + dp.getLength());
 	            str = new String(dp.getData(), 0, dp.getLength());
 	            final String cmdString = str;
 	
@@ -59,6 +66,7 @@ public class SocketThread extends Thread {
 	               public void run()
 	               {
 	                   if (stopFlag) return;
+	   	            //System.out.println("Sending " + cmdString);
 	            	  sdt3dApp.OnInput(cmdString,parser);
 	                  sdt3dApp.getWwd().redraw();
 	               }

@@ -78,10 +78,23 @@ public class SdtLink
 	}
 	public Position getLabelPosition()
     {		
+		
 		if (label != null)
 			return label.getPosition();
 		else
-			return node1.getPosition();
+		{
+			if ((getSrcNode() == null || getSrcNode().getPosition() == null)
+					|| (getDstNode() == null || getDstNode().getPosition() == null))
+				{
+					// No position for both nodes yet...
+					return null;
+				}
+			// For now approximate the position - we'll reposition the label
+			// when multiple links are recreated.  If this is a problem we'll
+			// need to recalc the link offset & center position etc.
+			return Position.interpolate(.5,getSrcNode().getPosition(),getDstNode().getPosition());
+		}
+			
     }
 	public boolean isHidden() 
 	{
@@ -117,8 +130,10 @@ public class SdtLink
 
 		}
 		if (null != label)
+		{
+			// is there a reason this is done here?
 			label.setAlwaysOnTop(true);
-		
+		}
 		return label;
 	}   
 	public void removeLabel()
@@ -188,7 +203,7 @@ public class SdtLink
              
     public void updatePositions(DrawContext dc,int linkNum,int totalLinks)
     {    	
-         if (null != line)
+        if (null != line)
         {
          	Globe globe = dc.getGlobe();
             ArrayList<Position> lp = new ArrayList<Position>();
@@ -250,7 +265,7 @@ public class SdtLink
               	}
                 // If the link has a label reset its position to midpoint of link
                 if (getLabel() != null && i == numSegments)
-                	getLabel().setPosition(newPos);      
+                	getLabel().setPosition(newPos);    
             } 
          	else
          	{
@@ -281,8 +296,13 @@ public class SdtLink
         lineColor = color;
         
         if (line != null) 
+        {
             line.setColor(color);
-        
+            // reset label color if it has not been explicity set
+            if (label != null && labelColor == null)
+	        	label.getAttributes().setBackgroundColor(lineColor);
+
+        }   	
         if (marker != null)
         {
             marker.getAttributes().setMaterial(new Material(lineColor));

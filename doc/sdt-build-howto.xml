@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<article lang="">
+  <title><inlinemediaobject>
+      <imageobject>
+        <imagedata fileref="sdt3dLogo.gif" role="" scale="15"/>
+      </imageobject>
+    </inlinemediaobject>Building the Scripted Display Tools
+  (sdt/sdt3d)</title>
+
+  <titleabbrev>Building the sdt Applications</titleabbrev>
+
+  <sect1 id="SDTOutputFormat">
+    <title>Building sdt3d</title>
+
+    <para>The sdt3d application has external dependencies on NASA's Worldwind
+    JDK, joglutils (a library that provides Java bindings for OpenGL and 3d
+    Model support), and protolib-jni (a library that provides java native
+    interface to NRL's protolib protoPipe implementation). Zip files of the
+    Worldwind JDK and joglutils distributions known to work with the latest
+    sdt3d code base are posted on the Protean Forge proteantools project
+    release site in the latest sdt file release directory. The protolib-jni
+    svn repository is also hosted on the Protean Forge website in the protolib
+    project. See the instructions specific to your OS for further build
+    instructions.</para>
+
+    <para>Those without developer access can find the latest open source
+    version of the NASA Worldwind JDK at <ulink
+    url="http://worldwind.arc.nasa.gov/java/index.html">http://worldwind.arc.nasa.gov/java/index.html</ulink>
+    and the protolib source at <ulink
+    url="http://downloads.pf.itd.nrl.navy.mil/protolib/">http://downloads.pf.itd.nrl.navy.mil/protolib/</ulink>.
+    The location of the joglutils library is unreliable at best but the latest
+    source may be found at: <ulink
+    url="https://github.com/sgotehl/jogl-utils/">https://github.com/sgothel/jogl-utils/.</ulink></para>
+
+    <sect2>
+      <title>Linux Build</title>
+
+      <para>For Linux, a Makefile is provided that will build a sdt3d.jar
+      file: (Note that you must have JAVA_HOME defined and javac and jar
+      available in your path). First download the latest worldwind and
+      joglutils zip files available in the latest sdt file release directory.
+      Unzip the release in the sdt/makefiles directory and ensure the zip
+      files are named joglutils.zip and worldwind.zip. From the makefiles
+      directory make sdt3d. "make -f Makefile all" will make sdt, sdtcmd, and
+      sdt3d.</para>
+
+      <para><programlisting>cd sdt/makefiles 
+make -f Makefile.linux sdt3d </programlisting></para>
+
+      <para>The sdt3d.sh helper script in the makefiles directory can then be
+      used to launch the sdt3d jar file.</para>
+
+      <programlisting>./sdt3d.sh</programlisting>
+    </sect2>
+
+    <sect2>
+      <title>OSX Build</title>
+
+      <para>You may build sdt3d under osx via the makefile script described
+      for a linux build or via Eclipse as described in the windows build
+      section. </para>
+
+      <para>If protolib-jni does not build under osx it may be necessary to
+      manually symlink to the include directory as appropriate for your jdk
+      version, e.g. <programlisting>cd /System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home/ 
+sudo ln -s /System/Library/Frameworks/JavaVM.framework/Headers include</programlisting>
+      </para>
+    </sect2>
+
+    <sect2>
+      <title>Windows Build</title>
+
+      <para>The easiest way to build sdt3d under windows is to use the Eclipse
+      tool with the following four projects:<orderedlist>
+          <listitem>
+            <para>sdt3d</para>
+
+            <para>Within Eclipse, check the sdt3d java src files out of the
+            sdt SVN repository. (You will need developer access to the sdt
+            project hosted on the protean forge website)</para>
+
+            <para><programlisting>SVN root = "/svnroot/proteantools/trunk/sdt"</programlisting></para>
+
+            <para>Check out the /src/java folder into a new project and name
+            it sdt3d. Documentation and examples are available in the /sdt/doc
+            and /sdt/examples folders that you may load into a separate
+            project in your workspace.</para>
+
+            <para>If you do not have developer access you may download the sdt
+            nightly build distribution from <ulink
+            url="http://downloads.pf.itd.nrl.navy.mil/proteantools/">http://downloads.pf.itd.nrl.navy.mil/sdt/</ulink>
+            and load the sdt3d source files directly from sdt/src/java.</para>
+
+            <para>The java folder contains <ulink
+            url="http://www.eclipse.org/">Eclipse</ulink> .project and
+            .classpath configuration files that should be used to build the
+            sdt3d project. (They expect the worldwind, joglutils, and
+            protolib-jni project directories to be relative to the sdt3d as
+            described in the following steps).</para>
+
+            <para>Modify the sdt3d java build path to find the java jre
+            libraries in the appropriate location for your system if
+            necessary. (See the sdt3d project properties java build path
+            libraries section)</para>
+          </listitem>
+
+          <listitem>
+            <para>protolib-jni</para>
+
+            <para>If you have developer access check the protolib-jni file out
+            of SVN directly into Eclipse:</para>
+
+            <para><programlisting>SVN root = "/svnroot/protolib"</programlisting></para>
+
+            <para>Check out the /trunk/src/java folder and name it
+            protolib-jni.</para>
+
+            <para>If you do not have developer access, get the nightly build
+            distribution from <ulink
+            url="http://downloads.pf.itd.nrl.navy.mil/protolib/">http://downloads.pf.itd.nrl.navy.mil/protolib/</ulink>
+            and load the source files directly from /protolib/src/java.</para>
+
+            <para>Protolib-jni dll, jar, and library files are provided the
+            src/java directory for your convenience and are also available in
+            the protolib binary distribution. They should be loaded into your
+            protolib project.</para>
+
+            <para>If you have need to build protolib-jni, use a Visual Studio
+            CMD (so that you have the correct environment variables set) and
+            change directory to the top level protolib directory. Clean the
+            distribution and configure waf to build the protolib-jni. Finally
+            run waf to create the protolib-jni dll, jar, and library files in
+            the build/default directory.</para>
+
+            <programlisting>waf distclean
+waf configure --disable-wx --disable-vif --disable-manet --static --build-java
+waf</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>joglutils</para>
+
+            <para>Download the joglutils zip file from the latest sdt3d file
+            release on the protean forge website. Unzip the project relative
+            to the sdt3d project in your Eclipse workspace directory. Load
+            into the Eclipse workspace using the build.xml file provided in
+            the joglutils make directory. This project should be relative to
+            the sdt3d project and be called joglutils.</para>
+
+            <para>Modify the joglutils java build path to find the java jre
+            (rt.jar) library in the appropriate location for your system. (See
+            the joglutils project properties java build path libraries
+            section).</para>
+          </listitem>
+
+          <listitem>
+            <para>worldwind</para>
+
+            <para>Download the worldwind zip file in the latest sdt file
+            release on the protean forge website. Unzip the project relative
+            to the sdt3d project in your Eclipse workspace directory. Load
+            into the Eclipse workspace using the build.xml ant file provided
+            in the worldwind directory.</para>
+
+            <para>Add the jogl.jar file in the worldwind workspace to the
+            joglutils project. (See the joglutils project properties java
+            build path libraries section).</para>
+          </listitem>
+        </orderedlist></para>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Building sdt and sdtcmd</title>
+
+    <para>To build the sdt application, you will need the wxWidgets library
+    for your platform freely-available from:</para>
+
+    <para><ulink
+    url="http://www.wxwidgets.org/">http://www.wxwidgets.org</ulink></para>
+
+    <para>The current release depends on wxWidgets 2.9 or wxWidgets 2.8.
+    Previous releases (1.1a1 and above) use wxWidgets 2.6.x. sdt releases
+    1.0a1-1.0a8 use wxWidgets 2.4.x.</para>
+
+    <para>Please note that binary releases of wxWidgets do not include the
+    header files necessary to compile sdt, so you must download and build the
+    source code. Please see the wxWidgets readme for instructions. It is
+    recommended to compile wxWidgets using the "--disable-shared" config
+    option so that the binary may be moved to machines that do not have
+    wxWidgets installed.</para>
+
+    <sect2>
+      <title>Windows Build</title>
+
+      <para>Sdt src code is available on NRL's protean forge web site
+      at:</para>
+
+      <para><programlisting>SVN root = "/svnroot/proteantools/trunk/sdt"</programlisting></para>
+
+      <para>If you do not have developer access you may download the binary
+      distribution from <ulink
+      url="http://downloads.pf.itd.nrl.navy.mil/sdt/">http://downloads.pf.itd.nrl.navy.mil/sdt/</ulink></para>
+
+      <para>Microsoft Visual Studio project files are available in the
+      distribution in the makefiles/win32 directory. Load the sdt solution
+      file into Microsoft Visual Studio. Project files are available that
+      build sdt and sdtcmd.</para>
+    </sect2>
+
+    <sect2>
+      <title>Linux Build</title>
+
+      <para>Sdt src code is available on NRL's protean forge web site
+      at:</para>
+
+      <para><programlisting>SVN root = "/svnroot/proteantools/trunk/sdt"</programlisting></para>
+
+      <para>If you do not have developer access you may download the binary
+      distribution from <ulink
+      url="http://downloads.pf.itd.nrl.navy.mil/sdt/">http://downloads.pf.itd.nrl.navy.mil/sdt/</ulink></para>
+
+      <para>From the makefiles directory make sdt and sdtcmd. "make -f
+      Makefile all" will make sdt,sdtcmd, and sdt3d.</para>
+
+      <para><programlisting>cd sdt/makefiles 
+make -f Makefile sdt
+make -f Makefile sdtcmd</programlisting></para>
+
+      <para/>
+    </sect2>
+  </sect1>
+</article>

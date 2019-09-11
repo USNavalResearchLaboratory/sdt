@@ -16,7 +16,7 @@ WX_LIBS = `wx-config --libs`
 #
 SYSTEM_FLAGS = 
 SYSTEM_INCLUDES = 
-SYSTEM_LIBS = 
+SYSTEM_LIBS = -pthread
 SYSTEM_REZ = touch
 
 # 6) System specific capabilities
@@ -47,5 +47,7 @@ SYSTEM = linux
 CC = g++
 RANLIB = ranlib
 AR = ar
+
+DYLIBEXT = so
 
 include Makefile.common

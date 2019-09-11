@@ -48,5 +48,6 @@ RANLIB = ranlib
 AR = ar
 
 SYSTEM_BUNDLE = sdt.app
+DYLIBEXT = dylib
 
 include Makefile.common

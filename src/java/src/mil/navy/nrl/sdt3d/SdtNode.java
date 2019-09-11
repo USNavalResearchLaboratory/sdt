@@ -105,7 +105,7 @@ public class SdtNode implements Renderable
         	}
         }
         // Else we only have a symbol, still need a location update
-        if (getSprite() == null)
+        if (getSprite() == null || getSprite().getType() == SdtSprite.Type.NONE)
         {
         	if (getFollowTerrain())
         		position = new Position(position, globeElevation);

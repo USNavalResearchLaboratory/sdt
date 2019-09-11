@@ -1,59 +1,60 @@
-Scripted Display Tool - 3D
+Scripted Display Tool(s)
 
-This project contains the "Scripted Display Tool - 3D" (sdt3d)
-application.  The application was developed by the Protocol
-Engineering Advanced Networking (PROTEAN) Research Group of the Naval
-Research Laboratory (NRL).
+This project contains source code and build scripts for the "Scripted
+Display Tool" (both sdt 2d & sdt3d applications).  The applications
+were developed by the Protocol Engineering Advanced Networking
+(PROTEAN) Research Group of the Naval Research Laboratory (NRL).
 
-The intent of this application is to provide a tool that supports
+The intent of these applications is to provide tools that support
 real-time visualization of mobile communication network field tests,
-emulations, or even simulations.  The application may also prove
+emulations, or even simulations.  The applications may also prove
 suitable for other purposes.
 
-This tool is based upon the NASA WorldWind Java (WWJ) SDK available
+SDT (2D)
+
+sdt is written in C++ using the freely-available, cross-platform 
+wxWindows library for graphical user interface applications.
+
+Documentation is available at:
+
+<http://cs.itd.nrl.navy.mil/work/sdt/index.php>
+
+SDT3D
+
+sdt3d is based upon the NASA WorldWind Java (WWJ) SDK available
 from:
 
 <http://worldwind.arc.nasa.gov/java/index.html> 
 
+and joglutils available at:
+
+https://github.com/sgothel/jogl-utilswpr 
+
 This application uses the simple visualization scripting language of
-the original 2-dimensional Scripted Display Tool (set).  The latest
-command set definition is described at:
+the original 2-dimensional Scripted Display Tool (sdt) as described
+at:
 
-http://pf.itd.nrl.navy.mil/sdt/sdt.html
+<http://cs.itd.nrl.navy.mil/work/sdt/index.php>
 
-USING:
+BUILDING
 
-The "sdt3d" application listens on a ProtoPipe named "sdt" to which
-SDT commands may be sent.  The application can also be told to listen
-to a UDP socket for commands or to load an input file containing sdt
-commands.
+See the sdt documentation in the docs directory for the latest build 
+instructions for both sdt and sdt3d or the README-SDT3D.txt and
+README-SDT.txt files colocated with this file.
 
-The application can be started using the sdt3d.bat (windows), the mac
-osx sdt3d application, or the sdt3d.sh (linux) script included in the
-distribution.
+TO DOWNLOAD THE LATEST SRC TREE:
 
-Note that when using the sdt3d.bat windows file, you will need to set
-the path to java in the sdt3d.bat file if not already set in your
-environment.  Note that the directory must be enclosed in quotes if
-there are any spaces, e.g. 
+If you have developer access, check out the latest  sdt3d project out of 
+SVN from our "pf.itd.nrl.navy.mil" server:
 
-"C:\Program Files (x86)\Java\jre6\bin\java.exe"
+sdt3d : SVN root = "/svnroot/proteantools/trunk", module = "sdt"
 
-SDTCMD Utility:
+Otherwise get the nightly build from:
 
-The sdtcmd utility can be used to send real-time commands to the sdt3d app:
+http://downloads.pf.itd.nrl.navy.mil/proteantools/
 
-sdtcmd node node01 symbol sphere,blue
 
-Windows (sdtcmd.exe), macosx, and linux (sdtcmd) versions of sdtcmd are provided in the respective binary distributes.
-
-EXAMPLES:
-
-An examples directory containing a few sample sdt scripts files and
-imagery is provided.  You may need to change the path in the example
-scripts to point to your examples directory.
-
-Some added commands include:
+Some added "newer" commands in Release 1.2 include:
 
 path <imageFilePath> - sets directory prefix to search for files
 instance <instanceName> - overrides the default pipe name of "sdt"
@@ -61,7 +62,8 @@ region <regionName> <attributes> - creates a region overlay
 listen <udpPort> - directs sdt3d to listen to the given udp port
 link <node1>,<node1>[,<linkID|all>[,<dir,all>]] - multiple directed or
 bidirectional links are now supported
-symbol <symbolType>[,<color>[,<thickness>[,x_radius[,y_radius>[,opacity]]] - symbols can be associated with nodes
+symbol <symbolType>[,<color>[,<thickness>[,x_radius[,y_radius>[,opacity]]] - sym
+bols can be associated with nodes
 delete <objectType|all>,<objectName|all>
 clear <objectType|all>
 tile <imageTile> <attributes> - overlays a specified image at the given
@@ -69,4 +71,6 @@ lat lon coordinates
 pos <lon>,<lat>,<agl|msl> - nodes can be positioned at MSL or AGL
 follow <nodeName> - the view can be told to "follow" specified nodes 
 
-See the documentation for more information
+
+Commands not yet supported are simply ignored.
+
