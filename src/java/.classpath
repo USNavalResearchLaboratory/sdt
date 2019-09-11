@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/protolib-jni">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="protolib-jni"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/worldwind"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/joglutils"/>
+	<classpathentry kind="lib" path="/worldwind/gluegen-rt.jar"/>
+	<classpathentry kind="lib" path="/worldwind/jogl.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="worldwind"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/worldwind/worldwind.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

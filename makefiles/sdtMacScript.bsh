@@ -1,0 +1,5 @@
+#!/bin/bash 
+# Co-locate this script with the "sdt.app" bundle
+# to launch the MacOS "sdt" from the command-line
+# with arguments
+exec "${0%/*}/sdt.app/Contents/MacOS/sdt" $@ 

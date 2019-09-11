@@ -1,0 +1,36 @@
+This directory contains some simple examples to illustrate the use of
+"sdt" and "sdt3d". 
+
+Load the scripts into the sdt application using the input script file
+menu.
+
+simple-example.sdt illustrates:
+      setting the background bounds for the display 
+      setting a path to search for sprites
+      loading sprites
+      assigning sprites to nodes
+      positioning stationary nodes
+      moving a node in a circular pattern
+
+sampler.sdt illustrates (sdt3d only):
+      symbols
+      3d models
+      agl,msl altitude positioning
+      regions
+      label toggling and formatting
+      view positioning
+      multiple links between two nodes
+      nested scripts
+
+uav.sdt illustrates
+      a complete "sceneario"
+      node movement and linkage
+      background image is overlayed on the terrain
+
+flyTo.sdt illustrates (sdt3d only)
+      "flying" to a globe location 
+
+suezCanal.sdt illustrates (sdt3d only)
+      a complete "scenario"
+      making the view "follow" a given node as it moves out of view
+      setting up a region      

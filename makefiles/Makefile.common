@@ -1,0 +1,185 @@
+#########################################################################
+# COMMON MAKEFILE STUFF
+#
+
+SHELL=/bin/sh
+
+.SUFFIXES: .cpp $(.SUFFIXES)
+
+SRC_DIR = ../src/java/src
+WORK_DIR = build
+BLD_DIR = $(WORK_DIR)/build
+BIN_DIR = $(WORK_DIR)/bin
+DL_DIR = $(WORK_DIR)/download
+DST_DIR = $(WORK_DIR)/sdt3d
+LIB_DIR = $(DST_DIR)/lib
+JAR_DIR = $(DST_DIR)/jars
+
+PROTOLIB = ../protolib
+PROTOLIBJNI = $(BLD_DIR)/protolib
+COMMON = ../src/common
+INCLUDE = ../include
+UNIX = ../makefiles
+# This software depends upon the NRL Protean Group's
+# "Protokit" development library
+LIBPROTO = $(PROTOLIB)/lib/libprotokit.a
+    
+FLAGS = $(SYSTEM_FLAGS) $(WX_FLAGS)
+
+INCLUDES =  $(SYSTEM_INCLUDES) $(WX_INCLUDES) -I$(PROTOLIB)/include -I$(INCLUDE) 
+
+CFLAGS = -g -DUNIX -DPROTO_DEBUG -Wall -O -fPIC $(FLAGS) $(INCLUDES) $(SYSTEM_HAVES)
+
+LIBS = $(WX_LIBS) $(SYSTEM_LIBS) -lm   
+
+TARGETS = sdt 
+
+# Rule for C++ .cpp extension
+.cpp.o:
+	$(CC) -c $(CFLAGS) -o $*.o $*.cpp
+         
+SRC = $(COMMON)/sdt.cpp $(PROTOLIB)/src/wx/wxProtoApp.cpp
+          
+OBJ = $(SRC:.cpp=.o)
+
+all:	sdt
+
+$(LIBPROTO): 
+	$(MAKE) -C $(PROTOLIB)/makefiles -f Makefile.$(SYSTEM)    
+
+sdt:        $(DL_DIR) $(BLD_DIR) $(PROTOLIB) $(OBJ) $(LIBPROTO) 
+	$(CC) -o $@ $(OBJ) $(LIBPROTO) $(LIBS) 
+	mkdir -p ../bin
+	cp $@ ../bin/$@
+
+sdt.app: sdt ../src/macos/Info.plist.in
+	mkdir -p sdt.app/Contents
+	mkdir -p sdt.app/Contents/MacOS
+	mkdir -p sdt.app/Contents/Resources
+	cp ../src/macos/Info.plist.in sdt.app/Contents/Info.plist
+	cp ../src/macos/sdtLogo.icns sdt.app/Contents/Resources/
+	echo "APPL????" >sdt.app/Contents/PkgInfo
+	$(CC) -o $@/Contents/MacOS/sdt $(OBJ) $(LIBPROTO) $(LIBS)
+	mkdir -p ../bin
+	cp -r $@ ../bin/$@
+
+PLAYER_SRC = $(COMMON)/sdtPlayer.cpp
+
+PLAYER_OBJ = $(PLAYER_SRC:.cpp=.o)
+
+sdtplay:	$(PLAYER_OBJ) $(LIBPROTO)
+	$(CC) -o $@ $(PLAYER_OBJ) $(LIBPROTO) $(LIBS)
+
+CMD_SRC   =  $(COMMON)/sdtCmd.cpp
+CMD_OBJ   =  $(CMD_SRC:.cpp=.o)
+
+sdtcmd:   $(CMD_OBJ) $(LIBPROTO)
+	$(CC) -o $@ $(CMD_OBJ) $(LIBPROTO) $(LIBS)
+
+APP_NAME = sdt3d
+
+PROTOLIB_OBJS = $(LIB_DIR)/libProtolibJni.so\
+				$(LIB_DIR)/libprotokit.so\
+				$(LIB_DIR)/libprotokit.so.2\
+				$(JAR_DIR)/protolib-jni.jar
+
+WORLDWIND_OBJS = $(LIB_DIR)/libgluegen-rt.so\
+				 $(LIB_DIR)/libjogl.so\
+				 $(LIB_DIR)/libjogl_awt.so\
+				 $(LIB_DIR)/libjogl_cg.so\
+				 $(JAR_DIR)/gluegen-rt.jar\
+			   	 $(JAR_DIR)/jogl.jar\
+				 $(JAR_DIR)/worldwind.jar
+
+JOGLUTILS_OBJS = $(JAR_DIR)/joglutils.jar
+
+.PHONY:        sdt3d clean distclean 
+all: $(WORK_DIR) $(BLD_DIR) $(BIN_DIR) $(DL_DIR) $(DST_DIR) $(LIB_DIR) $(JAR_DIR) sdt3d.zip
+sdt3d: $(WORK_DIR) $(BLD_DIR) $(BIN_DIR) $(DL_DIR) $(DST_DIR) $(LIB_DIR) $(JAR_DIR) sdt3d.zip
+
+$(WORK_DIR):
+	mkdir -p $@
+
+#$(WORK_DIR)/%:
+#	mkdir -p $@
+# The above breaks sdt compile for some reason...
+$(BLD_DIR):
+	mkdir -p $@
+$(BIN_DIR):
+	mkdir -p $@
+$(DL_DIR):
+	mkdir -p $@
+$(DST_DIR):
+	mkdir -p $@
+$(LIB_DIR):
+	mkdir -p $@
+$(JAR_DIR):
+	mkdir -p $@
+
+
+## SDT3D ##
+sdt3d.zip: $(JAR_DIR)/sdt3d.jar
+	cp sdt3d.sh $(DST_DIR)/
+#	rsync -aC $(SRC_DIR)/images $(DST_DIR)/
+	cd $(WORK_DIR) && zip -r $@ sdt3d
+	mv $(WORK_DIR)/$@ $@
+
+$(JAR_DIR)/sdt3d.jar: $(PROTOLIBJNI) $(PROTOLIB_OBJS) $(WORLDWIND_OBJS) $(JOGLUTILS_OBJS)
+	javac -d $(BIN_DIR) -sourcepath $(SRC_DIR) -classpath $(JAR_DIR)/protolib-jni.jar:$(JAR_DIR)/worldwind.jar:$(JAR_DIR)/joglutils.jar $(SRC_DIR)/mil/navy/nrl/sdt3d/sdt3d.java
+	jar cfm $@ Manifest.txt -C $(BIN_DIR) mil
+
+## / SDT3D ##
+
+## Protolib ##
+
+../protolib:
+	if test -d $@; then echo using local $@ tree; else mkdir -p $@; wget -O ../protolib.tgz http://downloads.pf.itd.nrl.navy.mil/protolib/nightly_snapshots/protolib-svnsnap.tgz; tar xf ../protolib.tgz -C ..; cd $@ && ./waf configure --disable-wx; cd $@ && ./waf build; echo downloaded protolib.tgz; fi
+
+$(PROTOLIB_OBJS): $(BLD_DIR)/protolib
+	cp -L $(BLD_DIR)/protolib/build/default/$(notdir $@) $@
+
+$(BLD_DIR)/protolib: $(DL_DIR)/protolib.tgz
+	tar xf $< -C $(BLD_DIR)
+	cd $(BLD_DIR)/protolib && ./waf configure --disable-wx --build-java
+	cd $(BLD_DIR)/protolib && ./waf build
+
+$(DL_DIR)/protolib.tgz:
+	wget -O $@ http://downloads.pf.itd.nrl.navy.mil/protolib/nightly_snapshots/protolib-svnsnap.tgz
+## / Protolib ##
+
+## Worldwind (and jogl, etc) ##
+$(WORLDWIND_OBJS): $(BLD_DIR)/worldwind
+	cp $(BLD_DIR)/worldwind/$(notdir $@) $@
+
+$(BLD_DIR)/worldwind: $(DL_DIR)/worldwind.zip
+	unzip -d $(BLD_DIR) $<
+
+$(DL_DIR)/worldwind.zip: 
+        # 0.6 release
+	cp -d worldwind.zip $(DL_DIR)/worldwind.zip
+#	wget -O $@ http://builds.worldwind.arc.nasa.gov/releases/worldwind-0.6.158.12011.zip
+## / Worldwind ##
+
+## JOGL Utilities ##
+$(JOGLUTILS_OBJS): $(BLD_DIR)/joglutils
+	cp $(BLD_DIR)/joglutils/build/joglutils.jar $@
+
+$(BLD_DIR)/joglutils: $(DL_DIR)/joglutils.zip
+	unzip -d $(BLD_DIR) $<
+
+$(DL_DIR)/joglutils.zip:
+	cp -d joglutils.zip $(DL_DIR)/joglutils.zip
+#	wget -O $@ http://projectkenai.com/projects/jogl/sources/jogl-utils-git/content/src/net/java/joglutils/model/examples/joglutils.zip
+
+clean: 
+	rm -rf *.o ../src/common/*.o sdt sdt.app;
+	$(MAKE) -C $(PROTOLIB)/makefiles -f Makefile.$(SYSTEM) clean
+	-rm -rf sdt3d.zip $(BLD_DIR) $(BIN_DIR) $(DST_DIR) $(LIB_DIR) $(JAR_DIR)
+
+
+distclean:   clean
+	-rm -rf $(WORK_DIR)
+
+# DO NOT DELETE THIS LINE -- mkdep uses it.
+# DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.
+

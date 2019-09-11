@@ -1,0 +1,63 @@
+#
+# This script is included by the nested_scripts.sdt example.
+# The including script also loads the sprites.
+#
+# It illustrated drawing multiple/directed links between nodes.
+#
+# Set the path to be used to search for referenced files.  (Change as appropriate for your environment.)
+#
+path "../examples/;../examples/sprites/;"
+
+bgimage malta.jpg
+bgbounds 14.275700,35.985800,14.401300,36.098400
+
+# Set optional heading, pitch, and zoom for initial view
+# Note that these commands are experimental and not fully supported
+#
+heading -95.482777
+pitch 64.794802
+zoom 12981.575324
+
+# Change the default label text for ships
+#
+node ship1 type rih label yellow,"boat 1"
+node ship2 type rih label on,"boat 2"
+node ship3 type rih label on,"boat 3"
+#
+# Turn off labels or use default
+#
+node oilTanker type oilTanker label off
+node independence type alp label off
+node uav type scanEagle
+node uav2 type scanEagle
+node pirate type pirate label on,"pirate ship"
+
+#
+# Position the nodes
+#
+node ship1 pos 14.343478,36.061597,0.000000
+node ship2 pos 14.340700,36.050350,0.000000
+node uav pos 14.340700,36.014400,0.000000
+node uav pos 14.343019,36.053680,500.000000
+node ship3 pos 14.351813,36.068334,0.000000
+node independence pos 14.354584,36.025628,0.000000
+node uav2 pos 14.351807,36.023383,500.000000
+node oilTanker pos 14.286300,36.093700
+node pirate pos 14.291400,36.096200
+
+
+#
+# Drraw some links between the ships
+#
+link uav,ship2 line green,2 linklabel on
+link uav,ship3 line green,2 linklabel on
+link uav,ship1 line green,2 linklabel on
+link uav2,independence line green,2
+
+#
+# Create some directed links between the uavs
+#
+link uav,uav2,eth0 line blue,2 linklabel on
+link uav,uav2,wifi,dir line red,2 linklabel on
+link uav2,uav,wifi2,dir line white,2 linklabel on
+

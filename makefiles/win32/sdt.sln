@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sdtCmd", "sdtcmd\sdtcmd.vcproj", "{7D4BD7E0-046D-4A2B-8EB4-7BCB2ED3925F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22949B91-CECA-4278-A39E-7AB0C3983E2F} = {22949B91-CECA-4278-A39E-7AB0C3983E2F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sdt", "sdt.vcproj", "{8C4DC610-E8D4-4D88-8ABE-E2EB6721FF65}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22949B91-CECA-4278-A39E-7AB0C3983E2F} = {22949B91-CECA-4278-A39E-7AB0C3983E2F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Protokit-2008-express", "..\..\..\protolib\makefiles\win32\Protokit-2008-express.vcproj", "{22949B91-CECA-4278-A39E-7AB0C3983E2F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug DLL|Win32 = Debug DLL|Win32
+		Debug|Win32 = Debug|Win32
+		Release DLL|Win32 = Release DLL|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7D4BD7E0-046D-4A2B-8EB4-7BCB2ED3925F}.Debug DLL|Win32.ActiveCfg = Debug|Win32
+		{7D4BD7E0-046D-4A2B-8EB4-7BCB2ED3925F}.Debug DLL|Win32.Build.0 = Debug|Win32
+		{7D4BD7E0-046D-4A2B-8EB4-7BCB2ED3925F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7D4BD7E0-046D-4A2B-8EB4-7BCB2ED3925F}.Debug|Win32.Build.0 = Debug|Win32
+		{7D4BD7E0-046D-4A2B-8EB4-7BCB2ED3925F}.Release DLL|Win32.ActiveCfg = Release|Win32
+		{7D4BD7E0-046D-4A2B-8EB4-7BCB2ED3925F}.Release DLL|Win32.Build.0 = Release|Win32
+		{7D4BD7E0-046D-4A2B-8EB4-7BCB2ED3925F}.Release|Win32.ActiveCfg = Release|Win32
+		{7D4BD7E0-046D-4A2B-8EB4-7BCB2ED3925F}.Release|Win32.Build.0 = Release|Win32
+		{8C4DC610-E8D4-4D88-8ABE-E2EB6721FF65}.Debug DLL|Win32.ActiveCfg = Debug DLL|Win32
+		{8C4DC610-E8D4-4D88-8ABE-E2EB6721FF65}.Debug DLL|Win32.Build.0 = Debug DLL|Win32
+		{8C4DC610-E8D4-4D88-8ABE-E2EB6721FF65}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8C4DC610-E8D4-4D88-8ABE-E2EB6721FF65}.Debug|Win32.Build.0 = Debug|Win32
+		{8C4DC610-E8D4-4D88-8ABE-E2EB6721FF65}.Release DLL|Win32.ActiveCfg = Release DLL|Win32
+		{8C4DC610-E8D4-4D88-8ABE-E2EB6721FF65}.Release DLL|Win32.Build.0 = Release DLL|Win32
+		{8C4DC610-E8D4-4D88-8ABE-E2EB6721FF65}.Release|Win32.ActiveCfg = Release|Win32
+		{8C4DC610-E8D4-4D88-8ABE-E2EB6721FF65}.Release|Win32.Build.0 = Release|Win32
+		{22949B91-CECA-4278-A39E-7AB0C3983E2F}.Debug DLL|Win32.ActiveCfg = Debug|Win32
+		{22949B91-CECA-4278-A39E-7AB0C3983E2F}.Debug DLL|Win32.Build.0 = Debug|Win32
+		{22949B91-CECA-4278-A39E-7AB0C3983E2F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{22949B91-CECA-4278-A39E-7AB0C3983E2F}.Debug|Win32.Build.0 = Debug|Win32
+		{22949B91-CECA-4278-A39E-7AB0C3983E2F}.Release DLL|Win32.ActiveCfg = Release|Win32
+		{22949B91-CECA-4278-A39E-7AB0C3983E2F}.Release DLL|Win32.Build.0 = Release|Win32
+		{22949B91-CECA-4278-A39E-7AB0C3983E2F}.Release|Win32.ActiveCfg = Release|Win32
+		{22949B91-CECA-4278-A39E-7AB0C3983E2F}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

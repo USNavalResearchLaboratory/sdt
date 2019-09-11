@@ -1,0 +1,49 @@
+# This file contains some more or less useful image files for associating with
+# sdt sprites.  Modify the sizes as appropriate.  Additional examples are
+available in the sdt-sprites tag for proteantools.
+
+#3d Models
+sprite warrior image warrior-blue/warrior.3ds size 64,64 length 16
+sprite stealth image stealth/stealth.3ds size 300,300 length 20.8
+
+
+# Vehicles
+sprite truck image truck.png size 50,25
+sprite blueCar image car.gif size 47,23
+sprite greyCar image car-gray.gif size 47,23
+sprite firetruck image firetruck2.gif size 153,100
+
+# Aircraft 
+sprite uav image uav.png size 72,20
+sprite saucer image saucer.gif size 144,52
+sprite helo image helo.png size 105,43
+sprite helo1 image helo1.gif size 150,87
+sprite scanEagle image scanEagle.png size 114,42 #228,96
+
+# Ships
+sprite enterprise image carrier-enterprise size 240,172 #962,691
+sprite hovercraft image hovercraft.gif size 94,46 #47,23
+sprite hovercraft-cam image hovercraft-camo.gif size 94,46 #47,23
+sprite rih image inflatableRigidHull.png size 77,19
+sprite independence image uss-independence-LCS-2.png size 135,57 # 271,114
+sprite alp image amphibiousLandingPlatform.png size 353,68 #700,137
+sprite aegis image aegis-r.png size 283,215 # 567,430
+sprite ddg-destroyer image ddg-destroyer-2.png size 454,309
+sprite oilTanker image oilTanker.png size 223,156 #446,312
+sprite sub image submarine_cartoon.png  #size 200,180 #600,470
+sprite pirate image pirates.png
+
+# People
+sprite soldier image soldier.gif size 28,60
+sprite soldier1 image soldier1.png size 49,128
+sprite soldier2 image soldier2.gif size 46,79
+
+# Miscellaneous
+sprite sat image satellite.png size 180,131 #361,262
+sprite flame image flame.gif size 58,80
+sprite laptop image laptop.png size 88,80
+sprite pda image pda.png size 82,55
+sprite redStar image red_star.gif size 33,32
+sprite yellowStar image star.gif size 33,32
+sprite waterTower image waterTower.png 62,62 #256,256
+

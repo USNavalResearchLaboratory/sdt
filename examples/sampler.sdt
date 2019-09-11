@@ -1,0 +1,124 @@
+# This script provides examples of 
+#      symbol types
+#      3d models
+#      agl,msl altitude positioning
+#      region types
+#      label toggling and formatting
+#      view positioning
+#      multiple links
+#      nested scripts
+#
+# Set the path to be used to search for referenced files.  (Change as appropriate for your environment.)
+#
+path "examples/;examples/sprites/;../examples/;../examples/sprites/;"
+#
+# Set background image ("sdt") and bounds
+bgimage platoon.jpg
+bgbounds -112.089100,40.493600,-112.070900,40.487300
+
+# Set optional heading, pitch, and zoom for initial view
+# node that these commands are experimental and not fully
+# supported
+heading -17.138033
+zoom 3499.418533
+#
+# Alert the user that there are more 
+status "Zoom out to see 3d models in the air"
+
+#
+# Load sprites and 3d models
+sprite soldier image soldier1.png size 46,79
+sprite warrior image warrior/warrior.3ds size 64,64 length 16
+sprite waterTower image waterTower.png size 124,124 
+sprite stealth image stealth/stealth.3ds size 150,150 length 10.4
+sprite saucer image saucer.gif
+sprite car image car.gif
+sprite satellite image satellite.png
+
+#
+# Assign sprite types to nodes
+node 0 type warrior label on,"3d model"
+node 29 type car label off
+
+# Turn off sprite type for some nodes (otherwise the
+# sprite will default to the first sprite loaded)
+# Turn off labels
+node 1 type none label off
+node 2 type none label off
+node 3 type none label off
+node 4 type none label off
+node 5 type none label off
+node 6 type none label off
+node 7 type none label off
+node 8 type none label off
+node 9 type none label off
+node 10 type none label off
+node 11 type none label off
+node 12 type none label off
+node 13 type none label off
+node 14 type none label off
+node 15 type none label off
+node 16 type none label off
+node 17 type none label off
+node 18 type none label off
+node 19 type none label off
+node 20 type none label off
+node 21 type none label off
+node 22 type none label off
+node 23 type none label off
+node 24 type none label off
+node 25 type none label off
+node 26 type none label off
+node 27 type none label off
+node 28 type none label off
+#
+# Display some background imagery 
+node waterTower type waterTower pos -112.087800,40.490658,0.000000 
+#
+# Position the stealth bomber at 2000 meters above ground level
+node stealth type stealth pos -112.083054,40.491786,2000,agl label on,"2000 agl"
+# 
+# Position the saucer at 2000 meters above mean sea level
+node saucer type saucer pos -112.083054,40.491786,2000,msl label on "2000 msl"
+#
+# Default sphere (red icon hugging .15 opacity)
+node 3 symbol sphere label on,"default sphere"
+#
+# Yellow sphere 
+node 7 symbol sphere,yellow label on,"yellow sphere"
+
+# Create a 200 meter "fixed" symbol
+node 14 symbol sphere,x,x,200 label on,"200 meter\nfixed sphere"
+
+# Create a sphere at 99% opacity
+node 21 symbol sphere,x,x,x,x,.99 label on,"sphere at 99% opacity"
+
+# Create a green cube
+node 27 symbol cube,green label on,"green cube"
+
+# Create a sphere region
+region region1 shape sphere,blue,3,500,500,0.50 center -112.072344,40.5006,1500
+
+# Create a circular surface region
+region region2 shape circle,green,3,500,500,0.50 center -112.082344,40.5006,1500
+
+# Create a square surface shape region
+region region3 shape square,white,3,500,500,0.30 center -112.092344,40.5006,1500
+
+# Create a square region
+region region4 shape cube,red,3,500,500,0.30 center -112.102344,40.5006,2000
+
+# Create a sphere region at altitude 50% opacity
+region region5 shape sphere,cyan,3,500,500,0.50 center -112.072344,40.5006,3000
+
+# Create a node with just a label
+node info type none position -112.0838,40.4875,0.000000 label red,"Expand the viewport\nto view the regions"
+#
+node sat type satellite label off position -112.062344,40.492057,1000.000000 
+# Create some links between the car and the satelite
+link 29,sat,wifi1 line blue,3 
+link 29,sat,wifi2 line white,3 
+link 29,sat,wifi3 line red,3 
+link 29,sat,wifi4,dir line green,3 linklabel on
+
+input sampler.include

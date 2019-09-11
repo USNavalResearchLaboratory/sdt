@@ -1,0 +1,2 @@
+Main-Class: mil.navy.nrl.sdt3d.sdt3d
+Class-Path: protolib-jni.jar gluegen-rt.jar jogl.jar worldwind.jar joglutils.jar
