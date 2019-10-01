@@ -14,7 +14,7 @@ public class SdtCmdParser
 		CMD_INVALID, CMD_ARG, CMD_NOARG
 	};
 
-	String CMD_LIST[] = {
+	static String CMD_LIST[] = {
 		"+bgbounds",
 		"+collapseLinks",
 		"+flyto",
