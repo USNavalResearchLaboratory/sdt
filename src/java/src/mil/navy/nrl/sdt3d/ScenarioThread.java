@@ -28,6 +28,8 @@ public class ScenarioThread extends SocketThread
 	
 	private ScenarioModel scenarioModel;
 	
+	private ScenarioController scenarioController;
+	
 	private int scenarioPlaybackStartTime;
 
 	int lastWaitTime = 0;
@@ -35,12 +37,13 @@ public class ScenarioThread extends SocketThread
 	HashMap<Integer, String> int2Cmd;
 
 // TODO: Change superclass !
-	public ScenarioThread(sdt3d.AppFrame theSdtApp, ScenarioModel scenarioModel, HashMap<Integer, String> int2Cmd, int scenarioPlaybackStartTime)
+	public ScenarioThread(sdt3d.AppFrame theSdtApp, ScenarioController scenarioController, HashMap<Integer, String> int2Cmd, int scenarioPlaybackStartTime)
 	{
 		super(theSdtApp, 0);
 		sdt3dApp = theSdtApp;
+		this.scenarioController = scenarioController;
 		// TODO: Get model from app?
-		this.scenarioModel = scenarioModel;
+		this.scenarioModel = scenarioController.getScenarioModel();
 		this.scenarioPlaybackStartTime = scenarioPlaybackStartTime;
 		this.int2Cmd = int2Cmd;
 	}
@@ -66,6 +69,7 @@ public class ScenarioThread extends SocketThread
 	void setScenarioPlaybackTime(int scenarioPlaybackStartTime)
 	{
 		this.scenarioPlaybackStartTime = scenarioPlaybackStartTime;
+		System.out.println("scenarioPlaybackStartTime> " + scenarioPlaybackStartTime);
 	}
 	
 	@Override
@@ -88,8 +92,11 @@ public class ScenarioThread extends SocketThread
 		{
 			lastTime = titr.next().getKey();
 		}
+		// Intialize scenario start time ljt fire?
+		scenarioController.setScenarioTime(scenarioPlaybackStartTime/1000);
 
 		Iterator<Entry<Integer, Map<Integer, String>>> itr = getScenarioModel().getModel().entrySet().iterator();		
+		synchronized(scenarioModel) {
 		while (!stopFlag && itr.hasNext())
 		{
 			System.out.println("Scenario Playback iterating");
@@ -109,15 +116,51 @@ public class ScenarioThread extends SocketThread
 			int waitTime = entry.getKey() - lastTime;
 			lastTime = entry.getKey();
 			
-			// TESTING!!
-			if (waitTime > 1000)
+			System.out.println("lastTime> " + lastTime/1000 + " scenarioPlaybackStartTime> " + scenarioPlaybackStartTime/1000); 
+			if (lastTime < scenarioPlaybackStartTime)
 			{
-				waitTime = 1000;
+				// Don't start pacing commands until we get to playback time
+				value = " " + pendingCmd + " \"" + value + " \"\n";
 			}
-			
-			value = " wait " + waitTime + "\n" + pendingCmd + " \"" + value + " \"\n";
-			sb.append(value, 0, value.length());
-			parseString(sb, parser);
+			else
+			{
+				value = pendingCmd + " \"" + value + " \"\n";
+				try
+				{
+					System.out.println("Sleeping> " + waitTime/1000);
+					sleep(waitTime);
+				}
+				catch (InterruptedException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				scenarioController.startPlayer();
+			}
+			System.out.println("cmd> " + value);
+
+			/*
+
+			if (this.lastWaitTime > 0)
+			{
+				currentTime = System.currentTimeMillis();
+				elapsedTime = currentTime - this.lastWaitTime;
+				sleepTime = sleepTime - elapsedTime;
+				if (sleepTime < 0)
+					sleepTime = 0;
+			}
+	
+			*/
+			if (!pendingCmd.equalsIgnoreCase("wait"))
+			{
+				sb.append(value, 0, value.length());
+				parseString(sb, parser);	
+			}
+			else
+			{
+				System.out.println("pendingcmd equals wait");
+			}
+		}
 		}
 		running = false;
 

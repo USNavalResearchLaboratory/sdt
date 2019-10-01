@@ -23,13 +23,14 @@ public class FileThread extends SocketThread
 	CmdParser parser = null;
 
 	LinkedList<FileReaders> fileStack = new LinkedList<FileReaders>();
-
+	
 
 	public boolean isRunning()
 	{
 		return !fileStack.isEmpty();
 	}
 
+	
 	class FileReaders
 	{
 		private FileReader fIn;
@@ -220,7 +221,7 @@ public class FileThread extends SocketThread
 			return false;
 	}
 
-
+	
 	@Override
 	public void run()
 	{
@@ -232,18 +233,22 @@ public class FileThread extends SocketThread
 		String record = null;
 		try
 		{
-			while (!fileStack.isEmpty() && (inputFile = fileStack.peek().getBufferedReader()) != null)
+			while (!getPauseForScenarioPlayback() && !fileStack.isEmpty() && (inputFile = fileStack.peek().getBufferedReader()) != null)
 			{
-				while ((record = inputFile.readLine()) != null && !stopFlag)
+				while ((!getPauseForScenarioPlayback() && (record = inputFile.readLine()) != null && !stopFlag))
 				{
-
+					//System.out.println("Reading input file");
 					// Reattach eol
 					record = record + '\n';
 					sb.append(record, 0, record.length());
 					// parse string
 					parseString(sb, parser);
 				} // end processing file stack
-				popFile();
+				
+				if (!getPauseForScenarioPlayback())
+				{
+					popFile();
+				}
 			}
 
 		}

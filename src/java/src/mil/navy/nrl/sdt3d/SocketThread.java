@@ -24,6 +24,9 @@ public class SocketThread extends Thread
 	int port = 0;
 
 	long lastWaitTime = 0;
+	
+	private boolean pauseForScenarioPlayback = false;
+
 
 
 	public SocketThread(sdt3d.AppFrame theSdtApp, int thePort)
@@ -45,13 +48,24 @@ public class SocketThread extends Thread
 		stopFlag = true;
 	}
 
+	
+	void setPauseForScenarioPlayback(boolean pauseForScenarioPlayback)
+	{
+		this.pauseForScenarioPlayback = pauseForScenarioPlayback;
+	}
+	
+	
+	boolean getPauseForScenarioPlayback()
+	{
+		return this.pauseForScenarioPlayback;
+	}
 
 	/*
 	 * Called by input threads to parse input and extract the wait commands
 	 */
 	protected void parseString(StringBuilder sb, final CmdParser parser)
 	{
-		System.out.println("ParseString " + sb);
+		//System.out.println("ParseString " + sb);
 		long currentTime = 0;
 		long elapsedTime = 0;
 		int index = 0;

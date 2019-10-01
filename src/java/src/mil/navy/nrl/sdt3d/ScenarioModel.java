@@ -14,11 +14,9 @@ public class ScenarioModel
 
 	private LinkedHashMap<Integer,Map<Integer,String>> sdtCommandMap = new LinkedHashMap<Integer, Map<Integer,String>>();
 		
-	//private Map<Integer, Map<Integer, String>> synMap = Collections.synchronizedMap(sdtCommandMap);
-	
-	private ScenarioController listener;
-	
-	private int elapsedTime = 0;
+	private Map<Integer, Map<Integer, String>> synMap = Collections.synchronizedMap(sdtCommandMap);
+		
+	private static int elapsedTime = 0;
 	
 	ScenarioModel()
 	{
@@ -26,10 +24,9 @@ public class ScenarioModel
 	}
 	
 	
-	synchronized LinkedHashMap<Integer,Map<Integer,String>> getModel()
+	synchronized Map<Integer, Map<Integer, String>> getModel()
 	{
-		return sdtCommandMap;
-		//return this.synMap;
+		return synMap;
 	}
 	
 	
@@ -38,28 +35,16 @@ public class ScenarioModel
 		return elapsedTime;
 	}
 	
-
-	void updateModel(long currentTime, int pendingCmd, String val)
+	/*
+	 * Called from the app when taping the scenario.  Elapsed time is the time
+	 * sdt has been running (not necessarily "scenario" elapsed time)
+	 */
+	synchronized void updateModel(long currentTime, int pendingCmd, String val)
 	{
-		System.out.println("Updating model");
 		elapsedTime = (int) ((currentTime - ScenarioController.scenarioStartTime));
 		
 		Map<Integer,String> cmd = new HashMap<Integer,String>();
 		cmd.put(pendingCmd, val);
-		sdtCommandMap.put(elapsedTime, cmd);
-		//synMap.put(elapsedTime, cmd);
-						
-		// Tell the controller to update the view
-		//this.listener.firePropertyChange(ScenarioController.SCENARIO_MODIFIED, null, timeInSecs);
-		
-	}
-	
-	
-	
-	void setUpListeners(ScenarioController listener)
-	{
-		this.listener = listener;
-	}
-
-
+		getModel().put(elapsedTime, cmd);		
+	}	
 }

@@ -11,17 +11,11 @@ import java.beans.*;
  * @author thompson
  * @since Aug 16, 2019
  */
-public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
+public class ScenarioPlaybackPanel extends JPanel 
 {
 	private static final long serialVersionUID = 1L;
-	private PropertyChangeListener propertyChangeListener;
-	
-	private final PropertyChangeSupport propertyChangeSupport;
-
-	private ScenarioController listener;
 	
     // panel components
-    private boolean suspendPositionEvents = false;
     private JLabel scenarioTime;
     private JLabel scenarioTimeValue; 
     private JSpinner scenarioSpinner;
@@ -35,39 +29,33 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
     private JSpinner speedSpinner;
     private JSpinner speedFactorSpinner;
     
+    private boolean suspendPositionEvents = false;
     private int maxSliderValue = 1000;
     private Timer player;
     
     private static final int PLAY_FORWARD = 1;
     private static final int PLAY_BACKWARD = -1;
-    //private static final int PLAY_STOP = 0;
     private static final int PLAY_PAUSED = 0;
-    private static final int PLAYING = 2;
+    static final int PLAYING = 2;
+    private static final int TAPING = 3;
 
-    private int playMode = PLAY_PAUSED;
+    private int playMode = PLAYING; 
 
-    private int elapsedSecs = -1;
-
+    // elapsedSecs is total taped scenario time
+    private int elapsedSecs = 0; 
+    // scenarioSecs is scenario play time
+    private int scenarioSecs = 0;
  
     public ScenarioPlaybackPanel()
     {
         initComponents();
-        this.updateEnabledState();
          
-        this.propertyChangeSupport = new PropertyChangeSupport(this);
+        updateEnabledState(true);
+
+        // ljt for now... we want to increment the timeline while the
+        // scenario is being taped - 
+        setPlayMode(TAPING);
         
-        // TODO: Keep me?
-        this.propertyChangeListener = new PropertyChangeListener()
-        {
-            public void propertyChange(PropertyChangeEvent event)
-            {
-                if (event.getPropertyName().equals(ScenarioController.SCENARIO_MODIFIED))
-                {
-                		System.out.println("ScenarioPlaybackPanel::SCENARIO_MODIFIED");
-                    updatePositionList(false);
-                }
-            }
-        };
     }
     
     
@@ -134,8 +122,6 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
                 {
                     public void stateChanged(ChangeEvent e)
                     {
-                    		// TODO: How to tell that user changed the state?
-                    		//System.out.println("State changed slider");
                         positionSliderStateChanged();
                     }
                 });
@@ -180,7 +166,7 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
 
                 //---- "Stop" Button ----
                 this.startStopButton = new JButton();
-                this.startStopButton.setText("Start");
+                this.startStopButton.setText("Stop");
                 this.startStopButton.setEnabled(true);
                 this.startStopButton.addActionListener(new ActionListener()
                 {
@@ -277,40 +263,11 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
     }
 
     
-	void setUpListeners(ScenarioController controller)
+	void setListener(ScenarioController listener)
 	{
-		// TODO: implement all our buttons
-		this.listener = controller;
-		//sliderButton().addChangeListener(c);
-		//stopButton.addChangeListener(c);
-		//reverseButton.addChangeListener(c);
-		//orwardButton.addChangeListener(c);
-		// TODO: Do we really want to listen for changes to the slider??
-		//scenarioTimeSlider.addChangeListener(c);
-		//previousTimemarkButton().addChangeListener(c);
-		//nextTimemarkButton().addChangeListener(c);
-		//gearButton().addChangeListener(c);
+		// TODO: check for events the controller is not interested in?
+		addPropertyChangeListener(listener);
 
-		startStopButton.addActionListener(Void -> controller.togglePlayOrStop());
-		
-		// TODO: use time context stuff?
-		
-		//reverseButton.addActionListener((Void -> c.stepBackward()));
-		//forwardButton.addActionListener(Void -> c.stepForward());
-		//previousTimemarkButton().addActionListener(Void -> c.goToPreviousTimemark());
-		//nextTimemarkButton().addActionListener(Void -> c.goToNextTimemark());
-		//gearButton().addActionListener(Void -> c.showPopupMenu());
-	}
-
-	private JButton playButton()
-	{
-		return startStopButton;
-	}
-	
-	
-	public boolean isPlayButtonPressed()
-	{
-		return playButton().isEnabled();
 	}
 	
 
@@ -318,53 +275,24 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
     {
     		return scenarioSlider;
     }
-    
-
-    private void updatePositionList(boolean resetPosition)
-    {
-    		
-     	//String[] strings = new String[this.sdtCmdMap != null? this.sdtCmdMap.size() : 0];
-    		String[] strings = new String[0];
-    	
-        for (int i = 0; i < strings.length; i++)
-        {
-            strings[i] = String.format("%,4d", i);
-        }
-
-        if (strings.length == 0)
-            strings = new String[] {"   0"};
-
-        int currentPosition = Math.min(this.getCurrentPositionNumber(), strings.length - 1);
-        int currentSliderValue = this.scenarioSlider.getValue();
-        this.scenarioSpinner.setModel(new SpinnerListModel(strings));
-        this.scenarioSpinner.setValue(resetPosition ? strings[0] : strings[currentPosition]);
-        this.scenarioSlider.setValue(resetPosition ? 0 : currentSliderValue);
-    }
-
+        
     private void setPositionSpinnerNumber(int n)
     {
         this.scenarioSpinner.setValue(String.format("%,4d", n));
     }
 
-    private void updateEnabledState()
+    private void updateEnabledState(boolean state)
     {
-        //boolean state = this.sdtCmdMap != null;
-        boolean state = true;
-        
         this.scenarioSpinner.setEnabled(state);
         this.scenarioSlider.setEnabled(state);
         this.scenarioTime.setEnabled(state);
-
         this.fastReverseButton.setEnabled(state);
         this.reverseButton.setEnabled(state);
-//        this.stopButton.setEnabled(state);
         this.forwardButton.setEnabled(state);
         this.fastForwardButton.setEnabled(state);
         this.speedLabel.setEnabled(state);
         this.speedSpinner.setEnabled(state);
         this.speedFactorSpinner.setEnabled(state);
-
-        //this.updateReadout(this.sdtCmdMap != null && sdtCmdMap.size() > 0 ? sdtCmdMap.get(0)state : null);
     }
 
     private void positionSpinnerStateChanged()
@@ -380,9 +308,8 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
     {
         if (!this.suspendPositionEvents)
         {
-            //updateTimeDelta();
         		updateReadout(scenarioSlider.getValue());
-            listener.firePropertyChange(ScenarioController.POSITION_CHANGE, 0, scenarioSlider.getValue());
+        		firePropertyChange(ScenarioController.POSITION_CHANGE, 0, scenarioSlider.getValue());
         }
     }
 
@@ -395,7 +322,7 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
         return Integer.parseInt(o.toString().trim().replaceAll(",", ""));
     }
 
- 
+    // TBD: Is this spinner code being used?
     private void setTimeDelta(int positionNumber, double positionDelta)
     {
         // Update UI controls without firing events
@@ -408,8 +335,6 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
             this.scenarioSlider.setValue(value);
         }
         this.suspendPositionEvents = false;
-
-        //this.positionDelta = positionDelta;
     }
 
 
@@ -442,20 +367,30 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
     
     private void startStopButtonActionPerformed()
     {
-        // TODO: Add listener or setter/getters
+    		// Toggle play mode
     		if (playMode == PLAY_PAUSED)
     		{
     			startStopButton.setText("Stop");
     			suspendPositionEvents = true;  // TODO: Using?
+    			
+    			// Playing mode controls whether we update the slider
+    			// while scenario playback controls the timer updating the slider
     			setPlayMode(PLAYING);
-    			listener.firePropertyChange(ScenarioController.PLAY_STARTED, null, scenarioSlider.getValue());
+    			
+    			// ljt pass or set here?
+    			//scenarioSecs = scenarioSlider.getValue();
+    			
+    			firePropertyChange(ScenarioController.PLAY_STARTED, null, scenarioSlider.getValue());
     		}
     		else
     		{
     			startStopButton.setText("Start");
+    			
     			suspendPositionEvents = false;
+    			// should the controller manage play mode?
     			setPlayMode(PLAY_PAUSED);
-    			listener.firePropertyChange(ScenarioController.PLAY_STOPPED, null, scenarioSlider.getValue());    			
+    			player.stop();
+    			firePropertyChange(ScenarioController.PLAY_STOPPED, null, scenarioSlider.getValue());  
     		}
     }
     
@@ -475,9 +410,9 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
     		{
     			updateScenarioTime(scenarioSlider.getValue() - 1);
     		}
-    		listener.firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
+    		firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
     		// resume position events
-    		//suspendPositionEvents = false;
+    		suspendPositionEvents = false;
 
     }
 
@@ -488,7 +423,7 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
 		suspendPositionEvents = true;
 		// TODO: Check for end of scenario
 		updateScenarioTime(scenarioSlider.getValue() + 1);
-		listener.firePropertyChange(ScenarioController.SKIP_FORWARD, null, scenarioSlider.getValue());
+		firePropertyChange(ScenarioController.SKIP_FORWARD, null, scenarioSlider.getValue());
 		// resume position events
 		suspendPositionEvents = false;
 
@@ -496,13 +431,14 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
 
     private void fastForwardButtonActionPerformed()
     {
-       // if (!isLastPosition(this.getCurrentPositionNumber()))
-        //    setPositionSpinnerNumber(this.getCurrentPositionNumber() + 1);
+    		//if (!isLastPosition(this.getCurrentPositionNumber()))
+    		//	setPositionSpinnerNumber(this.getCurrentPositionNumber() + 1);
     }
-
-    int getElapsedSecs()
-    {
-    		return this.elapsedSecs;
+    
+    
+    void setScenarioTime(int scenarioSecs)
+    {    	
+    		this.scenarioSecs = scenarioSecs;
     }
     
     
@@ -516,39 +452,63 @@ public class ScenarioPlaybackPanel extends JPanel //implements ActionListener
             // Animate the view motion by controlling the positionSpinner and positionDelta
             public void actionPerformed(ActionEvent actionEvent)
             {
-            		//elapsedSecs = (int)((System.currentTimeMillis() - ScenarioController.scenarioStartTime)/1000);   
             		elapsedSecs++;
-            		runPlayer();
+            		// we set it as we iterate through scenario but also increment as we are waiting?
+            		scenarioSecs++;
+            		
+            		if (playMode == TAPING)
+            		{
+            			updateScenarioTime(elapsedSecs);
+            		}
+            		
+            		if (playMode == PLAYING)
+            		{
+            			System.out.println("ScenarioSecs " + scenarioSecs);
+            			updateScenarioTime(scenarioSecs);
+            		}
             }
         });
+        player.start();
+
     }
     
+    void startPlayer()
+    {
+    		// we set mode to playing when we toggle start/stop mode 
+    		// but only start the player when scenario playback gets 
+    		// after our scenario playback time
+    		if (player != null) 
+    		{
+    			player.start();
+    		}
+    }
+    
+    void setPlayMode(int mode)
+    {
+        this.playMode = mode;
+        if ((this.playMode == PLAYING || this.playMode == TAPING) 
+        		&& player == null)
+        {
+            initPlayer();
+        }
+        if (this.playMode == PLAY_PAUSED)
+        {
+        		player.stop();
+        }
+    }
+
+
     private boolean isPlayerActive()
     {
         return this.playMode != PLAY_PAUSED;
     }
-    
-    
-    private void setPlayMode(int mode)
-    {
-        this.playMode = mode;
-        
-        if (player == null)
-        {
-            initPlayer();
-        }
-        player.start();
-    }
 
-    
-    private void runPlayer()
-    {
-    		if (this.playMode == PLAYING)
-    		{
-    			updateScenarioTime(elapsedSecs);
-    		}
-    }
-    
- 
+
+	public Integer getElapsedSecs() 
+	{
+		return this.elapsedSecs;
+	}
+
+     
 
 }

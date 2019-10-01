@@ -529,9 +529,6 @@ public class sdt3d extends SdtApplication
 		
 		private ScenarioController scenarioController;
 		
-		// Create a scenario model to manage our sdt cmd list
-		private ScenarioModel scenarioModel = new ScenarioModel();
-
 		private String defaultSprite = null;
 
 		Hashtable<String, SdtNode> nodeTable = new Hashtable<String, SdtNode>();
@@ -593,7 +590,7 @@ public class sdt3d extends SdtApplication
 			startProtoPipe();
 	
 			// TODO: start via command 
-			scenarioThread = new ScenarioThread(this, scenarioModel, int2Cmd, 0);
+			scenarioThread = new ScenarioThread(this, scenarioController, int2Cmd, 0);
 						
 			// Show our config directory in the file chooser
 			fc.setFileHidingEnabled(false);
@@ -857,9 +854,7 @@ public class sdt3d extends SdtApplication
 			this.sdtKmlAppController.setBalloonController(balloonController);
 
 			// Add a controller to interact with our scenario panel
-			this.scenarioController = new ScenarioController(this, scenarioModel, scenarioPlaybackPanel);
-			this.scenarioController.initController();
-
+			this.scenarioController = new ScenarioController(this, scenarioPlaybackPanel);
 
 		}
 		
@@ -1716,18 +1711,18 @@ public class sdt3d extends SdtApplication
 			}
 		}
 		
-		private void restartScenarioThread()
+		private void stopScenarioThread()
 		{    	
 			if (scenarioThread != null)
 			{
     				scenarioThread.stopThread();
-			
-    				while (scenarioThread != null && scenarioThread.isRunning()) 
-    				{
-    					System.out.println("Thread is still running");
-    				};
 			}
-    			scenarioThread = new ScenarioThread(this, scenarioModel, int2Cmd, 0);
+		}
+		
+		
+		private void startScenarioThread()
+		{
+			scenarioThread = new ScenarioThread(this, scenarioController, int2Cmd, 0);
 		}
 		
 		private void createPropertyChangeListener()
@@ -1736,9 +1731,10 @@ public class sdt3d extends SdtApplication
 		        {
 		            public void propertyChange(PropertyChangeEvent event)
 		            {
-		            		restartScenarioThread();
+		            		stopScenarioThread();
 		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK))
 		                {
+		                		startScenarioThread();
 	                			playbackScenario = true;
 	                			int scenarioPlaybackStart = (int) event.getNewValue();
 	                				                			
@@ -1752,7 +1748,11 @@ public class sdt3d extends SdtApplication
 		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK_STOPPED))
 		                {	
 		                		playbackScenario = false;
-		                		scenarioThread.stopThread();
+		                		// TODO: Renable file read
+		                		if (fileThread != null)
+		                		{
+		                			fileThread.setPauseForScenarioPlayback(true);
+		                		}
 		                }
 		            }
 		        });
@@ -7466,8 +7466,9 @@ public class sdt3d extends SdtApplication
 			
 			if (tapeScenario)
 			{
+				// need to synchronize threads
 				if (!playbackScenario) // testing!
-					scenarioModel.updateModel(currentTime, cmd2Int.get(pendingCmd), val);
+					scenarioController.updateModel(currentTime, cmd2Int.get(pendingCmd), val);
 			}
 			
 			// If we are playing back scenario we are taping incoming commands 
@@ -7492,7 +7493,7 @@ public class sdt3d extends SdtApplication
 
 		boolean doCmd(String pendingCmd, String val)
 		{			
-			System.out.println("sdt3d:doCmd() cmd>" + pendingCmd + " val>" + val);
+			//System.out.println("sdt3d:doCmd() cmd>" + pendingCmd + " val>" + val);
 			if (pendingCmd.equalsIgnoreCase("bgbounds"))
 				return setBackgroundBounds(val);
 			else if (pendingCmd.equalsIgnoreCase("flyto"))
@@ -7788,8 +7789,7 @@ public class sdt3d extends SdtApplication
 		 */
 		public synchronized boolean onInput(String str, CmdParser parser)
 		{
-			
-			System.out.println("onInput str> " + str);
+			//System.out.println("onInput str> " + str);
 			currentNode = parser.currentNode;
 			currentSprite = parser.currentSprite;
 			currentRegion = parser.currentRegion;
