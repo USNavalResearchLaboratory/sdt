@@ -37,6 +37,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -254,6 +256,10 @@ public class sdt3d extends SdtApplication
 				CMD_INVALID, CMD_ARG, CMD_NOARG
 		};
 
+		private final HashMap<Integer, String> int2Cmd = new HashMap<>();
+		
+		private final HashMap<String, Integer> cmd2Int = new HashMap<>();
+		
 		String CMD_LIST[] = {
 			"+bgbounds",
 			"+collapseLinks",
@@ -563,12 +569,44 @@ public class sdt3d extends SdtApplication
 			}
 		}
 
+		
+		private void initialize() throws IllegalAccessException, InstantiationException, ClassNotFoundException
+		{
+			// Build application panels, set up controllers and listeners etc.
+			buildApplicationGui();
+			
+			// initialize command maps
+			initialize_cmd_maps();
+			
+			// Start listening for commands on a protopipe
+			startProtoPipe();
+	
+			// Show our config directory in the file chooser
+			fc.setFileHidingEnabled(false);
+			
+			loadDummySprite();
+
+			if (!initializeConfiguration())
+			{
+				System.out.println("sdt3d::initialize() Error loading configuration files.");
+			}
+				
+			setGlobeType();
+
+
+			// Start pollTimer to control wwd redraw
+			startPollTimer();
+
+		} // end initialize
+
+
 
 		protected ViewControlsSelectListener addViewControlLayer(SdtApplication.AppFrame theFrame)
 		{
 			ViewControlsLayer layer = new ViewControlsLayer();
 			layer.setName("View Controls");
 			theFrame.wwjPanel.wwd.getModel().getLayers().add(layer);
+			
 			// Add to our checkbox tree as we are adding these after the
 			// worldwind tree is built.
 			setLayer("All Layers::Worldwind::View Controls,on");
@@ -611,15 +649,37 @@ public class sdt3d extends SdtApplication
 
 		}
 
-
-		private void initialize() throws IllegalAccessException, InstantiationException, ClassNotFoundException
+		private void initialize_cmd_maps()
 		{
-			JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-			// Show our config directory
-			fc.setFileHidingEnabled(false);
+			int x = 0;
+			for (String cmd : CMD_LIST)
+			{
+				x++;
+				cmd2Int.put(cmd, x);
+				int2Cmd.put(x, cmd);
 
-			createDefaultSdtLayers(getWwd());
+				System.out.println("cmd2Int " + cmd2Int.get(cmd));
+				System.out.println("int2Cmd " + int2Cmd.get(x));
 
+			}
+		}
+
+		
+		private void createViewController()
+		{
+			// We extended KMLViewController to provide gx:tour support
+			sdtKmlViewController = new SdtKMLViewController(this.getWwd());
+
+			// Set up a view controller to keep the nodes in view.
+			this.viewController = new ViewController(getWwd());
+			this.viewController.setIcons(getNodeIconLayer().getIcons());
+			this.viewController.setModels(getNodeModelLayer().getModels());
+			this.viewController.setKmlModels(getNodeKmlModelLayer().getRenderables());
+
+		}
+		
+		private void createElevationBuilder()
+		{
 			// Create SdtElevationBuilder
 			final Model model = this.getWwd().getModel();
 			final Globe globe = model.getGlobe();
@@ -637,20 +697,23 @@ public class sdt3d extends SdtApplication
 			imageLayer.setPickEnabled(false);
 			this.elevationBuilder = new SdtModelBuilder(compElev, imageLayer);
 			insertBeforeCompass(getWwd(), imageLayer);
-
-			// We extended KMLViewController to provide gx:tour support
-			sdtKmlViewController = new SdtKMLViewController(this.getWwd());
-
-			// Set up a view controller to keep the nodes in view.
-			this.viewController = new ViewController(getWwd());
-			this.viewController.setIcons(getNodeIconLayer().getIcons());
-			this.viewController.setModels(getNodeModelLayer().getModels());
-			this.viewController.setKmlModels(getNodeKmlModelLayer().getRenderables());
-
-			// We disable view clipping, as view tracking works best when
-			// an icon's screen rectangle is known even when the icon is outside
-			// the view frustrum. When set to "true" the view jumps up and down.
-			getNodeIconLayer().setViewClippingEnabled(false);
+		}
+		
+		
+		private void eliminateBathymetryData()
+		{
+			// Eliminate bathymetry elevation data otherwise
+			// links get rendered under the ocean...
+			ElevationModel currentElevationModel = this.getWwd().getModel().getGlobe().getElevationModel();
+			noDepthModel = new BathymetryFilterElevationModel(currentElevationModel);
+			this.getWwd().getModel().getGlobe().setElevationModel(noDepthModel);
+			// this.getWwd().getSceneController().setVerticalExaggeration(5d);
+		}
+		
+		
+		private void createAppPanels() throws IllegalAccessException, InstantiationException, ClassNotFoundException
+		{
+			JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 
 			// create the west panel
 			this.westPanel = new JPanel(new BorderLayout());
@@ -741,33 +804,22 @@ public class sdt3d extends SdtApplication
 
 			buildMenuBar();
 
-			// Eliminate bathymetry elevation data otherwise
-			// links get rendered under the ocean...
-			ElevationModel currentElevationModel = this.getWwd().getModel().getGlobe().getElevationModel();
-			noDepthModel = new BathymetryFilterElevationModel(currentElevationModel);
-			this.getWwd().getModel().getGlobe().setElevationModel(noDepthModel);
-			// this.getWwd().getSceneController().setVerticalExaggeration(5d);
-
-			// Create select listener for tool tips and drag events
-			createSelectListener();
-
-			// Start listening for commands on a protopipe
-			startProtoPipe();
-
-			// TODO: ljt change model for multiframe
-			if (isFlatGlobe())
-			{
-				this.flatGlobe = (FlatGlobe) getWwd().getModel().getGlobe();
-				this.roundGlobe = new Earth();
-			}
-			else
-			{
-				this.flatGlobe = new EarthFlat();
-				this.roundGlobe = getWwd().getModel().getGlobe();
-			}
 			// Create a layer tree to store the kml nodes
 			this.kmlPanelLayerTree = new LayerTree();
 			this.kmlPanelLayer.addRenderable(this.kmlPanelLayerTree);
+
+			WorldWind.setOfflineMode(false);
+			
+			// We need to store the main select listener so we can
+			// remove it if we create a multi-frame.
+
+			this.mainSelectListener = this.addViewControlLayer(this);
+
+		}
+		
+		
+		private void addControllers()
+		{	
 			// Add a controller to handle input events on the layer selector and on browser balloons.
 			this.hotSpotController = new HotSpotController(this.getWwd());
 			// Add a controller to handle common KML application events.
@@ -787,12 +839,34 @@ public class sdt3d extends SdtApplication
 			// Give the KML app controller a reference to the BalloonController so that the app controller can open
 			// KML feature balloons when feature's are selected in the on-screen layer tree.
 			this.sdtKmlAppController.setBalloonController(balloonController);
+		}
+		
+		
+		private void buildApplicationGui() throws IllegalAccessException, InstantiationException, ClassNotFoundException
+		{
+			createDefaultSdtLayers(getWwd());
 
-			WorldWind.setOfflineMode(false);
+			createElevationBuilder();
+			
+			createViewController();
+			
+			createAppPanels();
+			
+			eliminateBathymetryData();
+			
+			addControllers();
+			
+			createSelectListener();
 
-			// Load dummy icon as the default sprite. This ensures that nodes with no assigned
-			// sprites can be followed and have associated symbols. As the first entry in the
-			// sprite table it will be used as the default sprite.
+		}
+		
+		/**
+		* Load dummy icon as the default sprite. This ensures that nodes with no assigned
+		* sprites can be followed and have associated symbols. As the first entry in the
+		* sprite table it will be used as the default sprite.
+		*/
+		private void loadDummySprite()
+		{
 			java.net.URL dummyIcon = getClass().getResource("/images/dummyIcon.png");
 			if (dummyIcon != null)
 			{
@@ -804,26 +878,31 @@ public class sdt3d extends SdtApplication
 				catch (IOException e)
 				{
 					// TODO Auto-generated catch block
+					System.out.println("sdt3d::loadDummySprite() Error loading default sprite.");
 					e.printStackTrace();
 				}
 			}
-			if (!initializeConfiguration())
-				return;
+			
 
-			// Load default user preferences file if it exists
-			loadUserPreferencesFile();
+		}
+		
+		
+		private void setGlobeType()
+		{
+			// TODO: ljt change model for multiframe
 			// TODO: LJT Deal with flat/round globe changes in multiframe?
-
-			// We need to store the main select listener so we can
-			// remove it when we create the multi-frame
-
-			this.mainSelectListener = this.addViewControlLayer(this);
-
-			// Start pollTimer to control wwd redraw
-			startPollTimer();
-
-		} // end initialize
-
+			if (isFlatGlobe())
+			{
+				this.flatGlobe = (FlatGlobe) getWwd().getModel().getGlobe();
+				this.roundGlobe = new Earth();
+			}
+			else
+			{
+				this.flatGlobe = new EarthFlat();
+				this.roundGlobe = getWwd().getModel().getGlobe();
+			}
+		}
+		
 
 		protected void buildWmsLayerFrame()
 		{
@@ -944,6 +1023,14 @@ public class sdt3d extends SdtApplication
 		}
 
 
+		/**
+		 * Load user configuration files.  Create config directories, sdt.properties if
+		 * they don't exist.
+		 * 
+		 * Look in sdt.properties file for userPreferencesFile
+		 * 
+		 * @return boolean
+		 */
 		boolean initializeConfiguration()
 		{
 			File configDir = new File(configDirName);
@@ -963,7 +1050,7 @@ public class sdt3d extends SdtApplication
 					// Create properties file
 					try
 					{
-
+						// If file does not exist set default userPreferencesFile to sdt.settings
 						BufferedWriter out = new BufferedWriter(new FileWriter(propertiesFileName));
 						out.write("userPreferencesFile sdt.settings");
 						out.close();
@@ -976,7 +1063,7 @@ public class sdt3d extends SdtApplication
 				}
 			}
 			// Now look in properties file for userPreferences file (It might have been
-			// changed by user we didn't just create it...
+			// changed by user we didn't just create it in the above step).
 			File propertiesFile = new File(propertiesFileName);
 			if (propertiesFile.exists())
 			{
@@ -1007,10 +1094,14 @@ public class sdt3d extends SdtApplication
 				}
 			}
 
+			loadUserPreferencesFile();
+			
 			return true;
 		}
 
-
+		/**
+		 *  Load the userPreferences file assigned in initializeConfiguration
+		 */
 		void loadUserPreferencesFile()
 		{
 			// First look in config directory
@@ -1018,10 +1109,14 @@ public class sdt3d extends SdtApplication
 
 			// If file not found, follow normal file lookup rules
 			if (fileName == null)
+			{
 				loadInputFile(userPreferencesFile, false);
+			}
 			else
+			{
 				// Otherwise load the file found in the user config directory
 				loadInputFile(fileName, false);
+			}
 
 			// Reset the lastTime a command was processed so we don't have
 			// huge wait times in our debug file.
@@ -1037,7 +1132,6 @@ public class sdt3d extends SdtApplication
 		 * menu items are invoked. In the command case we only associate the file
 		 * with the command and load the file.
 		 */
-
 		public boolean loadUserConfigFile(String val)
 		{
 			if (val == null || val.equalsIgnoreCase("none"))
@@ -1128,7 +1222,7 @@ public class sdt3d extends SdtApplication
 			setNodeLayer(new RenderableLayer());
 			getNodeLayer().setName("Node Layer");
 			insertBeforeCompass(wwd, getNodeLayer());
-
+			
 			// Create a renderable layer for node trails
 			setTrailLayer(new RenderableLayer());
 			getTrailLayer().setName("Node Trails");
@@ -1178,6 +1272,11 @@ public class sdt3d extends SdtApplication
 			getNodeIconLayer().setName("Node Icons");
 			insertBeforeCompass(wwd, getNodeIconLayer());
 
+			// We disable view clipping, as view tracking works best when
+			// an icon's screen rectangle is known even when the icon is outside
+			// the view frustrum. When set to "true" the view jumps up and down.
+			getNodeIconLayer().setViewClippingEnabled(false);
+			
 			// Create renderable layer for node models
 			setNodeModelLayer(new Model3DLayer());
 			getNodeModelLayer().setName("Node Models");
@@ -1482,7 +1581,9 @@ public class sdt3d extends SdtApplication
 
 		} // end startProtoPipe
 
-
+		/**
+		 * 			 Create select listener for tool tips and drag events
+		 */
 		private void createSelectListener()
 		{
 			try
@@ -1761,7 +1862,7 @@ public class sdt3d extends SdtApplication
 			 */
 			public boolean OnCommand(String str)
 			{
-				// System.out.println("OnCommand(" + str + ")");
+				//System.out.println("OnCommand(" + str + ")");
 
 				str = str.trim();
 
@@ -7288,7 +7389,7 @@ public class sdt3d extends SdtApplication
 
 		private boolean doCmd(String pendingCmd, String val)
 		{
-
+			
 			if (pendingCmd.equalsIgnoreCase("bgbounds"))
 				return setBackgroundBounds(val);
 			else if (pendingCmd.equalsIgnoreCase("flyto"))
