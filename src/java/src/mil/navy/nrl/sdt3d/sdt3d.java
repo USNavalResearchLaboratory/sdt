@@ -49,6 +49,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -61,7 +62,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -99,7 +99,6 @@ import javax.swing.event.ChangeListener;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.jogamp.opengl.util.awt.Screenshot;
-
 import gov.nasa.worldwind.BasicModel;
 import gov.nasa.worldwind.Configuration;
 import gov.nasa.worldwind.Model;
@@ -164,7 +163,6 @@ import gov.nasa.worldwind.view.orbit.BasicOrbitView;
 import gov.nasa.worldwind.view.orbit.FlatOrbitView;
 import gov.nasa.worldwind.view.orbit.OrbitView;
 import gov.nasa.worldwindx.applications.sar.OSXAdapter;
-import gov.nasa.worldwindx.examples.GazetteerPanel;
 import gov.nasa.worldwindx.examples.WMSLayersPanel;
 import gov.nasa.worldwindx.examples.util.BalloonController;
 import gov.nasa.worldwindx.examples.util.ExtentVisibilitySupport;
@@ -181,7 +179,6 @@ import mil.navy.nrl.sdt3d.SdtLogDebugDialog.DebugType;
 
 public class sdt3d extends SdtApplication
 {
-
 	// "Override" of SdtApplication.AppFrame.start
 	public static AppFrame start(String appName, Class<AppFrame> appFrameClass,
 			String[] args)
@@ -226,8 +223,6 @@ public class sdt3d extends SdtApplication
 		FileWriter fileWriter = null;
 
 		PrintWriter logDebugFile = null;
-		
-		public boolean logDebugOutput = false;
 
 		private String version = "2.3";
 
@@ -239,7 +234,7 @@ public class sdt3d extends SdtApplication
 
 		private StatusPanel statusPanel;
 
-		private GazetteerPanel goToPanel;
+		private ScenarioPlaybackPanel scenarioPlaybackPanel;
 
 		private JSplitPane horizontalSplitPane;
 
@@ -248,7 +243,7 @@ public class sdt3d extends SdtApplication
 		private JPanel logoPanel;
 
 		private JPanel smallLogoPanel;
-
+		
 		private JPanel sdtViewControlsPanel;
 
 		private SdtApplication.AppFrame sharedFrame;
@@ -285,7 +280,7 @@ public class sdt3d extends SdtApplication
 		private final HashMap<Integer, String> int2Cmd = new HashMap<>();
 		
 		private final HashMap<String, Integer> cmd2Int = new HashMap<>();
-		
+
 		private String pipe_name = "sdt";
 
 		private boolean pipeCmd = false;
@@ -341,17 +336,28 @@ public class sdt3d extends SdtApplication
 				bookmarkItem, loadBookmarkItem, clearSpriteTableItem, debugItem,
 				loadDefaultBookmarksItem, loadKMLFileItem, loadKMLUrlItem, loadCacheItem;
 
-		private JCheckBoxMenuItem showStatusItem, showGoToItem, elevationItem, globeItem, 
-				mercatorItem, sinusoidalItem, showWmsItem, modSinusoidalItem, latLonItem, 
-				stereoItem, collapseLinksItem, symbolOffsetItem, offlineModeItem,
-				showSdtViewControlsItem, showSdtPanelItem, multiFrameItem;
+		private JCheckBoxMenuItem showStatusItem, showScenarioPlaybackItem, elevationItem, 
+				globeItem, mercatorItem, sinusoidalItem, showWmsItem,
+				modSinusoidalItem, latLonItem, stereoItem, collapseLinksItem, 
+				symbolOffsetItem, offlineModeItem, showSdtViewControlsItem, 
+				showSdtPanelItem, multiFrameItem;
 
-		public static boolean collapseLinks = false;
+		static boolean collapseLinks = false;
 
-		public static boolean symbolOffset = true;
+		static boolean symbolOffset = true;
 
-		public boolean multiFrame = false;
+		private boolean multiFrame = false;
 
+		private boolean logDebugOutput = false;
+		
+		boolean recordScenario = true;
+		
+		boolean playbackScenario = false;
+		
+		boolean playbackStopped = false;
+		
+		private PropertyChangeSupport propChangeSupport = new PropertyChangeSupport(this);
+		
 		// used to calculate wait interval when writing log file
 		long lastTime, currentTime = 0;
 
@@ -379,7 +385,8 @@ public class sdt3d extends SdtApplication
 
 		private FileThread fileThread = null;
 
-
+		private ScenarioThread scenarioThread = null;
+		
 		SdtApplication.AppFrame getSharedFrame()
 		{
 			return this.sharedFrame;
@@ -458,7 +465,9 @@ public class sdt3d extends SdtApplication
 		protected SdtKMLViewController sdtKmlViewController;
 
 		protected BalloonController balloonController;
-
+		
+		private ScenarioController scenarioController;
+		
 		private String defaultSprite = null;
 
 		Hashtable<String, SdtNode> nodeTable = new Hashtable<String, SdtNode>();
@@ -490,25 +499,27 @@ public class sdt3d extends SdtApplication
 
 		// move to balloon layer
 		private RenderableLayer layer;
+		
+		private SdtCmdParser parser;
 
-
-		public AppFrame(String[] args) throws IllegalAccessException, InstantiationException, ClassNotFoundException
+		public AppFrame(String[] args) 
 		{
 			// Our main frame is not shared
 			super(null, null, true, false, false);
+			
 			initialize();
 
-			SdtCmdParser parser = new SdtCmdParser(this);
+			parser = new SdtCmdParser(this);
 
 			for (int i = 0; i < args.length; i++)
 			{
-				onInput(args[i], parser);
+				onInput(args[i], parser, false);
 			}
 		}
 
 		
-		private void initialize() throws IllegalAccessException, InstantiationException, ClassNotFoundException
-		{
+		private void initialize() 
+		{			
 			// Build application panels, set up controllers and listeners etc.
 			buildApplicationGui();
 			
@@ -581,23 +592,26 @@ public class sdt3d extends SdtApplication
 							sharedFrame.wwjPanel.wwd.redraw();
 						}
 						pollTimer.stop(); // one-shot redraw
+						
 					}
 				});
 
 		}
 
+		
 		private void initialize_cmd_maps()
 		{
 			int x = 0;
 			for (String cmd : SdtCmdParser.CMD_LIST)
 			{
+				if (cmd == null)
+				{
+					continue;
+				}
 				x++;
-				cmd2Int.put(cmd, x);
-				int2Cmd.put(x, cmd);
-
-				System.out.println("cmd2Int " + cmd2Int.get(cmd));
-				System.out.println("int2Cmd " + int2Cmd.get(x));
-
+				// Load our cmd maps and remove the leading +/- 
+				cmd2Int.put(cmd.substring(1), x);
+				int2Cmd.put(x, cmd.substring(1));
 			}
 		}
 
@@ -647,7 +661,7 @@ public class sdt3d extends SdtApplication
 		}
 		
 		
-		private void createAppPanels() throws IllegalAccessException, InstantiationException, ClassNotFoundException
+		private void createAppPanels() 
 		{
 			JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 
@@ -728,11 +742,10 @@ public class sdt3d extends SdtApplication
 			horizontalSplitPane.setContinuousLayout(true); // prevents the pane's being obscured when expanding right
 
 			this.getContentPane().add(horizontalSplitPane, BorderLayout.CENTER);
-			this.goToPanel = new GazetteerPanel(this.getWwd(), null); // use default yahoo service
-			this.getContentPane().add(goToPanel, BorderLayout.SOUTH);
-			// Yahoo service had gone away/changed disable for now.
-			this.goToPanel.setVisible(false);
-
+			this.scenarioPlaybackPanel = new ScenarioPlaybackPanel(); 
+			this.getContentPane().add(scenarioPlaybackPanel, BorderLayout.SOUTH);
+			this.scenarioPlaybackPanel.setVisible(true);
+			
 			this.pack();
 
 			// Center the application on the screen.
@@ -753,7 +766,7 @@ public class sdt3d extends SdtApplication
 			this.mainSelectListener = this.addViewControlLayer(this);
 
 		}
-		
+				
 		
 		private void addControllers()
 		{	
@@ -777,10 +790,14 @@ public class sdt3d extends SdtApplication
 		    // so that the app controller can open KML feature balloons 
 			// when feature's are selected in the on-screen layer tree.
 			this.sdtKmlAppController.setBalloonController(balloonController);
+
+			// Add a controller to interact with our scenario panel
+			this.scenarioController = new ScenarioController(this, scenarioPlaybackPanel);
+
 		}
 		
 		
-		private void buildApplicationGui() throws IllegalAccessException, InstantiationException, ClassNotFoundException
+		private void buildApplicationGui() 
 		{
 			createDefaultSdtLayers(getWwd());
 
@@ -795,6 +812,8 @@ public class sdt3d extends SdtApplication
 			addControllers();
 			
 			createSelectListener();
+			
+			createPropertyChangeListener();
 
 		}
 		
@@ -1500,10 +1519,10 @@ public class sdt3d extends SdtApplication
 			viewMenu.add(multiFrameItem);
 			multiFrameItem.addActionListener(this);
 
-			showGoToItem = new JCheckBoxMenuItem("Show GoTo panel");
-			showGoToItem.setSelected(true);
-			viewMenu.add(showGoToItem);
-			showGoToItem.addActionListener(this);
+			showScenarioPlaybackItem = new JCheckBoxMenuItem("Show Scenario Playback panel");
+			showScenarioPlaybackItem.setSelected(true);
+			viewMenu.add(showScenarioPlaybackItem);
+			showScenarioPlaybackItem.addActionListener(this);
 
 			showWmsItem = new JCheckBoxMenuItem("Show WMS Frame");
 			showWmsItem.setSelected(false);
@@ -1667,6 +1686,36 @@ public class sdt3d extends SdtApplication
 			}
 		} // end createSelectListener
 
+		
+		public void modelPropertyChange(String propertyName, Object oldValue, Object newValue)
+		{
+			if (propChangeSupport != null)
+			{
+				this.propChangeSupport.firePropertyChange(propertyName, oldValue, newValue);
+			}
+		}
+		
+		private void stopScenarioThread()
+		{    	
+			if (scenarioThread != null)
+			{
+    				scenarioThread.stopThread();
+			}
+		}
+		
+		
+		private void startScenarioThread(Long scenarioPlaybackStartTime)
+		{
+			if (scenarioThread != null)
+			{
+				scenarioThread.stopThread();
+			}
+			scenarioThread = new ScenarioThread(this, scenarioController, int2Cmd, scenarioPlaybackStartTime);
+			scenarioThread.start();
+		}
+		
+		
+
 
 		private boolean validateColor(String c)
 		{
@@ -1756,7 +1805,6 @@ public class sdt3d extends SdtApplication
 			return color;
 		} // end sdt3d.getColor()
 
-				//System.out.println("OnCommand(" + str + ")");
 
 		private StatusPanel getStatusPanel()
 		{
@@ -1764,9 +1812,9 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private GazetteerPanel getGoToPanel()
+		private ScenarioPlaybackPanel getScenarioPlaybackPanel()
 		{
-			return this.goToPanel;
+			return this.scenarioPlaybackPanel;
 		}
 
 
@@ -1869,6 +1917,7 @@ public class sdt3d extends SdtApplication
 					udpSocketThread = null;
 					toggleUdpOn();
 				}
+				// LJT REVIEW THIS
 				if (tcpSocketThread != null && !tcpSocketThread.stopped())
 				{
 					tcpSocketThread.stopThread();
@@ -1876,6 +1925,27 @@ public class sdt3d extends SdtApplication
 					toggleTcpOn();
 				}
 
+				if (fileThread != null && openFile != null)
+				{
+					fileThread.stopThread();
+					fileThread.stopRead();
+					fileThread.clear();
+					try
+					{
+						Thread.currentThread();
+						Thread.sleep(1000); // sleep for 1000 ms
+					}
+					catch (InterruptedException ie)
+					{
+						// If this thread was interrupted by another thread
+					}
+				}
+
+				if (scenarioThread != null && !scenarioThread.stopped()) {
+					scenarioThread.stopThread();
+					scenarioThread = null;
+				}
+				
 				// Reset system modes
 				this.setOfflineMode("off");
 				this.setElevationData("on");
@@ -2434,15 +2504,15 @@ public class sdt3d extends SdtApplication
 					this.getStatusPanel().setVisible(false);
 				}
 			}
-			else if (event.getSource() == showGoToItem)
+			else if (event.getSource() == showScenarioPlaybackItem)
 			{
-				if (showGoToItem.isSelected())
+				if (showScenarioPlaybackItem.isSelected())
 				{
-					this.getGoToPanel().setVisible(true);
+					this.getScenarioPlaybackPanel().setVisible(true);
 				}
 				else
 				{
-					this.getGoToPanel().setVisible(false);
+					this.getScenarioPlaybackPanel().setVisible(false);
 				}
 			}
 			else if (event.getSource() == showWmsItem)
@@ -3597,29 +3667,29 @@ public class sdt3d extends SdtApplication
 		} // setShowStatusPanel
 
 
-		boolean setShowGoToPanel(String val)
+		boolean setShowScenarioPlaybackPanel(String val)
 		{
 			if (0 == val.length())
 			{
-				System.out.println("setGoToPanel() error invalid value\n");
+				System.out.println("setShowScenarioPlaybackPanel() error invalid value\n");
 				return false;
 			}
 			if (val.equalsIgnoreCase("on"))
 			{
-				this.showGoToItem.setSelected(true);
-				this.goToPanel.setVisible(true);
+				this.showScenarioPlaybackItem.setSelected(true);
+				this.scenarioPlaybackPanel.setVisible(true);
 				return true;
 			}
 			if (val.equalsIgnoreCase("off"))
 			{
-				this.showGoToItem.setSelected(false);
-				this.goToPanel.setVisible(false);
+				this.showScenarioPlaybackItem.setSelected(false);
+				this.scenarioPlaybackPanel.setVisible(false);
 				return true;
 			}
-			System.out.println("setShowGoToPanel() error invalid value\n");
+			System.out.println("setShowScenarioPlaybackPanel() error invalid value\n");
 			return false;
 
-		} // setShowGoToPanel
+		} // setShowScenarioPlaybackPanel
 
 
 		boolean setShowWmsFrame(String val)
@@ -3716,7 +3786,6 @@ public class sdt3d extends SdtApplication
 							}
 							fileWriter = new FileWriter(filename);
 							logDebugFile = new PrintWriter(fileWriter);
-
 						}
 					}
 					catch (IOException e)
@@ -3752,6 +3821,41 @@ public class sdt3d extends SdtApplication
 		} // setLogDebugOutput
 
 
+		private boolean setRecordScenario(String val)
+		{
+			if (0 == val.length())
+			{
+				System.out.println("setRecordScenario() error invalid value\n");
+				return false;
+			}
+			String[] file = val.split(",");
+
+			if (file[0].equalsIgnoreCase("on"))
+			{
+				recordScenario = true;
+				scenarioController.initController();
+				
+			}
+			else
+			{
+				if (val.equalsIgnoreCase("off"))
+				{
+					// TODO: fix when fully implement record start/stop
+					recordScenario = false;
+					scenarioController.stopController();
+				}
+				else
+				{
+					System.out.println("setRecordScenario() error invalid value\n");
+					return false;
+				}
+			}
+
+			return true;
+
+		} // setRecordScenario
+
+		
 		boolean setLoadCache(String val)
 		{
 			if (0 == val.length())
@@ -7286,6 +7390,117 @@ public class sdt3d extends SdtApplication
 			}
 		}
 
+		private void logDebugOutput(String pendingCmd, String val)
+		{
+			// Don't want to log playback commands but shouldn't get here
+			// in any event
+			if (logDebugOutput && !playbackScenario)
+			{
+				if (logDebugFile != null)
+				{
+					logDebugFile.print(pendingCmd + " \"" + val + "\" \n");
+
+					long wait = currentTime - lastTime;
+					if (wait > 100)
+					{
+						logDebugFile.print("wait " + wait + " \n");
+						// TODO: Do we want to flush each time?
+						logDebugFile.flush();
+						lastTime = currentTime;
+					}
+				}
+				else
+				{
+					System.out.println(pendingCmd + " " + val + " \n");
+				}
+			}
+		}
+		
+		
+		private void createPropertyChangeListener()
+		{
+		    propChangeSupport.addPropertyChangeListener(new PropertyChangeListener()
+		        {
+		            public void propertyChange(PropertyChangeEvent event)
+		            {
+		            	stopScenarioThread();
+		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK))
+		                {
+		                		System.out.println("SCENARIO_PLAYBACK sdt3d\n");
+		                		scenarioController.appendBufferModel();
+	                			
+		                		// oldValue: sliderStartTime, newValue: scenarioStartTime
+		                		startScenarioThread((Long) event.getNewValue());
+	                			playbackScenario = true;	  
+	                			playbackStopped = false;
+						}
+		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK_STOPPED))
+		                {	
+		                		System.out.println("SCEANRIO_PLAYBACK_STOPPED sdt3d\n");
+		                		playbackScenario = true;
+		                		playbackStopped = true;		                		
+		                }
+		                if (event.getPropertyName().equals(ScenarioController.RESUME_LIVE_PLAY))
+		                	{
+		                		System.out.println("RESUME_LIVE_PLAY sdt3d\n");
+		                		// TODO: Need to playback what is in the buffer prior to resuming play
+		                		scenarioController.appendBufferModel();
+		                		playbackScenario = false;
+		                		playbackStopped = false;
+		                }
+		            }
+		        });
+		}
+		
+		void processCmd(String pendingCmd, String val,boolean scenarioCmd)
+		{			
+			// If we are "taping" the scenario, update our model 
+			// TODO: regardless of command success?  I guess replay can fail just as well..
+			
+			// total hack for now so we can continue recording after stoppage
+			//if (pendingCmd.equalsIgnoreCase("recordScenario"))
+			//{
+			//	this.doCmd(pendingCmd, val);
+			//	return;
+			//}
+			
+			if (recordScenario)
+			{
+				if (!playbackScenario && !scenarioCmd) 
+				{
+					//System.out.println("Updating model..");
+					scenarioController.updateModel(cmd2Int.get(pendingCmd), val);
+				}
+				else
+				{
+					if (!scenarioCmd)
+					{
+						scenarioController.updateBufferModel(cmd2Int.get(pendingCmd),val);
+					}
+				}	
+			}
+			
+			
+			if ((playbackScenario && !scenarioCmd)
+					||
+					playbackStopped)
+			{
+				
+				return;
+			}
+		
+			if (parser.doCmd(pendingCmd, val))
+			{
+				logDebugOutput(pendingCmd, val);
+			}
+			else
+			{
+				System.out.println("sdt3d::doCmd() cmd> " + pendingCmd + " val>" + val + " failed ");
+			}
+		
+		}
+
+
 
 
 		/**
@@ -7315,8 +7530,9 @@ public class sdt3d extends SdtApplication
 		 * for each poll interval regardless of how many sdt3d commands
 		 * have been received by the various input threads.
 		 */
-		public synchronized boolean onInput(String str, SdtCmdParser parser)
+		public synchronized boolean onInput(String str, SdtCmdParser parser, boolean scenarioCmd)
 		{
+			//System.out.println("onInput str> " + str);
 			currentNode = parser.currentNode;
 			currentSprite = parser.currentSprite;
 			currentRegion = parser.currentRegion;
@@ -7337,7 +7553,7 @@ public class sdt3d extends SdtApplication
 				str = str.substring(0, str.lastIndexOf("\""));
 			}
 			String cmd = str.concat(" ");
-			parser.OnCommand(cmd);
+			parser.OnCommand(cmd, scenarioCmd);
 
 			// So we don't clobbering file/pipe state when interleaving
 			// the two command sets
@@ -7547,6 +7763,12 @@ public class sdt3d extends SdtApplication
 		public RenderableLayer getKmlLayer()
 		{
 			return kmlLayer;
+		}
+
+
+		public void setPlaybackScenario(boolean b) 
+		{
+			playbackScenario = false;
 		}
 
 	} // end class AppFrame

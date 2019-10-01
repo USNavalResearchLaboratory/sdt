@@ -149,7 +149,7 @@ public class SdtCmdParser
 	 * @param str
 	 * @return
 	 */
-	public boolean OnCommand(String str)
+	public boolean OnCommand(String str, boolean scenarioCmd)
 	{
 		// System.out.println("OnCommand(" + str + ")");
 
@@ -167,7 +167,7 @@ public class SdtCmdParser
 					seeking_cmd = false;
 					break;
 				case CMD_NOARG:
-					processCmd(pending_cmd, null); // ljt error checking?
+					sdt3dApp.processCmd(pending_cmd, null, scenarioCmd); // ljt error checking?
 					pending_cmd = null;
 					seeking_cmd = true;
 					break;
@@ -179,7 +179,7 @@ public class SdtCmdParser
 		}
 		else // Not seeking command
 		{
-			processCmd(current_cmd, str);
+			sdt3dApp.processCmd(current_cmd, str, scenarioCmd);
 			seeking_cmd = true;
 			pending_cmd = null;
 		} // done seeking cmd
@@ -227,48 +227,9 @@ public class SdtCmdParser
 		pipeCmd = isPipeCmd;
 	}
 
-	
-	private void processCmd(String pendingCmd, String val)
+
+	boolean doCmd(String pendingCmd, String val)
 	{
-		if (this.doCmd(pendingCmd, val))
-		{
-			// LJT move vars here?
-			if (sdt3dApp.logDebugOutput)
-			{
-				if (sdt3dApp.logDebugFile != null)
-				{
-					if (sdt3dApp.lastTime == 0)
-						sdt3dApp.lastTime = Time.increasingTimeMillis();
-
-					sdt3dApp.currentTime = Time.increasingTimeMillis();
-
-					sdt3dApp.logDebugFile.print(pendingCmd + " \"" + val + "\" \n");
-
-					long wait = sdt3dApp.currentTime - sdt3dApp.lastTime;
-					if (wait > 100)
-					{
-						sdt3dApp.logDebugFile.print("wait " + wait + " \n");
-						sdt3dApp.lastTime = sdt3dApp.currentTime;
-					}
-				}
-				else
-				{
-					System.out.println(pendingCmd + " " + val + " \n");
-				}
-
-			}
-		}
-		else
-		{
-			System.out.println("sdt3d::doCmd() cmd> " + pendingCmd + " val>" + val + " failed ");
-		}
-
-	}
-
-
-	private boolean doCmd(String pendingCmd, String val)
-	{
-
 		if (pendingCmd.equalsIgnoreCase("bgbounds"))
 			return sdt3dApp.setBackgroundBounds(val);
 		else if (pendingCmd.equalsIgnoreCase("flyto"))
@@ -485,9 +446,9 @@ public class SdtCmdParser
 		{
 			return sdt3dApp.setShowStatusPanel(val);
 		}
-		else if (pendingCmd.equalsIgnoreCase("showGoToPanel"))
+		else if (pendingCmd.equalsIgnoreCase("showScenarioPlaybackPanel"))
 		{
-			return sdt3dApp.setShowGoToPanel(val);
+			return sdt3dApp.setShowScenarioPlaybackPanel(val);
 		}
 		else if (pendingCmd.equalsIgnoreCase("showWmsFrame"))
 		{
@@ -499,7 +460,7 @@ public class SdtCmdParser
 		}
 		else
 			return false;
-	} // end ProcessCmd
+	} // end DoCmd
 
 
 	

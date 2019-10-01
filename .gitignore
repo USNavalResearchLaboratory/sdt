@@ -9,6 +9,7 @@ makefiles/sdt
 makefiles/sdt3d.zip
 makefiles/sdtcmd
 makefiles/worldwind*
+.classpath
 *.o
 
 

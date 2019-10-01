@@ -51,8 +51,6 @@ public class FileThread extends SocketThread
 
 	private BufferedReader brIn = null;
 
-	private sdt3d.AppFrame sdt3dApp;
-
 	private boolean stopFlag = false;
 
 	BufferedReader inputFile = null;
@@ -60,13 +58,14 @@ public class FileThread extends SocketThread
 	SdtCmdParser parser = null;
 
 	LinkedList<FileReaders> fileStack = new LinkedList<FileReaders>();
-
+	
 
 	public boolean isRunning()
 	{
 		return !fileStack.isEmpty();
 	}
 
+	
 	class FileReaders
 	{
 		private FileReader fIn;
@@ -108,11 +107,10 @@ public class FileThread extends SocketThread
 	}
 
 
-	public FileThread(sdt3d.AppFrame sddt3dApp, String fileName, boolean pipeCmd)
+	public FileThread(sdt3d.AppFrame theApp, String fileName, boolean pipeCmd)
 	{
-		super(sddt3dApp, 0);
+		super(theApp, 0);
 
-		sdt3dApp = sddt3dApp;
 		try
 		{
 			fIn = new FileReader(fileName);
@@ -257,11 +255,11 @@ public class FileThread extends SocketThread
 			return false;
 	}
 
-
+	
 	@Override
 	public void run()
 	{
-		final SdtCmdParser parser = new SdtCmdParser(sdt3dApp);
+		final SdtCmdParser parser = new SdtCmdParser(theApp);
 
 		StringBuilder sb = new StringBuilder();
 
@@ -273,14 +271,13 @@ public class FileThread extends SocketThread
 			{
 				while ((record = inputFile.readLine()) != null && !stopFlag)
 				{
-
 					// Reattach eol
 					record = record + '\n';
 					sb.append(record, 0, record.length());
 					// parse string
 					parseString(sb, parser);
-				} // end processing file stack
-				popFile();
+				} // end processing file stack								
+				popFile();				
 			}
 
 		}

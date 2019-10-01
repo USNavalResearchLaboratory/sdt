@@ -61,12 +61,9 @@ public class PipeThread extends SocketThread
 
 	SdtCmdParser parser = null;
 
-
-	public PipeThread(sdt3d.AppFrame theSdtApp)
+	public PipeThread(sdt3d.AppFrame theApp)
 	{
-		super(theSdtApp, 0);
-
-		sdt3dApp = theSdtApp;
+		super(theApp, 0);
 	}
 
 
@@ -86,7 +83,7 @@ public class PipeThread extends SocketThread
 	@Override
 	public void run()
 	{
-		final SdtCmdParser parser = new SdtCmdParser(sdt3dApp);
+		parser = new SdtCmdParser(theApp);
 		StringBuilder sb = new StringBuilder();
 		parser.setPipeCmd(true);
 		try
@@ -100,7 +97,7 @@ public class PipeThread extends SocketThread
 		}
 		try
 		{
-			cmdPipe.listen(sdt3dApp.getPipeName());
+			cmdPipe.listen(theApp.getPipeName());
 		}
 		catch (IOException e)
 		{
@@ -130,7 +127,7 @@ public class PipeThread extends SocketThread
 				// If we're reading a file from the command line
 				// suspend further processing until the file
 				// read is complete.
-				if (sdt3dApp.readingCmdInputFile())
+				if (theApp.readingCmdInputFile())
 				{
 					// TODO: What should happen here?  This should be debugged
 					System.out.println("PipeThread::Run() Warning!  Reading from input file possible interleaved commands!! " + cmdString);

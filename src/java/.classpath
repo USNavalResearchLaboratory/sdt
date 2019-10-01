@@ -1,30 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
+  	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/protolib-jni">
+	<classpathentry kind="src" path="/protolib-jni">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="protolib-jni"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/worldwind"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/joglutils"/>
-	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/worldwind/gluegen-rt.jar">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="worldwind"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/worldwind/worldwind.jar">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="worldwind"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="src" path="/joglutils"/>
 	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/worldwind/gdal.jar"/>
+	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/worldwind/gluegen-rt.jar"/>
 	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/worldwind/jogl-all.jar"/>
+	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/worldwind/worldwind.jar"/>
 	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/worldwind/worldwindx.jar"/>
 	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/apache/commons-text-1.8/commons-text-1.8.jar"/>
-	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/apache/commons-lang3-3.10/commons-lang3-3.10.jar"/>
 	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/apache/commons-io-2.6/commons-io-2.6.jar"/>
+	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/apache/commons-lang3-3.10/commons-lang3-3.10.jar"/>
 	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/mozilla/juniversalchardet-mod-1.0.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

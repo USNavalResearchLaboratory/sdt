@@ -55,16 +55,20 @@ public class SocketThread extends Thread
 {
 	protected boolean stopFlag = false;
 
-	protected sdt3d.AppFrame sdt3dApp;
+	protected final sdt3d.AppFrame theApp;
 
 	int port = 0;
 
 	long lastWaitTime = 0;
+	
+	// TODO: Change to thread enum
+	protected boolean isScenarioThread = false;
 
 
-	public SocketThread(sdt3d.AppFrame theSdtApp, int thePort)
+
+	public SocketThread(sdt3d.AppFrame theApp, int thePort)
 	{
-		sdt3dApp = theSdtApp;
+		this.theApp = theApp;
 		port = thePort;
 	}
 
@@ -87,6 +91,7 @@ public class SocketThread extends Thread
 	 */
 	protected void parseString(StringBuilder sb, final SdtCmdParser parser)
 	{
+		//System.out.println("ParseString " + sb);
 		long currentTime = 0;
 		long elapsedTime = 0;
 		int index = 0;
@@ -201,7 +206,7 @@ public class SocketThread extends Thread
 							@Override
 							public void run()
 							{
-								sdt3dApp.onInput(message, parser);
+								theApp.onInput(message, parser, isScenarioThread);
 							}
 						});
 					sb = sb.delete(0, index);
