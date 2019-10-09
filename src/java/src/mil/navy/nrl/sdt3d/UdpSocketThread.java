@@ -17,10 +17,10 @@ public class UdpSocketThread extends SocketThread
 	String multicastAddr = "";
 
 
-	public UdpSocketThread(AppFrame theSdtApp, int thePort,
+	public UdpSocketThread(AppFrame theApp, int thePort,
 			String theMulticastAddr)
 	{
-		super(theSdtApp, thePort);
+		super(theApp, thePort);
 		// TODO Auto-generated constructor stub
 		multicastAddr = theMulticastAddr;
 	} // UdpSocketThread::UdpSocketThread()
@@ -30,7 +30,7 @@ public class UdpSocketThread extends SocketThread
 	public void run()
 	{
 		byte buffer[] = new byte[65535];
-		final CmdParser parser = sdt3dApp.new CmdParser();
+		final CmdParser parser = theApp.new CmdParser();
 		String inputLine = null;
 		DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 		StringBuilder sb = new StringBuilder();

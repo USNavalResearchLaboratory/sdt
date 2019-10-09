@@ -18,9 +18,9 @@ public class TcpSocketThread extends SocketThread
 	ServerSocket tcpSocket = null;
 
 
-	public TcpSocketThread(AppFrame theSdtApp, int thePort)
+	public TcpSocketThread(AppFrame theApp, int thePort)
 	{
-		super(theSdtApp, thePort);
+		super(theApp, thePort);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -89,7 +89,7 @@ public class TcpSocketThread extends SocketThread
 		@Override
 		public void run()
 		{
-			final CmdParser parser = sdt3dApp.new CmdParser();
+			final CmdParser parser = theApp.new CmdParser();
 			StringBuilder sb = new StringBuilder();
 
 			try

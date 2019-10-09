@@ -375,10 +375,7 @@ public class ScenarioPlaybackPanel extends JPanel
     			
     			// Playing mode controls whether we update the slider
     			// while scenario playback controls the timer updating the slider
-    			setPlayMode(PLAYING);
-    			
-    			// ljt pass or set here?
-    			//scenarioSecs = scenarioSlider.getValue();
+    			setPlayMode(PLAYING);   			
     			
     			firePropertyChange(ScenarioController.PLAY_STARTED, null, scenarioSlider.getValue());
     		}
@@ -437,7 +434,7 @@ public class ScenarioPlaybackPanel extends JPanel
     
     
     void setScenarioTime(int scenarioSecs)
-    {    	
+    {   
     		this.scenarioSecs = scenarioSecs;
     }
     
@@ -463,7 +460,7 @@ public class ScenarioPlaybackPanel extends JPanel
             		
             		if (playMode == PLAYING)
             		{
-            			System.out.println("ScenarioSecs " + scenarioSecs);
+            			//System.out.println("ScenarioSecs " + scenarioSecs);
             			updateScenarioTime(scenarioSecs);
             		}
             }
@@ -472,13 +469,15 @@ public class ScenarioPlaybackPanel extends JPanel
 
     }
     
-    void startPlayer()
+    void startPlayer(int scenarioTime)
     {
     		// we set mode to playing when we toggle start/stop mode 
     		// but only start the player when scenario playback gets 
     		// after our scenario playback time
     		if (player != null) 
     		{
+    			//System.out.println("Starting player at > " + scenarioTime);
+    			setScenarioTime(scenarioTime);
     			player.start();
     		}
     }
@@ -493,6 +492,8 @@ public class ScenarioPlaybackPanel extends JPanel
         }
         if (this.playMode == PLAY_PAUSED)
         {
+			System.out.println("STOPPING PLAYER.........");
+
         		player.stop();
         }
     }

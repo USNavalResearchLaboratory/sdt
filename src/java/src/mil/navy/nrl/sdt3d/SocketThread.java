@@ -19,7 +19,7 @@ public class SocketThread extends Thread
 {
 	protected boolean stopFlag = false;
 
-	protected sdt3d.AppFrame sdt3dApp;
+	protected final sdt3d.AppFrame theApp;
 
 	int port = 0;
 
@@ -29,9 +29,9 @@ public class SocketThread extends Thread
 
 
 
-	public SocketThread(sdt3d.AppFrame theSdtApp, int thePort)
+	public SocketThread(sdt3d.AppFrame theApp, int thePort)
 	{
-		sdt3dApp = theSdtApp;
+		this.theApp = theApp;
 		port = thePort;
 	}
 
@@ -180,7 +180,7 @@ public class SocketThread extends Thread
 							@Override
 							public void run()
 							{
-								sdt3dApp.onInput(message, parser);
+								theApp.onInput(message, parser);
 							}
 						});
 					sb = sb.delete(0, index);

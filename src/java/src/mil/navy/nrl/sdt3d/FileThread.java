@@ -14,8 +14,6 @@ public class FileThread extends SocketThread
 
 	private BufferedReader brIn = null;
 
-	private sdt3d.AppFrame sdt3dApp;
-
 	private boolean stopFlag = false;
 
 	BufferedReader inputFile = null;
@@ -72,11 +70,10 @@ public class FileThread extends SocketThread
 	}
 
 
-	public FileThread(sdt3d.AppFrame theSdtApp, String fileName, boolean pipeCmd)
+	public FileThread(sdt3d.AppFrame theApp, String fileName, boolean pipeCmd)
 	{
-		super(theSdtApp, 0);
+		super(theApp, 0);
 
-		sdt3dApp = theSdtApp;
 		try
 		{
 			fIn = new FileReader(fileName);
@@ -225,7 +222,7 @@ public class FileThread extends SocketThread
 	@Override
 	public void run()
 	{
-		final CmdParser parser = sdt3dApp.new CmdParser();
+		final CmdParser parser = theApp.new CmdParser();
 
 		StringBuilder sb = new StringBuilder();
 

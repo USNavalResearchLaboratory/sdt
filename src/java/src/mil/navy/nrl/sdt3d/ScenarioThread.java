@@ -24,27 +24,27 @@ public class ScenarioThread extends SocketThread
 	
 	private boolean running = false;
 
-	protected sdt3d.AppFrame sdt3dApp;
-	
 	private ScenarioModel scenarioModel;
 	
 	private ScenarioController scenarioController;
 	
-	private int scenarioPlaybackStartTime;
+	private Long scenarioPlaybackStartTime;
 
+	private int sliderStartTime;
+	
 	int lastWaitTime = 0;
 	
 	HashMap<Integer, String> int2Cmd;
 
 // TODO: Change superclass !
-	public ScenarioThread(sdt3d.AppFrame theSdtApp, ScenarioController scenarioController, HashMap<Integer, String> int2Cmd, int scenarioPlaybackStartTime)
+	public ScenarioThread(sdt3d.AppFrame theApp, ScenarioController scenarioController, HashMap<Integer, String> int2Cmd, int sliderStartTime, Long scenarioPlaybackStartTime)
 	{
-		super(theSdtApp, 0);
-		sdt3dApp = theSdtApp;
+		super(theApp, 0);
 		this.scenarioController = scenarioController;
 		// TODO: Get model from app?
 		this.scenarioModel = scenarioController.getScenarioModel();
 		this.scenarioPlaybackStartTime = scenarioPlaybackStartTime;
+		this.sliderStartTime = sliderStartTime;
 		this.int2Cmd = int2Cmd;
 	}
 
@@ -66,18 +66,13 @@ public class ScenarioThread extends SocketThread
 		return this.scenarioModel;
 	}
 	
-	void setScenarioPlaybackTime(int scenarioPlaybackStartTime)
-	{
-		this.scenarioPlaybackStartTime = scenarioPlaybackStartTime;
-		System.out.println("scenarioPlaybackStartTime> " + scenarioPlaybackStartTime);
-	}
 	
 	@Override
 	public void run()
 	{
 		// started via thread start
 		this.running = true;
-		final CmdParser parser = sdt3dApp.new CmdParser();
+		final CmdParser parser = theApp.new CmdParser();
 		StringBuilder sb = new StringBuilder();
 		
 		// test clear state
@@ -85,22 +80,20 @@ public class ScenarioThread extends SocketThread
 		sb.append(value, 0, value.length());
 		parseString(sb, parser);
 		
-		int lastTime = 0;	
+		Long lastTime = new Long(0);	
 		// implement a get first
-		Iterator<Entry<Integer, Map<Integer, String>>> titr = getScenarioModel().getModel().entrySet().iterator();
+		Iterator<Entry<Long, Map<Integer, String>>> titr = getScenarioModel().getModel().entrySet().iterator();
 		if (titr.hasNext()) 
 		{
 			lastTime = titr.next().getKey();
 		}
-		// Intialize scenario start time ljt fire?
-		scenarioController.setScenarioTime(scenarioPlaybackStartTime/1000);
-
-		Iterator<Entry<Integer, Map<Integer, String>>> itr = getScenarioModel().getModel().entrySet().iterator();		
+		
+		boolean started = false;
+		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getModel().entrySet().iterator();		
 		synchronized(scenarioModel) {
 		while (!stopFlag && itr.hasNext())
 		{
-			System.out.println("Scenario Playback iterating");
-			Entry<Integer, Map<Integer,String>> entry = itr.next();
+			Entry<Long, Map<Integer,String>> entry = itr.next();
 				
 			Map<Integer, String> cmdMap = entry.getValue();
 			int key = 0; 
@@ -113,10 +106,11 @@ public class ScenarioThread extends SocketThread
 				value = (String) cmdEntry.getValue();
     			}			
 
-			int waitTime = entry.getKey() - lastTime;
+			Long waitTime = entry.getKey() - lastTime;
 			lastTime = entry.getKey();
 			
-			System.out.println("lastTime> " + lastTime/1000 + " scenarioPlaybackStartTime> " + scenarioPlaybackStartTime/1000); 
+			//System.out.println("waitTime> " + waitTime + "lastTime> " + lastTime + " scenarioPlaybackStartTime> " + scenarioPlaybackStartTime + " pending> " + pendingCmd + "/" + value); 
+			
 			if (lastTime < scenarioPlaybackStartTime)
 			{
 				// Don't start pacing commands until we get to playback time
@@ -124,10 +118,19 @@ public class ScenarioThread extends SocketThread
 			}
 			else
 			{
+				if (!started)
+				{
+					//scenarioController.startPlayer(lastTime);
+					scenarioController.startPlayer(scenarioPlaybackStartTime);
+					started = true;
+					// No wait when playback starts
+					waitTime = new Long(0);
+				}
+				
 				value = pendingCmd + " \"" + value + " \"\n";
 				try
 				{
-					System.out.println("Sleeping> " + waitTime/1000);
+					//System.out.println("sleeping " + waitTime);
 					sleep(waitTime);
 				}
 				catch (InterruptedException e)
@@ -135,9 +138,8 @@ public class ScenarioThread extends SocketThread
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				scenarioController.startPlayer();
+
 			}
-			System.out.println("cmd> " + value);
 
 			/*
 

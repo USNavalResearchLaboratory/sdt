@@ -7,6 +7,8 @@ import java.beans.PropertyChangeListener;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.swing.Timer;
+
+import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
 /**
  * @author thompson
  * @since Aug 16, 2019
@@ -32,7 +34,7 @@ public class ScenarioController implements PropertyChangeListener
 	
 	// Current time when taping begins
 	static long scenarioStartTime;
-	private Map<Integer, Integer> scenarioSliderTimeMap = new LinkedHashMap<Integer,Integer>();
+	private Map<Integer, Long> scenarioSliderTimeMap = new LinkedHashMap<Integer,Long>();
 	private Timer commandMapTimer = null;
 
 	
@@ -58,24 +60,38 @@ public class ScenarioController implements PropertyChangeListener
 		return this.scenarioPlaybackPanel;
 	}
 	
-	
-	public void setScenarioTime(int scenarioSecs)
+
+	synchronized void updateModel(int pendingCmd, String val)
 	{
-		//firePropertyChange(SCENARIO_STARTED, null, scenarioSecs);
-		getView().setScenarioTime(scenarioSecs);
+		scenarioModel.updateModel(pendingCmd, val);
 	}
 	
-	synchronized void updateModel(long currentTime, int pendingCmd, String val)
+	
+	public int getScenarioSecsFromRealTime(Long realScenarioTime)
 	{
-		scenarioModel.updateModel(currentTime, pendingCmd, val);
+		// TODO: Create reverse map?
+		for (Map.Entry<Integer, Long> entry: scenarioSliderTimeMap.entrySet())
+		{
+			if (entry.getValue() >= realScenarioTime) 
+			{
+				System.out.println("Seeting scenario secs> " + entry.getKey() + " value>" + entry.getValue());
+
+				return entry.getKey();
+			}
+		}
+		return 0;
 	}
 	
-	// either fire or call fix!!
-	public void startPlayer()
+	
+	/*
+	 * Called by the scenario thread 
+	 */
+	public void startPlayer(Long scenarioTime)
 	{
-		getView().startPlayer();
+		getView().startPlayer(getScenarioSecsFromRealTime(scenarioTime));
 	}
 
+	
 	public void initController()
 	{
 		getView().setListener(this);
@@ -87,7 +103,7 @@ public class ScenarioController implements PropertyChangeListener
 	@Override
 	public void propertyChange(PropertyChangeEvent event)
 	{		
-		System.out.println("ScenarioController::propertyChange");
+		//System.out.println("ScenarioController::propertyChange");
 		if (event.getPropertyName().equals(SCENARIO_STARTED))
 		{
 			System.out.println("Controller propertyChange SCENARIO_STARTED");
@@ -115,7 +131,7 @@ public class ScenarioController implements PropertyChangeListener
 		}
 		if (event.getPropertyName().equals(POSITION_CHANGE))
 		{	                		
-			System.out.println("Controller propertyChange POSITION_CHANGE this is called every time the slider changes"); 
+			//System.out.println("Controller propertyChange POSITION_CHANGE this is called every time the slider changes"); 
 			//getCommandAtSliderTime(event);
 		}
 		if (event.getPropertyName().equals(PLAY_STOPPED))
@@ -143,8 +159,9 @@ public class ScenarioController implements PropertyChangeListener
 		}
 
 		// Get the command map key for the scenario slider time
-		int scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
-		listener.modelPropertyChange(ScenarioController.SCENARIO_PLAYBACK, null, scenarioPlaybackStartTime);		
+		Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
+
+		listener.modelPropertyChange(ScenarioController.SCENARIO_PLAYBACK, sliderStartTime, scenarioPlaybackStartTime);		
 	}
 	
 	
@@ -160,8 +177,9 @@ public class ScenarioController implements PropertyChangeListener
 				@Override
 				public void actionPerformed(ActionEvent e)
 				{
-					// Take a snapshot of the latest sdt command time at slider scenario elapsed time
-					scenarioSliderTimeMap.put(getView().getElapsedSecs(), getScenarioModel().getElapsedTime());
+					// Take a snapshot of time at slider time
+					long currentTime = Time.increasingTimeMillis();
+					scenarioSliderTimeMap.put(getView().getElapsedSecs(), currentTime); 
 				}
 			});
 		

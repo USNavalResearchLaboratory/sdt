@@ -589,9 +589,6 @@ public class sdt3d extends SdtApplication
 			// Start listening for commands on a protopipe
 			startProtoPipe();
 	
-			// TODO: start via command 
-			scenarioThread = new ScenarioThread(this, scenarioController, int2Cmd, 0);
-						
 			// Show our config directory in the file chooser
 			fc.setFileHidingEnabled(false);
 			
@@ -1720,10 +1717,12 @@ public class sdt3d extends SdtApplication
 		}
 		
 		
-		private void startScenarioThread()
+		private void startScenarioThread(int sliderStartTime, Long scenarioPlaybackStartTime)
 		{
-			scenarioThread = new ScenarioThread(this, scenarioController, int2Cmd, 0);
+			scenarioThread = new ScenarioThread(this, scenarioController, int2Cmd, sliderStartTime, scenarioPlaybackStartTime);
+			scenarioThread.start();
 		}
+		
 		
 		private void createPropertyChangeListener()
 		{
@@ -1734,16 +1733,9 @@ public class sdt3d extends SdtApplication
 		            		stopScenarioThread();
 		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK))
 		                {
-		                		startScenarioThread();
-	                			playbackScenario = true;
-	                			int scenarioPlaybackStart = (int) event.getNewValue();
-	                				                			
-	                			if (!scenarioThread.stopped())
-	                			{
-	                				scenarioThread.setScenarioPlaybackTime(scenarioPlaybackStart);
-	                				scenarioThread.start();
-	                			}
-	                			
+		                		// sliderStartTime, scenarioStartTime
+		                		startScenarioThread((int) event.getOldValue(), (Long) event.getNewValue());
+	                			playbackScenario = true;	                			
 						}
 		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK_STOPPED))
 		                {	
@@ -1937,7 +1929,7 @@ public class sdt3d extends SdtApplication
 			public boolean OnCommand(String str)
 			{	
 				
-				System.out.println("OnCommand str>" + str);
+				//System.out.println("OnCommand str>" + str);
 				str = str.trim();
 
 				if (null == pending_cmd)
@@ -7455,20 +7447,16 @@ public class sdt3d extends SdtApplication
 		
 		void processCmd(String pendingCmd, String val)
 		{			
-			
-			if (lastTime == 0)
-				lastTime = Time.increasingTimeMillis();
-
-			currentTime = Time.increasingTimeMillis();
-
 			// If we are "taping" the scenario, update our model 
 			// TODO: regardless of command success?  I guess replay can fail just as well..
 			
 			if (tapeScenario)
 			{
 				// need to synchronize threads
-				if (!playbackScenario) // testing!
-					scenarioController.updateModel(currentTime, cmd2Int.get(pendingCmd), val);
+				if (!playbackScenario) 
+				{
+					scenarioController.updateModel(cmd2Int.get(pendingCmd), val);
+				}
 			}
 			
 			// If we are playing back scenario we are taping incoming commands 

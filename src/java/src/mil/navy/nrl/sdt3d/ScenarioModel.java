@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
+
 /**
  * @author thompson
  * @since Aug 16, 2019
@@ -12,9 +14,9 @@ import java.util.Map;
 public class ScenarioModel
 {
 
-	private LinkedHashMap<Integer,Map<Integer,String>> sdtCommandMap = new LinkedHashMap<Integer, Map<Integer,String>>();
+	private LinkedHashMap<Long,Map<Integer,String>> sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
 		
-	private Map<Integer, Map<Integer, String>> synMap = Collections.synchronizedMap(sdtCommandMap);
+	private Map<Long, Map<Integer, String>> synMap = Collections.synchronizedMap(sdtCommandMap);
 		
 	private static int elapsedTime = 0;
 	
@@ -24,7 +26,7 @@ public class ScenarioModel
 	}
 	
 	
-	synchronized Map<Integer, Map<Integer, String>> getModel()
+	synchronized Map<Long, Map<Integer, String>> getModel()
 	{
 		return synMap;
 	}
@@ -36,15 +38,15 @@ public class ScenarioModel
 	}
 	
 	/*
-	 * Called from the app when taping the scenario.  Elapsed time is the time
-	 * sdt has been running (not necessarily "scenario" elapsed time)
+	 * Called from the app when taping the scenario.  
 	 */
-	synchronized void updateModel(long currentTime, int pendingCmd, String val)
+	synchronized void updateModel(int pendingCmd, String val)
 	{
-		elapsedTime = (int) ((currentTime - ScenarioController.scenarioStartTime));
+		
+		long currentTime = Time.increasingTimeMillis();
 		
 		Map<Integer,String> cmd = new HashMap<Integer,String>();
 		cmd.put(pendingCmd, val);
-		getModel().put(elapsedTime, cmd);		
+		getModel().put(currentTime, cmd);
 	}	
 }
