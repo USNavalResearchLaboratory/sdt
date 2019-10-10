@@ -230,22 +230,17 @@ public class FileThread extends SocketThread
 		String record = null;
 		try
 		{
-			while (!getPauseForScenarioPlayback() && !fileStack.isEmpty() && (inputFile = fileStack.peek().getBufferedReader()) != null)
+			while (!fileStack.isEmpty() && (inputFile = fileStack.peek().getBufferedReader()) != null)
 			{
-				while ((!getPauseForScenarioPlayback() && (record = inputFile.readLine()) != null && !stopFlag))
+				while ((record = inputFile.readLine()) != null && !stopFlag)
 				{
-					//System.out.println("Reading input file");
 					// Reattach eol
 					record = record + '\n';
 					sb.append(record, 0, record.length());
 					// parse string
 					parseString(sb, parser);
-				} // end processing file stack
-				
-				if (!getPauseForScenarioPlayback())
-				{
-					popFile();
-				}
+				} // end processing file stack								
+				popFile();				
 			}
 
 		}

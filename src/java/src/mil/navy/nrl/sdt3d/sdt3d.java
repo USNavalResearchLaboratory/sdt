@@ -416,6 +416,8 @@ public class sdt3d extends SdtApplication
 		
 		boolean playbackScenario = false;
 		
+		boolean playbackStopped = false;
+		
 		private PropertyChangeSupport propChangeSupport = new PropertyChangeSupport(this);
 		
 		// used to calculate wait interval when writing log file
@@ -573,7 +575,7 @@ public class sdt3d extends SdtApplication
 
 			for (int i = 0; i < args.length; i++)
 			{
-				onInput(args[i], parser);
+				onInput(args[i], parser, false);
 			}
 		}
 
@@ -1717,38 +1719,14 @@ public class sdt3d extends SdtApplication
 		}
 		
 		
-		private void startScenarioThread(int sliderStartTime, Long scenarioPlaybackStartTime)
+		private void startScenarioThread(Long scenarioPlaybackStartTime)
 		{
-			scenarioThread = new ScenarioThread(this, scenarioController, int2Cmd, sliderStartTime, scenarioPlaybackStartTime);
+			scenarioThread = new ScenarioThread(this, scenarioController, int2Cmd, scenarioPlaybackStartTime);
 			scenarioThread.start();
 		}
 		
 		
-		private void createPropertyChangeListener()
-		{
-		    propChangeSupport.addPropertyChangeListener(new PropertyChangeListener()
-		        {
-		            public void propertyChange(PropertyChangeEvent event)
-		            {
-		            		stopScenarioThread();
-		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK))
-		                {
-		                		// sliderStartTime, scenarioStartTime
-		                		startScenarioThread((int) event.getOldValue(), (Long) event.getNewValue());
-	                			playbackScenario = true;	                			
-						}
-		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK_STOPPED))
-		                {	
-		                		playbackScenario = false;
-		                		// TODO: Renable file read
-		                		if (fileThread != null)
-		                		{
-		                			fileThread.setPauseForScenarioPlayback(true);
-		                		}
-		                }
-		            }
-		        });
-		}
+
 
 		private boolean validateColor(String c)
 		{
@@ -1926,7 +1904,7 @@ public class sdt3d extends SdtApplication
 			 * @param str
 			 * @return
 			 */
-			public boolean OnCommand(String str)
+			public boolean OnCommand(String str, boolean scenarioCmd)
 			{	
 				
 				//System.out.println("OnCommand str>" + str);
@@ -1944,7 +1922,7 @@ public class sdt3d extends SdtApplication
 							seeking_cmd = false;
 							break;
 						case CMD_NOARG:
-							processCmd(pending_cmd, null); // ljt error checking?
+							processCmd(pending_cmd, null, scenarioCmd); // ljt error checking?
 							pending_cmd = null;
 							seeking_cmd = true;
 							break;
@@ -1956,7 +1934,7 @@ public class sdt3d extends SdtApplication
 				}
 				else // Not seeking command
 				{
-					processCmd(current_cmd, str);
+					processCmd(current_cmd, str, scenarioCmd);
 					seeking_cmd = true;
 					pending_cmd = null;
 				} // done seeking cmd
@@ -7445,28 +7423,63 @@ public class sdt3d extends SdtApplication
 			}
 		}
 		
-		void processCmd(String pendingCmd, String val)
+		
+		private void createPropertyChangeListener()
+		{
+		    propChangeSupport.addPropertyChangeListener(new PropertyChangeListener()
+		        {
+		            public void propertyChange(PropertyChangeEvent event)
+		            {
+		            		stopScenarioThread();
+		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK))
+		                {
+		                	
+		                		// Append any cmds added to our buffer while we were stopped
+	                			scenarioController.appendBufferModel();
+	                			
+		                		// sliderStartTime, scenarioStartTime
+		                		startScenarioThread((Long) event.getNewValue());
+	                			playbackScenario = true;	  
+	                			playbackStopped = false;
+						}
+		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK_STOPPED))
+		                {	
+		                		playbackScenario = true;
+		                		playbackStopped = true;		                		
+		                }
+		            }
+		        });
+		}
+		
+		void processCmd(String pendingCmd, String val,boolean scenarioCmd)
 		{			
 			// If we are "taping" the scenario, update our model 
 			// TODO: regardless of command success?  I guess replay can fail just as well..
 			
 			if (tapeScenario)
 			{
-				// need to synchronize threads
 				if (!playbackScenario) 
 				{
 					scenarioController.updateModel(cmd2Int.get(pendingCmd), val);
 				}
+				else
+				{
+					if (!scenarioCmd)
+					{
+						scenarioController.updateBufferModel(cmd2Int.get(pendingCmd),val);
+					}
+				}	
 			}
 			
-			// If we are playing back scenario we are taping incoming commands 
-			// and will handle them as playback gets there so just return
-			//if (playbackScenario)
-			//if (scenarioThread.isRunning())
-			//{
-			//	return;
-			//}
 			
+			if ((playbackScenario && !scenarioCmd)
+					||
+					playbackStopped)
+			{
+				
+				return;
+			}
+		
 			if (this.doCmd(pendingCmd, val))
 			{
 				logDebugOutput(pendingCmd, val);
@@ -7475,7 +7488,7 @@ public class sdt3d extends SdtApplication
 			{
 				System.out.println("sdt3d::doCmd() cmd> " + pendingCmd + " val>" + val + " failed ");
 			}
-
+		
 		}
 
 
@@ -7775,7 +7788,7 @@ public class sdt3d extends SdtApplication
 		 * for each poll interval regardless of how many sdt3d commands
 		 * have been received by the various input threads.
 		 */
-		public synchronized boolean onInput(String str, CmdParser parser)
+		public synchronized boolean onInput(String str, CmdParser parser, boolean scenarioCmd)
 		{
 			//System.out.println("onInput str> " + str);
 			currentNode = parser.currentNode;
@@ -7798,7 +7811,7 @@ public class sdt3d extends SdtApplication
 				str = str.substring(0, str.lastIndexOf("\""));
 			}
 			String cmd = str.concat(" ");
-			parser.OnCommand(cmd);
+			parser.OnCommand(cmd, scenarioCmd);
 
 			// So we don't clobbering file/pipe state when interleaving
 			// the two command sets

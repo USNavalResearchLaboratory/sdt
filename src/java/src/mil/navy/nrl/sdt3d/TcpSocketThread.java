@@ -17,7 +17,6 @@ public class TcpSocketThread extends SocketThread
 
 	ServerSocket tcpSocket = null;
 
-
 	public TcpSocketThread(AppFrame theApp, int thePort)
 	{
 		super(theApp, thePort);

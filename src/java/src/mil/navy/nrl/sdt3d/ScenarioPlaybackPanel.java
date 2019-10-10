@@ -244,7 +244,7 @@ public class ScenarioPlaybackPanel extends JPanel
                 //---- Speed Multiplier Spinner ----
                 this.speedFactorSpinner = new JSpinner();
                 this.speedFactorSpinner.setModel(new SpinnerListModel(
-                    new String[] {"x.12", "x.25", "x.50", "x1", "x2", "x3", "x4", "x5", "x7", "x10"}));
+                    new String[] {"x.01", "x.12", "x.25", "x.50", "x.75", "x1", "x2", "x3", "x4", "x5", "x7", "x10"}));
                 this.speedFactorSpinner.setValue("x1");
                 this.speedFactorSpinner.setEnabled(false);
                 size = new Dimension(60, this.speedFactorSpinner.getPreferredSize().height);
@@ -265,7 +265,6 @@ public class ScenarioPlaybackPanel extends JPanel
     
 	void setListener(ScenarioController listener)
 	{
-		// TODO: check for events the controller is not interested in?
 		addPropertyChangeListener(listener);
 
 	}
@@ -276,25 +275,38 @@ public class ScenarioPlaybackPanel extends JPanel
     		return scenarioSlider;
     }
         
+    // Spinner not yet implemented
     private void setPositionSpinnerNumber(int n)
     {
         this.scenarioSpinner.setValue(String.format("%,4d", n));
     }
 
+    
     private void updateEnabledState(boolean state)
     {
         this.scenarioSpinner.setEnabled(state);
         this.scenarioSlider.setEnabled(state);
         this.scenarioTime.setEnabled(state);
-        this.fastReverseButton.setEnabled(state);
-        this.reverseButton.setEnabled(state);
-        this.forwardButton.setEnabled(state);
-        this.fastForwardButton.setEnabled(state);
+        this.fastReverseButton.setEnabled(false);
+        this.reverseButton.setEnabled(false);
+        this.forwardButton.setEnabled(false);
+        this.fastForwardButton.setEnabled(false);
         this.speedLabel.setEnabled(state);
-        this.speedSpinner.setEnabled(state);
-        this.speedFactorSpinner.setEnabled(state);
+        this.speedSpinner.setEnabled(false);
+        this.speedFactorSpinner.setEnabled(false);
     }
 
+    
+    Float getSpeedFactorValue()
+    {
+    		String val = (String) speedFactorSpinner.getValue();
+    		String [] value = val.split("x",2);
+    		Float speedFactor = new Float(value[1]);
+    		return speedFactor;
+    }
+    
+    
+    // Spinner not yet implemented
     private void positionSpinnerStateChanged()
     {
         if (!this.suspendPositionEvents)
@@ -304,6 +316,7 @@ public class ScenarioPlaybackPanel extends JPanel
         }
     }
 
+    
     private void positionSliderStateChanged()
     {
         if (!this.suspendPositionEvents)
@@ -313,6 +326,8 @@ public class ScenarioPlaybackPanel extends JPanel
         }
     }
 
+    
+    // Spinner not yet implemented
     private int getCurrentPositionNumber()
     {
         Object o = this.scenarioSpinner.getValue();
@@ -322,7 +337,8 @@ public class ScenarioPlaybackPanel extends JPanel
         return Integer.parseInt(o.toString().trim().replaceAll(",", ""));
     }
 
-    // TBD: Is this spinner code being used?
+    
+    // Spinner not yet implemented
     private void setTimeDelta(int positionNumber, double positionDelta)
     {
         // Update UI controls without firing events
@@ -359,19 +375,19 @@ public class ScenarioPlaybackPanel extends JPanel
     			maxSliderValue = currentScenarioValue + maxSliderValue/2;
     			scenarioSlider.setMaximum(maxSliderValue);
     		}
-    	
      	scenarioSlider.setValue(currentScenarioValue);
     		updateReadout(currentScenarioValue);
     }
     
     
-    private void startStopButtonActionPerformed()
+    void startStopButtonActionPerformed()
     {
     		// Toggle play mode
     		if (playMode == PLAY_PAUSED)
     		{
     			startStopButton.setText("Stop");
     			suspendPositionEvents = true;  // TODO: Using?
+    			speedFactorSpinner.setEnabled(false);
     			
     			// Playing mode controls whether we update the slider
     			// while scenario playback controls the timer updating the slider
@@ -384,9 +400,10 @@ public class ScenarioPlaybackPanel extends JPanel
     			startStopButton.setText("Start");
     			
     			suspendPositionEvents = false;
+    			speedFactorSpinner.setEnabled(true);
     			// should the controller manage play mode?
     			setPlayMode(PLAY_PAUSED);
-    			player.stop();
+    			player.stop();  // redundant make startstop manage this
     			firePropertyChange(ScenarioController.PLAY_STOPPED, null, scenarioSlider.getValue());  
     		}
     }

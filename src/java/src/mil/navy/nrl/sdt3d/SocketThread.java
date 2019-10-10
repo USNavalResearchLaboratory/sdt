@@ -25,7 +25,8 @@ public class SocketThread extends Thread
 
 	long lastWaitTime = 0;
 	
-	private boolean pauseForScenarioPlayback = false;
+	// TODO: Change to thread enum
+	protected boolean isScenarioThread = false;
 
 
 
@@ -48,17 +49,6 @@ public class SocketThread extends Thread
 		stopFlag = true;
 	}
 
-	
-	void setPauseForScenarioPlayback(boolean pauseForScenarioPlayback)
-	{
-		this.pauseForScenarioPlayback = pauseForScenarioPlayback;
-	}
-	
-	
-	boolean getPauseForScenarioPlayback()
-	{
-		return this.pauseForScenarioPlayback;
-	}
 
 	/*
 	 * Called by input threads to parse input and extract the wait commands
@@ -180,7 +170,7 @@ public class SocketThread extends Thread
 							@Override
 							public void run()
 							{
-								theApp.onInput(message, parser);
+								theApp.onInput(message, parser, isScenarioThread);
 							}
 						});
 					sb = sb.delete(0, index);

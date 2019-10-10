@@ -1,8 +1,5 @@
 package mil.navy.nrl.sdt3d;
 
-import java.awt.EventQueue;
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,23 +26,20 @@ public class ScenarioThread extends SocketThread
 	private ScenarioController scenarioController;
 	
 	private Long scenarioPlaybackStartTime;
-
-	private int sliderStartTime;
 	
 	int lastWaitTime = 0;
 	
 	HashMap<Integer, String> int2Cmd;
 
-// TODO: Change superclass !
-	public ScenarioThread(sdt3d.AppFrame theApp, ScenarioController scenarioController, HashMap<Integer, String> int2Cmd, int sliderStartTime, Long scenarioPlaybackStartTime)
+	public ScenarioThread(sdt3d.AppFrame theApp, ScenarioController scenarioController, HashMap<Integer, String> int2Cmd, Long scenarioPlaybackStartTime)
 	{
 		super(theApp, 0);
 		this.scenarioController = scenarioController;
 		// TODO: Get model from app?
 		this.scenarioModel = scenarioController.getScenarioModel();
 		this.scenarioPlaybackStartTime = scenarioPlaybackStartTime;
-		this.sliderStartTime = sliderStartTime;
 		this.int2Cmd = int2Cmd;
+		isScenarioThread = true;
 	}
 
 
@@ -75,10 +69,28 @@ public class ScenarioThread extends SocketThread
 		final CmdParser parser = theApp.new CmdParser();
 		StringBuilder sb = new StringBuilder();
 		
-		// test clear state
-		String value = " clear all \n";
+		//String value = " clear all \n";
+		String value = " clear nodes \n";
 		sb.append(value, 0, value.length());
 		parseString(sb, parser);
+		value = " clear regions \n";
+		sb.append(value, 0, value.length());
+		parseString(sb, parser);
+		value = " clear tiles \n";
+		sb.append(value, 0, value.length());
+		parseString(sb, parser);
+		value = " clear linkLabels \n";
+		sb.append(value, 0, value.length());
+		parseString(sb, parser);
+		value = " clear kml \n";
+		sb.append(value, 0, value.length());
+		parseString(sb, parser);
+		value = " status \"\" \n";
+		sb.append(value, 0, value.length());
+		parseString(sb, parser);
+		
+		//clearAllRenderables();
+		//this.elevationBuilder.clear();
 		
 		Long lastTime = new Long(0);	
 		// implement a get first
@@ -89,7 +101,11 @@ public class ScenarioThread extends SocketThread
 		}
 		
 		boolean started = false;
+		// Get playback speedfactor
+		Float speedFactor = scenarioController.getView().getSpeedFactorValue();
+		System.out.println("Speed factor>" + speedFactor);
 		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getModel().entrySet().iterator();		
+		
 		synchronized(scenarioModel) {
 		while (!stopFlag && itr.hasNext())
 		{
@@ -109,8 +125,6 @@ public class ScenarioThread extends SocketThread
 			Long waitTime = entry.getKey() - lastTime;
 			lastTime = entry.getKey();
 			
-			//System.out.println("waitTime> " + waitTime + "lastTime> " + lastTime + " scenarioPlaybackStartTime> " + scenarioPlaybackStartTime + " pending> " + pendingCmd + "/" + value); 
-			
 			if (lastTime < scenarioPlaybackStartTime)
 			{
 				// Don't start pacing commands until we get to playback time
@@ -120,7 +134,6 @@ public class ScenarioThread extends SocketThread
 			{
 				if (!started)
 				{
-					//scenarioController.startPlayer(lastTime);
 					scenarioController.startPlayer(scenarioPlaybackStartTime);
 					started = true;
 					// No wait when playback starts
@@ -130,8 +143,9 @@ public class ScenarioThread extends SocketThread
 				value = pendingCmd + " \"" + value + " \"\n";
 				try
 				{
-					//System.out.println("sleeping " + waitTime);
+					waitTime = (long) (waitTime * speedFactor);
 					sleep(waitTime);
+					// TODO: set scenario time from here... scenarioController.getView()
 				}
 				catch (InterruptedException e)
 				{
@@ -141,19 +155,9 @@ public class ScenarioThread extends SocketThread
 
 			}
 
-			/*
-
-			if (this.lastWaitTime > 0)
-			{
-				currentTime = System.currentTimeMillis();
-				elapsedTime = currentTime - this.lastWaitTime;
-				sleepTime = sleepTime - elapsedTime;
-				if (sleepTime < 0)
-					sleepTime = 0;
-			}
-	
-			*/
-			if (!pendingCmd.equalsIgnoreCase("wait"))
+			if ((!pendingCmd.equalsIgnoreCase("wait"))
+					&&
+				(!pendingCmd.equalsIgnoreCase("listen")))
 			{
 				sb.append(value, 0, value.length());
 				parseString(sb, parser);	
@@ -164,6 +168,7 @@ public class ScenarioThread extends SocketThread
 			}
 		}
 		}
+		
 		running = false;
 
 	} // end ScenarioThread::run()

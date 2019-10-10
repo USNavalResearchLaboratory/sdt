@@ -13,12 +13,33 @@ import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
  */
 public class ScenarioModel
 {
-
+	/*
+	* LinkedHashMap maintains insertion order
+	* 
+	* Key: current time
+	* Value: Map<pendingCmd(asInt), value>
+	*/
 	private LinkedHashMap<Long,Map<Integer,String>> sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
 		
+	/*
+	 * Collections.synchronizedMap returns a synchronized (thread-safe) map backed by the
+	 * specified map.  In order to guarantee serial access, all access to the backing map
+	 * must be accomplished through the returned mpa.
+	 */
 	private Map<Long, Map<Integer, String>> synMap = Collections.synchronizedMap(sdtCommandMap);
 		
-	private static int elapsedTime = 0;
+	/*
+	* LinkedHashMap maintains insertion order
+	*/
+	private LinkedHashMap<Long,Map<Integer,String>> sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
+		
+	/*
+	 * Collections.synchronizedMap returns a synchronized (thread-safe) map backed by the
+	 * specified map.  In order to guarantee serial access, all access to the backing map
+	 * must be accomplished through the returned mpa.
+	 */
+	private Map<Long, Map<Integer, String>> synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
+
 	
 	ScenarioModel()
 	{
@@ -26,27 +47,56 @@ public class ScenarioModel
 	}
 	
 	
-	synchronized Map<Long, Map<Integer, String>> getModel()
+	Map<Long, Map<Integer, String>> getModel()
 	{
 		return synMap;
 	}
 	
 	
-	int getElapsedTime()
+	Map<Long, Map<Integer, String>> getBufferModel()
 	{
-		return elapsedTime;
+		return synBufferMap;
 	}
 	
+		
 	/*
 	 * Called from the app when taping the scenario.  
 	 */
-	synchronized void updateModel(int pendingCmd, String val)
+	void updateModel(int pendingCmd, String val)
 	{
-		
 		long currentTime = Time.increasingTimeMillis();
 		
 		Map<Integer,String> cmd = new HashMap<Integer,String>();
 		cmd.put(pendingCmd, val);
 		getModel().put(currentTime, cmd);
+	}	
+	
+
+	void appendBufferModel()
+	{
+		if ((synBufferMap.size() == 0)
+				||
+			(synBufferMap.size() == synMap.size()))
+		{
+			System.out.println("No need to update buffer model!!!!!!!!!");
+			return;
+		}
+		
+		synMap.putAll(synBufferMap);
+		sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
+		synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
+		
+	}
+	
+	/*
+	 * Called from the app when replaying the scenario/ 
+	 */
+	void updateBufferModel(int pendingCmd, String val)
+	{
+		long currentTime = Time.increasingTimeMillis();
+		
+		Map<Integer,String> cmd = new HashMap<Integer,String>();
+		cmd.put(pendingCmd, val);
+		getBufferModel().put(currentTime, cmd);
 	}	
 }
