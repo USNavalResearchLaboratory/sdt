@@ -1,5 +1,7 @@
 package mil.navy.nrl.sdt3d;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -74,18 +76,18 @@ public class ScenarioModel
 
 	void appendBufferModel()
 	{
+		System.out.println("synBufferMap.size()> " + synBufferMap.size());
 		if ((synBufferMap.size() == 0)
 				||
 			(synBufferMap.size() == synMap.size()))
 		{
-			System.out.println("No need to update buffer model!!!!!!!!!");
 			return;
 		}
 		
 		synMap.putAll(synBufferMap);
 		sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
 		synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
-		
+
 	}
 	
 	/*

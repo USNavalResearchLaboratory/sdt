@@ -1,9 +1,15 @@
 package mil.navy.nrl.sdt3d;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.CmdParser;
 
@@ -35,7 +41,6 @@ public class ScenarioThread extends SocketThread
 	{
 		super(theApp, 0);
 		this.scenarioController = scenarioController;
-		// TODO: Get model from app?
 		this.scenarioModel = scenarioController.getScenarioModel();
 		this.scenarioPlaybackStartTime = scenarioPlaybackStartTime;
 		this.int2Cmd = int2Cmd;
@@ -55,21 +60,17 @@ public class ScenarioThread extends SocketThread
 		stopFlag = true;
 	}
 
+	
 	private ScenarioModel getScenarioModel()
 	{
 		return this.scenarioModel;
 	}
 	
-	
-	@Override
-	public void run()
+	private  void clearState()
 	{
-		// started via thread start
-		this.running = true;
 		final CmdParser parser = theApp.new CmdParser();
 		StringBuilder sb = new StringBuilder();
 		
-		//String value = " clear all \n";
 		String value = " clear nodes \n";
 		sb.append(value, 0, value.length());
 		parseString(sb, parser);
@@ -88,9 +89,17 @@ public class ScenarioThread extends SocketThread
 		value = " status \"\" \n";
 		sb.append(value, 0, value.length());
 		parseString(sb, parser);
+	}
+	
+	
+	@Override
+	public void run()
+	{
+		// started via thread start
+		this.running = true;
 		
-		//clearAllRenderables();
-		//this.elevationBuilder.clear();
+		clearState();
+		
 		
 		Long lastTime = new Long(0);	
 		// implement a get first
@@ -102,11 +111,14 @@ public class ScenarioThread extends SocketThread
 		
 		boolean started = false;
 		// Get playback speedfactor
+		String value = null;
+		final CmdParser parser = theApp.new CmdParser();
+		StringBuilder sb = new StringBuilder();
 		Float speedFactor = scenarioController.getView().getSpeedFactorValue();
-		System.out.println("Speed factor>" + speedFactor);
+
 		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getModel().entrySet().iterator();		
 		
-		synchronized(scenarioModel) {
+		synchronized(scenarioModel.getModel()) {
 		while (!stopFlag && itr.hasNext())
 		{
 			Entry<Long, Map<Integer,String>> entry = itr.next();
@@ -125,16 +137,15 @@ public class ScenarioThread extends SocketThread
 			Long waitTime = entry.getKey() - lastTime;
 			lastTime = entry.getKey();
 			
+			
 			if (lastTime < scenarioPlaybackStartTime)
 			{
-				// Don't start pacing commands until we get to playback time
 				value = " " + pendingCmd + " \"" + value + " \"\n";
 			}
 			else
 			{
 				if (!started)
 				{
-					scenarioController.startPlayer(scenarioPlaybackStartTime);
 					started = true;
 					// No wait when playback starts
 					waitTime = new Long(0);
@@ -145,14 +156,12 @@ public class ScenarioThread extends SocketThread
 				{
 					waitTime = (long) (waitTime * speedFactor);
 					sleep(waitTime);
-					// TODO: set scenario time from here... scenarioController.getView()
 				}
 				catch (InterruptedException e)
 				{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-
 			}
 
 			if ((!pendingCmd.equalsIgnoreCase("wait"))
@@ -162,18 +171,60 @@ public class ScenarioThread extends SocketThread
 				sb.append(value, 0, value.length());
 				parseString(sb, parser);	
 			}
-			else
-			{
-				System.out.println("pendingcmd equals wait");
-			}
 		}
 		}
 		
-		running = false;
+		// Fix threading issues with buffer
+		//LIVE theApp.setPlaybackScenario(false);
+		//LIVE playbackBufferedCommands();
+		
+		//System.out.println("Scenario replay ending");
+		running = false;		
+		scenarioController.getView().stopScenarioPlayback();
+		//LIVE scenarioController.getView().resumeScenarioPlayback();
 
 	} // end ScenarioThread::run()
 
 
+	void playbackBufferedCommands()
+	{
+		String value = null;
+		final CmdParser parser = theApp.new CmdParser();
+		StringBuilder sb = new StringBuilder();
+
+		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getBufferModel().entrySet().iterator();		
+		
+		synchronized(scenarioModel.getBufferModel()) {
+		while (!stopFlag && itr.hasNext())
+		{
+			Entry<Long, Map<Integer,String>> entry = itr.next();
+				
+			Map<Integer, String> cmdMap = entry.getValue();
+			int key = 0; 
+			value = null;
+			String pendingCmd = null;
+			for (Map.Entry<Integer, String> cmdEntry: cmdMap.entrySet())
+			{
+				key = (int) cmdEntry.getKey();
+				pendingCmd = int2Cmd.get(key);
+				value = (String) cmdEntry.getValue();
+    			}			
+
+			value = " " + pendingCmd + " \"" + value + " \"\n";
+
+			if ((!pendingCmd.equalsIgnoreCase("wait"))
+					&&
+				(!pendingCmd.equalsIgnoreCase("listen")))
+			{
+				sb.append(value, 0, value.length());
+				parseString(sb, parser);	
+			}
+		}
+		}
+	
+	}
+	
+	
 	public boolean isRunning() 
 	{	
 		return this.running;

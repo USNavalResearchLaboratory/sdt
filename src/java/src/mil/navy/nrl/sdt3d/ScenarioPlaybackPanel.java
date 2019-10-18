@@ -52,8 +52,6 @@ public class ScenarioPlaybackPanel extends JPanel
          
         updateEnabledState(true);
 
-        // ljt for now... we want to increment the timeline while the
-        // scenario is being taped - 
         setPlayMode(TAPING);
         
     }
@@ -312,7 +310,6 @@ public class ScenarioPlaybackPanel extends JPanel
         if (!this.suspendPositionEvents)
         {
             setTimeDelta(getCurrentPositionNumber(), 0);
-            //this.firePropertyChange(POSITION_CHANGE, -1, 0);
         }
     }
 
@@ -359,13 +356,7 @@ public class ScenarioPlaybackPanel extends JPanel
         this.scenarioTimeValue.setText(String.valueOf(time)); 
     }
 
-    private double getSpeedFactor()
-    {
-        String speedFactor = ((String)this.speedFactorSpinner.getValue()).replace("x", "");
-        return Double.parseDouble(speedFactor);
-    }
-
- 
+    
     void updateScenarioTime(int currentScenarioValue)
     {
     		// If we've gone beyond our initial scenario time increase the slider
@@ -380,41 +371,61 @@ public class ScenarioPlaybackPanel extends JPanel
     }
     
     
+    // TODO: Resume not yet fully implemented - eventually call this from scenario thread
+    void resumeScenarioPlayback()
+    {
+    		//startStopButton.setText("Start");
+    		//speedFactorSpinner.setEnabled(true);
+    		// Resuming live play will set our slider value to total scenario elapsed time
+    		setPlayMode(TAPING);
+    		firePropertyChange(ScenarioController.RESUME_LIVE_PLAY, null, null);
+    }
+    
+    
+    // Called by scenario thread when we've played back all
+    // commands in the scenario model.  "Continuing" will append
+    // buffered commands and continue playback
+    void stopScenarioPlayback()
+    {
+    		startStopButton.setText("Continue");
+    		speedFactorSpinner.setEnabled(false);
+    		setScenarioTime(scenarioSlider.getValue());
+    		setPlayMode(PLAY_PAUSED);   
+    }
+    
+    
     void startStopButtonActionPerformed()
     {
-    		// Toggle play mode
     		if (playMode == PLAY_PAUSED)
-    		{
+    		{   			
     			startStopButton.setText("Stop");
     			suspendPositionEvents = true;  // TODO: Using?
     			speedFactorSpinner.setEnabled(false);
-    			
-    			// Playing mode controls whether we update the slider
-    			// while scenario playback controls the timer updating the slider
+    			scenarioSecs = scenarioSlider.getValue();
+    			// Only do this yhere not in stop scenario playback too - rushing here
+    			//System.out.println("ScenarioSlider " + scenarioSlider.getValue());
     			setPlayMode(PLAYING);   			
-    			
-    			firePropertyChange(ScenarioController.PLAY_STARTED, null, scenarioSlider.getValue());
+    			firePropertyChange(ScenarioController.PLAY_STARTED, null, scenarioSecs);
     		}
     		else
     		{
-    			startStopButton.setText("Start");
-    			
-    			suspendPositionEvents = false;
+    			startStopButton.setText("Start");    			
+    			suspendPositionEvents = false; // TODO: using?
     			speedFactorSpinner.setEnabled(true);
-    			// should the controller manage play mode?
+    			
     			setPlayMode(PLAY_PAUSED);
-    			player.stop();  // redundant make startstop manage this
     			firePropertyChange(ScenarioController.PLAY_STOPPED, null, scenarioSlider.getValue());  
     		}
     }
     
-    
+    // not yet implemented
     private void fastReverseButtonActionPerformed()
     {
         if (this.getCurrentPositionNumber() > 0)
             setPositionSpinnerNumber(this.getCurrentPositionNumber() - 1);
     }
 
+    // not yet implemented
     private void reverseButtonActionPerformed()
     {
  
@@ -427,10 +438,9 @@ public class ScenarioPlaybackPanel extends JPanel
     		firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
     		// resume position events
     		suspendPositionEvents = false;
-
     }
 
-
+    // not yet implemented
     private void forwardButtonActionPerformed()
     {    
     		// suspend position events 
@@ -443,6 +453,7 @@ public class ScenarioPlaybackPanel extends JPanel
 
     }
 
+    // not yet implemented
     private void fastForwardButtonActionPerformed()
     {
     		//if (!isLastPosition(this.getCurrentPositionNumber()))
@@ -452,6 +463,7 @@ public class ScenarioPlaybackPanel extends JPanel
     
     void setScenarioTime(int scenarioSecs)
     {   
+    		System.out.println("Setting scenario time to> " + scenarioSecs);
     		this.scenarioSecs = scenarioSecs;
     }
     
@@ -460,16 +472,16 @@ public class ScenarioPlaybackPanel extends JPanel
     {
         if (player != null)
             return;
-        
+        // Player runs continuously keeping track of elapsed scenario time
+        // We only update the slider display if taping or playing.
         player = new Timer(1000, new ActionListener()
         {
             // Animate the view motion by controlling the positionSpinner and positionDelta
             public void actionPerformed(ActionEvent actionEvent)
             {
             		elapsedSecs++;
-            		// we set it as we iterate through scenario but also increment as we are waiting?
             		scenarioSecs++;
-            		
+            		//System.out.println("ScenarioSecs>" + scenarioSecs);
             		if (playMode == TAPING)
             		{
             			updateScenarioTime(elapsedSecs);
@@ -477,8 +489,13 @@ public class ScenarioPlaybackPanel extends JPanel
             		
             		if (playMode == PLAYING)
             		{
-            			//System.out.println("ScenarioSecs " + scenarioSecs);
             			updateScenarioTime(scenarioSecs);
+            		}
+            		
+            		if (playMode == PLAY_PAUSED)
+            		{
+            			scenarioSecs--;
+            			updateScenarioTime(scenarioSlider.getValue());
             		}
             }
         });
@@ -486,18 +503,6 @@ public class ScenarioPlaybackPanel extends JPanel
 
     }
     
-    void startPlayer(int scenarioTime)
-    {
-    		// we set mode to playing when we toggle start/stop mode 
-    		// but only start the player when scenario playback gets 
-    		// after our scenario playback time
-    		if (player != null) 
-    		{
-    			//System.out.println("Starting player at > " + scenarioTime);
-    			setScenarioTime(scenarioTime);
-    			player.start();
-    		}
-    }
     
     void setPlayMode(int mode)
     {
@@ -507,26 +512,11 @@ public class ScenarioPlaybackPanel extends JPanel
         {
             initPlayer();
         }
-        if (this.playMode == PLAY_PAUSED)
-        {
-			System.out.println("STOPPING PLAYER.........");
-
-        		player.stop();
-        }
-    }
-
-
-    private boolean isPlayerActive()
-    {
-        return this.playMode != PLAY_PAUSED;
     }
 
 
 	public Integer getElapsedSecs() 
 	{
 		return this.elapsedSecs;
-	}
-
-     
-
+	}  
 }

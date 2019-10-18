@@ -4,8 +4,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TimeZone;
+
 import javax.swing.Timer;
 
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
@@ -26,22 +31,21 @@ public class ScenarioController implements PropertyChangeListener
 	public static final String PLAY_STOPPED = "playStopped";
 	public static final String PLAY_STARTED = "playStarted";
 	
+	// TODO: Not yet implemented
+	public static final String RESUME_LIVE_PLAY = "resumeLivePlay";
+	
 	
 	private ScenarioModel scenarioModel = new ScenarioModel();
 	private ScenarioPlaybackPanel scenarioPlaybackPanel;
 	
 	private sdt3d.AppFrame listener;
 	
-	// Current time when taping begins
-	static long scenarioStartTime;
 	private Map<Integer, Long> scenarioSliderTimeMap = new LinkedHashMap<Integer,Long>();
 	private Timer commandMapTimer = null;
 
 	
 	public ScenarioController(sdt3d.AppFrame listener, ScenarioPlaybackPanel scenarioPlaybackPanel)
 	{
-		scenarioStartTime = System.currentTimeMillis();
-		
 		this.scenarioPlaybackPanel = scenarioPlaybackPanel;
 		this.listener = listener;
 		
@@ -94,11 +98,12 @@ public class ScenarioController implements PropertyChangeListener
 	
 	
 	/*
-	 * Called by the scenario thread 
+	 * Called by the scenario thread to set slider to
+	 * scenario playback time
 	 */
 	public void startPlayer(Long scenarioTime)
 	{
-		getView().startPlayer(getScenarioSecsFromRealTime(scenarioTime));
+		getView().setScenarioTime(getScenarioSecsFromRealTime(scenarioTime));
 	}
 
 	
@@ -114,36 +119,6 @@ public class ScenarioController implements PropertyChangeListener
 	public void propertyChange(PropertyChangeEvent event)
 	{		
 		//System.out.println("ScenarioController::propertyChange");
-		if (event.getPropertyName().equals(SCENARIO_STARTED))
-		{
-			System.out.println("Controller propertyChange SCENARIO_STARTED");
-			///view().setScenarioTime((int)event.getNewValue());
-            			
-		}
-            	
-		if (event.getPropertyName().equals(SCENARIO_MODIFIED))
-		{	    
-			System.out.println("Controller propertyChange SCENARIO_MODIFIED");
-
-			getView().updateScenarioTime((int)event.getNewValue());
-			getView().updateReadout((int)event.getNewValue());
-		}
-		// TODO: clean up
-		if (event.getPropertyName().equals(SKIP_BACK))
-		{
-			System.out.println("Controller propertyChange SKIP_BACK");
-			getCommandAtSliderTime(event);	                	
-		}
-		if (event.getPropertyName().equals(SKIP_FORWARD))
-		{	                		
-			System.out.println("Controller propertyChange SKIP_FORWARD"); 
-			getCommandAtSliderTime(event);
-		}
-		if (event.getPropertyName().equals(POSITION_CHANGE))
-		{	                		
-			//System.out.println("Controller propertyChange POSITION_CHANGE this is called every time the slider changes"); 
-			//getCommandAtSliderTime(event);
-		}
 		if (event.getPropertyName().equals(PLAY_STOPPED))
 		{	                		
 			System.out.println("Controller propertyChange PLAY_STOPPED");
@@ -155,9 +130,15 @@ public class ScenarioController implements PropertyChangeListener
 			System.out.println("Controller propertyChange PLAY_STARTED");  
 			// getCommandAtSliderTime fires SCENARIO_PLAYBACK
 			getCommandAtSliderTime(event);
-
+		}
+		
+		if (event.getPropertyName().equals(RESUME_LIVE_PLAY))
+		{
+			System.out.println("Controller propertyChange RESUME_LIVE_PLAY");
+			listener.modelPropertyChange(ScenarioController.RESUME_LIVE_PLAY, null, null);
 		}
 	}
+	
 	
 	void getCommandAtSliderTime(PropertyChangeEvent event)
 	{
@@ -172,8 +153,12 @@ public class ScenarioController implements PropertyChangeListener
 		if (!scenarioSliderTimeMap.containsKey(sliderStartTime))
 		{
 			System.out.println("ScenarioController::propertyChange() map does not contain key>" + event.getNewValue());
+			// Stop playback
+			getView().startStopButtonActionPerformed();
 			return;
 		}
+
+		
 		// Get the command map key for the scenario slider time
 		Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
 		listener.modelPropertyChange(ScenarioController.SCENARIO_PLAYBACK, sliderStartTime, scenarioPlaybackStartTime);		
@@ -186,6 +171,7 @@ public class ScenarioController implements PropertyChangeListener
 	 */
 	private void startCommandMapTimer()
 	{
+		// TODO: Should we do this in playback player?
 		final int POLL_INTERVAL = 1000;
 		commandMapTimer = new Timer(POLL_INTERVAL, new ActionListener()
 			{

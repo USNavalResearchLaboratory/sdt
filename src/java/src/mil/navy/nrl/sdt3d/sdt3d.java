@@ -412,7 +412,7 @@ public class sdt3d extends SdtApplication
 
 		private boolean logDebugOutput = false;
 		
-		boolean tapeScenario = true;
+		boolean recordScenario = true;
 		
 		boolean playbackScenario = false;
 		
@@ -1721,6 +1721,10 @@ public class sdt3d extends SdtApplication
 		
 		private void startScenarioThread(Long scenarioPlaybackStartTime)
 		{
+			if (scenarioThread != null)
+			{
+				scenarioThread.stopThread();
+			}
 			scenarioThread = new ScenarioThread(this, scenarioController, int2Cmd, scenarioPlaybackStartTime);
 			scenarioThread.start();
 		}
@@ -7447,6 +7451,13 @@ public class sdt3d extends SdtApplication
 		                		playbackScenario = true;
 		                		playbackStopped = true;		                		
 		                }
+		                if (event.getPropertyName().equals(ScenarioController.RESUME_LIVE_PLAY))
+		                	{
+		                		// TODO: Need to playback what is in the buffer prior to resuming play
+		                		scenarioController.appendBufferModel();
+		                		playbackScenario = false;
+		                		playbackStopped = false;
+		                }
 		            }
 		        });
 		}
@@ -7456,7 +7467,7 @@ public class sdt3d extends SdtApplication
 			// If we are "taping" the scenario, update our model 
 			// TODO: regardless of command success?  I guess replay can fail just as well..
 			
-			if (tapeScenario)
+			if (recordScenario)
 			{
 				if (!playbackScenario) 
 				{
@@ -8033,6 +8044,12 @@ public class sdt3d extends SdtApplication
 		public RenderableLayer getKmlLayer()
 		{
 			return kmlLayer;
+		}
+
+
+		public void setPlaybackScenario(boolean b) 
+		{
+			playbackScenario = false;
 		}
 
 	} // end class AppFrame
