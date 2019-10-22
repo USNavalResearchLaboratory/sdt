@@ -178,7 +178,6 @@ public class ScenarioThread extends SocketThread
 		//LIVE theApp.setPlaybackScenario(false);
 		//LIVE playbackBufferedCommands();
 		
-		//System.out.println("Scenario replay ending");
 		running = false;		
 		scenarioController.getView().stopScenarioPlayback();
 		//LIVE scenarioController.getView().resumeScenarioPlayback();

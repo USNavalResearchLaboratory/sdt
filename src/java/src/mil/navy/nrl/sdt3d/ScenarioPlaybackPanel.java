@@ -29,7 +29,7 @@ public class ScenarioPlaybackPanel extends JPanel
     private JSpinner speedSpinner;
     private JSpinner speedFactorSpinner;
     
-    private boolean suspendPositionEvents = false;
+    //private boolean suspendPositionEvents = false;
     private int maxSliderValue = 1000;
     private Timer player;
     
@@ -45,7 +45,7 @@ public class ScenarioPlaybackPanel extends JPanel
     private int elapsedSecs = 0; 
     // scenarioSecs is scenario play time
     private int scenarioSecs = 0;
- 
+		 
     public ScenarioPlaybackPanel()
     {
         initComponents();
@@ -307,21 +307,20 @@ public class ScenarioPlaybackPanel extends JPanel
     // Spinner not yet implemented
     private void positionSpinnerStateChanged()
     {
-        if (!this.suspendPositionEvents)
-        {
-            setTimeDelta(getCurrentPositionNumber(), 0);
-        }
+    		setTimeDelta(getCurrentPositionNumber(), 0);
     }
 
     
     private void positionSliderStateChanged()
     {
-        if (!this.suspendPositionEvents)
-        {
-        		updateReadout(scenarioSlider.getValue());
-        		firePropertyChange(ScenarioController.POSITION_CHANGE, 0, scenarioSlider.getValue());
-        }
-    }
+    		// Don't allow slider to go beyone our scenario elapsed time
+    		if (scenarioSlider.getValue() >= elapsedSecs)
+    		{
+    			scenarioSlider.setValue(elapsedSecs);
+    		}
+    		updateReadout(scenarioSlider.getValue());
+    		firePropertyChange(ScenarioController.POSITION_CHANGE, 0, scenarioSlider.getValue());
+     }
 
     
     // Spinner not yet implemented
@@ -338,16 +337,11 @@ public class ScenarioPlaybackPanel extends JPanel
     // Spinner not yet implemented
     private void setTimeDelta(int positionNumber, double positionDelta)
     {
-        // Update UI controls without firing events
-        this.suspendPositionEvents = true;
-        {
-            setPositionSpinnerNumber(positionNumber);
-            int min = this.scenarioSlider.getMinimum();
-            int max = this.scenarioSlider.getMaximum();
-            int value = (int) (min + (double) (max - min) * positionDelta);
-            this.scenarioSlider.setValue(value);
-        }
-        this.suspendPositionEvents = false;
+    		setPositionSpinnerNumber(positionNumber);
+    		int min = this.scenarioSlider.getMinimum();
+    		int max = this.scenarioSlider.getMaximum();
+    		int value = (int) (min + (double) (max - min) * positionDelta);
+    		this.scenarioSlider.setValue(value);
     }
 
 
@@ -359,13 +353,13 @@ public class ScenarioPlaybackPanel extends JPanel
     
     void updateScenarioTime(int currentScenarioValue)
     {
-    		// If we've gone beyond our initial scenario time increase the slider
+     		// If we've gone beyond our initial scenario time increase the slider
     		if (currentScenarioValue > maxSliderValue)
     		{
     			// TODO: Optimize this
     			maxSliderValue = currentScenarioValue + maxSliderValue/2;
     			scenarioSlider.setMaximum(maxSliderValue);
-    		}
+     	}
      	scenarioSlider.setValue(currentScenarioValue);
     		updateReadout(currentScenarioValue);
     }
@@ -387,11 +381,10 @@ public class ScenarioPlaybackPanel extends JPanel
     // buffered commands and continue playback
     void stopScenarioPlayback()
     {
+		setPlayMode(PLAY_PAUSED);   
     		startStopButton.setText("Continue");
     		speedFactorSpinner.setEnabled(false);
-    		setScenarioTime(scenarioSlider.getValue());
-    		setPlayMode(PLAY_PAUSED);   
-    }
+     }
     
     
     void startStopButtonActionPerformed()
@@ -399,21 +392,21 @@ public class ScenarioPlaybackPanel extends JPanel
     		if (playMode == PLAY_PAUSED)
     		{   			
     			startStopButton.setText("Stop");
-    			suspendPositionEvents = true;  // TODO: Using?
     			speedFactorSpinner.setEnabled(false);
     			scenarioSecs = scenarioSlider.getValue();
-    			// Only do this yhere not in stop scenario playback too - rushing here
-    			//System.out.println("ScenarioSlider " + scenarioSlider.getValue());
+    			setScenarioTime(scenarioSecs);
+    			System.out.println("PLAY_PAUSED PLAYBACK scenarioSecs> " + scenarioSecs);
     			setPlayMode(PLAYING);   			
     			firePropertyChange(ScenarioController.PLAY_STARTED, null, scenarioSecs);
     		}
     		else
     		{
     			startStopButton.setText("Start");    			
-    			suspendPositionEvents = false; // TODO: using?
     			speedFactorSpinner.setEnabled(true);
     			
     			setPlayMode(PLAY_PAUSED);
+    			scenarioSecs = scenarioSlider.getValue();
+    			System.out.println("PLAY_STOPPED scenarioSlider value> " + scenarioSlider.getValue());
     			firePropertyChange(ScenarioController.PLAY_STOPPED, null, scenarioSlider.getValue());  
     		}
     }
@@ -428,29 +421,19 @@ public class ScenarioPlaybackPanel extends JPanel
     // not yet implemented
     private void reverseButtonActionPerformed()
     {
- 
-    		// suspend position events 
-    		suspendPositionEvents = true;
     		if (scenarioSlider.getValue() != 0)
     		{
     			updateScenarioTime(scenarioSlider.getValue() - 1);
     		}
     		firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
-    		// resume position events
-    		suspendPositionEvents = false;
     }
 
     // not yet implemented
     private void forwardButtonActionPerformed()
     {    
-    		// suspend position events 
-		suspendPositionEvents = true;
 		// TODO: Check for end of scenario
 		updateScenarioTime(scenarioSlider.getValue() + 1);
 		firePropertyChange(ScenarioController.SKIP_FORWARD, null, scenarioSlider.getValue());
-		// resume position events
-		suspendPositionEvents = false;
-
     }
 
     // not yet implemented
@@ -463,7 +446,6 @@ public class ScenarioPlaybackPanel extends JPanel
     
     void setScenarioTime(int scenarioSecs)
     {   
-    		System.out.println("Setting scenario time to> " + scenarioSecs);
     		this.scenarioSecs = scenarioSecs;
     }
     
@@ -480,21 +462,20 @@ public class ScenarioPlaybackPanel extends JPanel
             public void actionPerformed(ActionEvent actionEvent)
             {
             		elapsedSecs++;
-            		scenarioSecs++;
-            		//System.out.println("ScenarioSecs>" + scenarioSecs);
+                     
             		if (playMode == TAPING)
             		{
-            			updateScenarioTime(elapsedSecs);
+             			updateScenarioTime(elapsedSecs);
             		}
             		
             		if (playMode == PLAYING)
             		{
-            			updateScenarioTime(scenarioSecs);
+                		scenarioSecs++;
+                		updateScenarioTime(scenarioSecs);
             		}
             		
             		if (playMode == PLAY_PAUSED)
             		{
-            			scenarioSecs--;
             			updateScenarioTime(scenarioSlider.getValue());
             		}
             }

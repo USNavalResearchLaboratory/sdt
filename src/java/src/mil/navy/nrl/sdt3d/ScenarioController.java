@@ -4,13 +4,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TimeZone;
-
 import javax.swing.Timer;
 
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
@@ -41,6 +37,7 @@ public class ScenarioController implements PropertyChangeListener
 	private sdt3d.AppFrame listener;
 	
 	private Map<Integer, Long> scenarioSliderTimeMap = new LinkedHashMap<Integer,Long>();
+		
 	private Timer commandMapTimer = null;
 
 	
@@ -83,17 +80,27 @@ public class ScenarioController implements PropertyChangeListener
 	}
 	
 	
-	public int getScenarioSecsFromRealTime(Long realScenarioTime)
+	int getScenarioSecsFromRealTime(Long realScenarioTime)
 	{
-		// TODO: Create reverse map?
+		// TODO:  Fix/Optimize!
+		commandMapTimer.stop();
+		int sliderTime = 0;
 		for (Map.Entry<Integer, Long> entry: scenarioSliderTimeMap.entrySet())
 		{
 			if (entry.getValue() >= realScenarioTime) 
 			{
-				return entry.getKey();
+			
+				Date theTime = new Date(realScenarioTime);
+				System.out.println("realScenarioTime> " + realScenarioTime + " key>" + entry.getKey() + " fmtReal> " + theTime);
+				
+				sliderTime = entry.getKey();
+				break;
 			}
+			// If no key is greater than realScenarioTime return last time in our slider
+			sliderTime = entry.getKey();
 		}
-		return 0;
+		commandMapTimer.start();
+		return sliderTime;
 	}
 	
 	
@@ -101,7 +108,7 @@ public class ScenarioController implements PropertyChangeListener
 	 * Called by the scenario thread to set slider to
 	 * scenario playback time
 	 */
-	public void startPlayer(Long scenarioTime)
+	public void setScenarioTime(Long scenarioTime)
 	{
 		getView().setScenarioTime(getScenarioSecsFromRealTime(scenarioTime));
 	}
@@ -144,6 +151,7 @@ public class ScenarioController implements PropertyChangeListener
 	{
 		int sliderStartTime = (int) event.getNewValue();
 		
+		// If no value provided start at beginning
 		if (sliderStartTime == 0)
 		{
 			Map.Entry<Integer, Long> entry = scenarioSliderTimeMap.entrySet().iterator().next();

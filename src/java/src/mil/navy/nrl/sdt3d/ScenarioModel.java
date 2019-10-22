@@ -76,7 +76,6 @@ public class ScenarioModel
 
 	void appendBufferModel()
 	{
-		System.out.println("synBufferMap.size()> " + synBufferMap.size());
 		if ((synBufferMap.size() == 0)
 				||
 			(synBufferMap.size() == synMap.size()))
