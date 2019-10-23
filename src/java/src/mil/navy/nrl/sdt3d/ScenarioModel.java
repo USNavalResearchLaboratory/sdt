@@ -49,13 +49,13 @@ public class ScenarioModel
 	}
 	
 	
-	Map<Long, Map<Integer, String>> getModel()
+	Map<Long, Map<Integer, String>> getSynMap()
 	{
 		return synMap;
 	}
 	
 	
-	Map<Long, Map<Integer, String>> getBufferModel()
+	Map<Long, Map<Integer, String>> getSynBufferMap()
 	{
 		return synBufferMap;
 	}
@@ -70,23 +70,32 @@ public class ScenarioModel
 		
 		Map<Integer,String> cmd = new HashMap<Integer,String>();
 		cmd.put(pendingCmd, val);
-		getModel().put(currentTime, cmd);
+		synchronized(synMap) {
+			synMap.put(currentTime, cmd);
+		}
 	}	
 	
 
 	void appendBufferModel()
 	{
-		if ((synBufferMap.size() == 0)
-				||
-			(synBufferMap.size() == synMap.size()))
+		synchronized(synBufferMap)
 		{
-			return;
+			synchronized(synMap) 
+			{
+				// Append any cmds added to our buffer while we were stopped
+				
+				if ((synBufferMap.size() == 0)
+						||
+					(synBufferMap.size() == synMap.size()))
+				{
+					return;
+				}
+				//System.out.println("Appending synbuffer>" + synBufferMap.size());
+				synMap.putAll(synBufferMap);
+				sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
+				synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
+			}
 		}
-		
-		synMap.putAll(synBufferMap);
-		sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
-		synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
-
 	}
 	
 	/*
@@ -98,6 +107,9 @@ public class ScenarioModel
 		
 		Map<Integer,String> cmd = new HashMap<Integer,String>();
 		cmd.put(pendingCmd, val);
-		getBufferModel().put(currentTime, cmd);
+		synchronized(synBufferMap)
+		{ 
+			synBufferMap.put(currentTime, cmd);
+		}
 	}	
 }

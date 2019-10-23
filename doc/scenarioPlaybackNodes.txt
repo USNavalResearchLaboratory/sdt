@@ -1,0 +1,55 @@
+Scenario playback is implemented by the ScenarioController, ScenarioModel, ScenarioPlaybackPanel, and ScenarioThread classes.
+
+The ScenarioModel class manages access to the scenario data model.  The ScenarioPlaybackPanel manages user control of scenario playback.  The ScenarioController manages interaction between the sdt3d application and the ScenarioModel and ScenarioPlaybackPanel.
+
+As commands are processed by the sdt3d application they are added to the ScenarioModel if the application is being recorded. (*Currently recording is enabled by default).
+
+The ScenarioModel uses a LinkedHashMap to store command value pairs at currentTime (e.g. when the command is processed).  Current time is the LinkedHashMap Key, LinkedHashMap Value is a Map of command value pairs.  The command component of the command value pair is stored as an int.
+
+LinkedHashMap<Long,Map<Integer,String>> sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
+
+A Collections.synchronizedMap is then used to manage synchronized (thread-safe) access to the sdtCommandMap.  (In order to guarantee serial access, all access to the backing map must be accomplished through the synchronizedMap).
+
+Map<Long, Map<Integer, String>> synchronizedMap = Collections.synchronizedMap(sdtCommandMap);
+
+
+The ScenarioPlaybackPanel provides a stop/start button and scroll bar that can be used to control scenario playback.  When the application is stopped and put in playback mode, any subsequent incoming commands (from any of the input threads, e.g. file, pipe, socket) are added to a command “buffer” (a second LinkHashMap and synchronizedMap managed by the ScenarioModel)
+
+When scenario playback ends (e.g. is manually stopped or the scenario thread has played back all commands in the sdtCommandMap) any commands in the buffered command map are appended to the sdtCommandMap and are available for replay.
+
+
+When scenario recording initially starts, the ScenarioPlaybackPanel keeps track of elapsed scenario time and starts a timer scheduled to fire once a second to update the slider position to elapsed scenario time.  Meanwhile the ScenarioController starts a second timer that fires once a second and updates a scenarioSliderTimeMap that stores the elapsed time and the current time in a LinkedHashMap.
+
+Then - when the user moves the scroll bar around and starts playback at a new location in the scenario - the ScenarioController uses the real time value associated with the selected slider time to locate the associated command in the scenario model and starts command playback at that location and sets the slider time to the closest “real time” scenarioSliderTimeMap value. The slider is then updated once a second.  (This needs more work**)
+
+Currently, when scenario playback ends (e.g. the scenario thread has iterated through all the commands in the model) scenario playback is stopped and the user must manually hit the “start” button to continue playing any new commands that may have been “recorded” while scenario playback was taking place.  (This could be made seemless***).
+
+When scenario playback is initiated, as mentioned before, any other incoming commands are buffered and a new scenario thread is created to manage playback.  It clears scenario state and iterates through all the commands in the scenario model sending all commands at speed to the application (no waiting) until a command time is > scenario playback time at which commands are paced at command real recvd time deltas.
+
+It seems to be performant for a first hack- e.g. I recorded the entire caas reference scenario and set the slider to replay 22 seconds into the test - it took about 7 seconds to get back to the slider playback location at 22 seconds into the test.  Playing back the “uav” scenario in its entirety took about 4 seconds to start playback at the tail end.
+
+The user can set a speed playback factor (e.g. x0.01, x0.12, x0.25, x0.50, x0.75, x1, x2, x3, x4, x5) which works but the slider map isn’t quite right (looks ok only when x1 - and gets reset correctly at x1)
+
+There are still things to fix - see below.
+
+I am moving on to builder work but would love some feedback when you have time.  
+
+(I told Steve Tuesday I am available for tasking but could continue working on your stuff until he got new tasking for me which should be soon (he had four people to find new tasking for) Last I checked I thought my sunk time would be a bout 50/50 by now - maybe now more in your favor by a few days..)
+
+I can demo over bluejeans if you want to see it before I get in there or I can push my branch and send you build instructions if you want to play with it yourself...
+
+todo (initial short list)
+
+1. Add user control of whether scenario is taped or not.* toggle playback panel display, “record" sdt commands etc 
+2. Fine tune scenario playback time line/elapsed time as visualized by the slider.**
+3. Make buffered playback seemless. ***
+4. optimize optimize optimize
+5. debug
+6. Slider value is not set correctly when speed factor is set (and is not optimal in general)
+7. Prettify scenario playback panel.
+8. Add “command reference” every X steps in the playback panel as slider moves so user knows where they are at generally?  Or where stopped?  or?
+9. Implement fast forward and reverse (?) buttons
+10. Dump scenario model to hdf5 or somesuch?
+
+
+

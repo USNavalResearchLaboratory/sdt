@@ -117,10 +117,21 @@ public class ScenarioController implements PropertyChangeListener
 	public void initController()
 	{
 		getView().setListener(this);
+		
+		getView().initPlayback();
 
 		startCommandMapTimer();		
 	}
 	
+	
+	public void stopController()
+	{
+		commandMapTimer.stop();
+		
+		getView().stopPlayback();
+
+		//getView().stopScenarioPlayback();
+	}
 	
 	@Override
 	public void propertyChange(PropertyChangeEvent event)
@@ -128,20 +139,20 @@ public class ScenarioController implements PropertyChangeListener
 		//System.out.println("ScenarioController::propertyChange");
 		if (event.getPropertyName().equals(PLAY_STOPPED))
 		{	                		
-			System.out.println("Controller propertyChange PLAY_STOPPED");
+			//System.out.println("Controller propertyChange PLAY_STOPPED");
 			listener.modelPropertyChange(ScenarioController.SCENARIO_PLAYBACK_STOPPED, null, null);
 			
 		}
 		if (event.getPropertyName().equals(PLAY_STARTED))
 		{	                		
-			System.out.println("Controller propertyChange PLAY_STARTED");  
+			//System.out.println("Controller propertyChange PLAY_STARTED");  
 			// getCommandAtSliderTime fires SCENARIO_PLAYBACK
 			getCommandAtSliderTime(event);
 		}
 		
 		if (event.getPropertyName().equals(RESUME_LIVE_PLAY))
 		{
-			System.out.println("Controller propertyChange RESUME_LIVE_PLAY");
+			//System.out.println("Controller propertyChange RESUME_LIVE_PLAY");
 			listener.modelPropertyChange(ScenarioController.RESUME_LIVE_PLAY, null, null);
 		}
 	}

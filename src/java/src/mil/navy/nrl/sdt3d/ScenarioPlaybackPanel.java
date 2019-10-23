@@ -37,7 +37,8 @@ public class ScenarioPlaybackPanel extends JPanel
     private static final int PLAY_BACKWARD = -1;
     private static final int PLAY_PAUSED = 0;
     static final int PLAYING = 2;
-    private static final int TAPING = 3;
+    private static final int RECORDING = 3;
+    private static final int RECORDING_STOPPED = 4;
 
     private int playMode = PLAYING; 
 
@@ -49,13 +50,33 @@ public class ScenarioPlaybackPanel extends JPanel
     public ScenarioPlaybackPanel()
     {
         initComponents();
-         
-        updateEnabledState(true);
-
-        setPlayMode(TAPING);
-        
+               
     }
     
+    /*
+     * initPlayback will be called when we add start/stop recording support 
+     */
+    public void initPlayback()
+    {
+        this.startStopButton.setEnabled(true);
+
+    		updateEnabledState(true);
+    		
+    		setPlayMode(RECORDING);
+    		
+             
+    }
+    
+    
+    public void stopPlayback()
+    {
+		// clean all this starting/stopping up!!
+
+    		startStopButtonActionPerformed();
+    		
+    		setPlayMode(RECORDING_STOPPED);
+     		
+    }
     
     private void initComponents()
     {
@@ -165,7 +186,7 @@ public class ScenarioPlaybackPanel extends JPanel
                 //---- "Stop" Button ----
                 this.startStopButton = new JButton();
                 this.startStopButton.setText("Stop");
-                this.startStopButton.setEnabled(true);
+                this.startStopButton.setEnabled(false);
                 this.startStopButton.addActionListener(new ActionListener()
                 {
                     public void actionPerformed(ActionEvent e)
@@ -368,10 +389,9 @@ public class ScenarioPlaybackPanel extends JPanel
     // TODO: Resume not yet fully implemented - eventually call this from scenario thread
     void resumeScenarioPlayback()
     {
-    		//startStopButton.setText("Start");
-    		//speedFactorSpinner.setEnabled(true);
+    		startStopButton.setText("Stop");
     		// Resuming live play will set our slider value to total scenario elapsed time
-    		setPlayMode(TAPING);
+    		setPlayMode(RECORDING);
     		firePropertyChange(ScenarioController.RESUME_LIVE_PLAY, null, null);
     }
     
@@ -382,7 +402,7 @@ public class ScenarioPlaybackPanel extends JPanel
     void stopScenarioPlayback()
     {
 		setPlayMode(PLAY_PAUSED);   
-    		startStopButton.setText("Continue");
+    		startStopButton.setText("Start");
     		speedFactorSpinner.setEnabled(false);
      }
     
@@ -395,7 +415,7 @@ public class ScenarioPlaybackPanel extends JPanel
     			speedFactorSpinner.setEnabled(false);
     			scenarioSecs = scenarioSlider.getValue();
     			setScenarioTime(scenarioSecs);
-    			System.out.println("PLAY_PAUSED PLAYBACK scenarioSecs> " + scenarioSecs);
+    			//System.out.println("PLAY_PAUSED PLAYBACK scenarioSecs> " + scenarioSecs);
     			setPlayMode(PLAYING);   			
     			firePropertyChange(ScenarioController.PLAY_STARTED, null, scenarioSecs);
     		}
@@ -406,7 +426,7 @@ public class ScenarioPlaybackPanel extends JPanel
     			
     			setPlayMode(PLAY_PAUSED);
     			scenarioSecs = scenarioSlider.getValue();
-    			System.out.println("PLAY_STOPPED scenarioSlider value> " + scenarioSlider.getValue());
+    			//System.out.println("PLAY_STOPPED scenarioSlider value> " + scenarioSlider.getValue());
     			firePropertyChange(ScenarioController.PLAY_STOPPED, null, scenarioSlider.getValue());  
     		}
     }
@@ -461,9 +481,12 @@ public class ScenarioPlaybackPanel extends JPanel
             // Animate the view motion by controlling the positionSpinner and positionDelta
             public void actionPerformed(ActionEvent actionEvent)
             {
-            		elapsedSecs++;
-                     
-            		if (playMode == TAPING)
+            		if (playMode != RECORDING_STOPPED)
+            		{
+            			elapsedSecs++;
+            		}
+            		
+            		if (playMode == RECORDING)
             		{
              			updateScenarioTime(elapsedSecs);
             		}
@@ -487,8 +510,14 @@ public class ScenarioPlaybackPanel extends JPanel
     
     void setPlayMode(int mode)
     {
+    		// If we stopped recording and now want to replay restart out player
+    		if (this.playMode == RECORDING_STOPPED)
+    		{
+    			player.start();
+    		}
+    	
         this.playMode = mode;
-        if ((this.playMode == PLAYING || this.playMode == TAPING) 
+        if ((this.playMode == PLAYING || this.playMode == RECORDING) 
         		&& player == null)
         {
             initPlayer();
