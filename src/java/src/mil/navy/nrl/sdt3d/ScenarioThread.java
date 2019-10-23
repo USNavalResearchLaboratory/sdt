@@ -97,18 +97,17 @@ public class ScenarioThread extends SocketThread
 	{
 		// started via thread start
 		this.running = true;
-		
 		clearState();
-		
-		
 		Long lastTime = new Long(0);	
 		// implement a get first
-		Iterator<Entry<Long, Map<Integer, String>>> titr = getScenarioModel().getModel().entrySet().iterator();
-		if (titr.hasNext()) 
+		synchronized(getScenarioModel().getSynMap()) 
 		{
-			lastTime = titr.next().getKey();
+			Iterator<Entry<Long, Map<Integer, String>>> titr = getScenarioModel().getSynMap().entrySet().iterator();
+			if (titr.hasNext()) 
+			{
+				lastTime = titr.next().getKey();
+			}
 		}
-		
 		boolean started = false;
 		// Get playback speedfactor
 		String value = null;
@@ -116,10 +115,11 @@ public class ScenarioThread extends SocketThread
 		StringBuilder sb = new StringBuilder();
 		Float speedFactor = scenarioController.getView().getSpeedFactorValue();
 
-		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getModel().entrySet().iterator();		
 		
-		synchronized(scenarioModel.getModel()) {
-		while (!stopFlag && itr.hasNext())
+		synchronized(scenarioModel.getSynMap()) {
+		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getSynMap().entrySet().iterator();		
+
+		while (itr.hasNext())
 		{
 			Entry<Long, Map<Integer,String>> entry = itr.next();
 				
@@ -153,9 +153,15 @@ public class ScenarioThread extends SocketThread
 				
 				value = pendingCmd + " \"" + value + " \"\n";
 				try
-				{
-					waitTime = (long) (waitTime * speedFactor);
-					sleep(waitTime);
+				{	
+					// If we have stopped the playback before all played, play
+					// back the remaining commands as fast as possible so state
+					// will be correct.
+					if (!stopFlag)
+					{
+						waitTime = (long) (waitTime * speedFactor);
+						sleep(waitTime);
+					}
 				}
 				catch (InterruptedException e)
 				{
@@ -172,16 +178,20 @@ public class ScenarioThread extends SocketThread
 				parseString(sb, parser);	
 			}
 		}
-		}
 		
-		// Fix threading issues with buffer
-		//LIVE theApp.setPlaybackScenario(false);
-		//LIVE playbackBufferedCommands();
+		
 		
 		running = false;		
-		scenarioController.getView().stopScenarioPlayback();
-		//LIVE scenarioController.getView().resumeScenarioPlayback();
-
+		// If the user interrupted playback allow them to control
+		// when we restart
+		if (!stopFlag)
+		{
+			// Play back any cmds added to our buffer while we were stopped
+			// threading issue?  playbackBufferedCommands();
+			scenarioController.getView().resumeScenarioPlayback();
+			
+		}
+		}
 	} // end ScenarioThread::run()
 
 
@@ -191,13 +201,12 @@ public class ScenarioThread extends SocketThread
 		final CmdParser parser = theApp.new CmdParser();
 		StringBuilder sb = new StringBuilder();
 
-		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getBufferModel().entrySet().iterator();		
-		
-		synchronized(scenarioModel.getBufferModel()) {
+		synchronized(getScenarioModel().getSynBufferMap()) {
+		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getSynBufferMap().entrySet().iterator();		
 		while (!stopFlag && itr.hasNext())
 		{
 			Entry<Long, Map<Integer,String>> entry = itr.next();
-				
+			
 			Map<Integer, String> cmdMap = entry.getValue();
 			int key = 0; 
 			value = null;
@@ -210,7 +219,7 @@ public class ScenarioThread extends SocketThread
     			}			
 
 			value = " " + pendingCmd + " \"" + value + " \"\n";
-
+				
 			if ((!pendingCmd.equalsIgnoreCase("wait"))
 					&&
 				(!pendingCmd.equalsIgnoreCase("listen")))

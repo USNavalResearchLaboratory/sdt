@@ -341,6 +341,7 @@ public class sdt3d extends SdtApplication
 			"+showWmsPanel",
 			"+showSdtControlPanel",
 			"+multiFrame",
+			"+recordScenario",
 			null
 		};
 
@@ -3922,6 +3923,41 @@ public class sdt3d extends SdtApplication
 		} // setLogDebugOutput
 
 
+		private boolean setRecordScenario(String val)
+		{
+			if (0 == val.length())
+			{
+				System.out.println("setRecordScenario() error invalid value\n");
+				return false;
+			}
+			String[] file = val.split(",");
+
+			if (file[0].equalsIgnoreCase("on"))
+			{
+				recordScenario = true;
+				scenarioController.initController();
+				
+			}
+			else
+			{
+				if (val.equalsIgnoreCase("off"))
+				{
+					// TODO: fix when fully implement record start/stop
+					recordScenario = false;
+					scenarioController.stopController();
+				}
+				else
+				{
+					System.out.println("setRecordScenario() error invalid value\n");
+					return false;
+				}
+			}
+
+			return true;
+
+		} // setRecordScenario
+
+		
 		private boolean setLoadCache(String val)
 		{
 			if (0 == val.length())
@@ -7437,22 +7473,23 @@ public class sdt3d extends SdtApplication
 		            		stopScenarioThread();
 		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK))
 		                {
-		                	
-		                		// Append any cmds added to our buffer while we were stopped
-	                			scenarioController.appendBufferModel();
+		                		System.out.println("SCENARIO_PLAYBACK sdt3d\n");
+		                		scenarioController.appendBufferModel();
 	                			
-		                		// sliderStartTime, scenarioStartTime
+		                		// oldValue: sliderStartTime, newValue: scenarioStartTime
 		                		startScenarioThread((Long) event.getNewValue());
 	                			playbackScenario = true;	  
 	                			playbackStopped = false;
 						}
 		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK_STOPPED))
 		                {	
+		                		System.out.println("SCEANRIO_PLAYBACK_STOPPED sdt3d\n");
 		                		playbackScenario = true;
 		                		playbackStopped = true;		                		
 		                }
 		                if (event.getPropertyName().equals(ScenarioController.RESUME_LIVE_PLAY))
 		                	{
+		                		System.out.println("RESUME_LIVE_PLAY sdt3d\n");
 		                		// TODO: Need to playback what is in the buffer prior to resuming play
 		                		scenarioController.appendBufferModel();
 		                		playbackScenario = false;
@@ -7467,10 +7504,18 @@ public class sdt3d extends SdtApplication
 			// If we are "taping" the scenario, update our model 
 			// TODO: regardless of command success?  I guess replay can fail just as well..
 			
+			// total hack for now so we can continue recording after stoppage
+			//if (pendingCmd.equalsIgnoreCase("recordScenario"))
+			//{
+			//	this.doCmd(pendingCmd, val);
+			//	return;
+			//}
+			
 			if (recordScenario)
 			{
-				if (!playbackScenario) 
+				if (!playbackScenario && !scenarioCmd) 
 				{
+					//System.out.println("Updating model..");
 					scenarioController.updateModel(cmd2Int.get(pendingCmd), val);
 				}
 				else
@@ -7738,6 +7783,11 @@ public class sdt3d extends SdtApplication
 			else if (pendingCmd.equalsIgnoreCase("logDebugOutput"))
 			{
 				return setLogDebugOutput(val);
+			}
+			else if (pendingCmd.equalsIgnoreCase("recordScenario"))
+			{
+				return true;
+				//return setRecordScenario(val);
 			}
 			else if (pendingCmd.equalsIgnoreCase("loadCache"))
 			{
