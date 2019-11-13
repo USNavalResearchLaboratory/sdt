@@ -1492,7 +1492,7 @@ public class sdt3d extends SdtApplication
 					{
 						private WWIcon lastToolTipIcon = null;
 
-						private SdtPolyline lastToolTipPolyline = null;
+						private SdtPath lastToolTipPolyline = null;
 
 
 						@Override
@@ -1531,9 +1531,9 @@ public class sdt3d extends SdtApplication
 
 									}
 
-									if (event.getTopObject() instanceof SdtPolyline)
+									if (event.getTopObject() instanceof SdtPath)
 									{
-										this.lastToolTipPolyline = (SdtPolyline) event
+										this.lastToolTipPolyline = (SdtPath) event
 												.getTopObject();
 										lastToolTipPolyline.setShowToolTip(true);
 										((Component) getWwd()).repaint();

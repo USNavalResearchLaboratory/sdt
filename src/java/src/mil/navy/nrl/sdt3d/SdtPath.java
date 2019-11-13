@@ -9,10 +9,11 @@ import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.OrderedRenderable;
+import gov.nasa.worldwind.render.Path;
 import gov.nasa.worldwind.render.Polyline;
 import gov.nasa.worldwind.render.ToolTipRenderer;
 
-public class SdtPolyline extends Polyline
+public class SdtPath extends Path 
 {
 
 	private String toolTipText;
