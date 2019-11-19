@@ -4373,8 +4373,9 @@ public class sdt3d extends SdtApplication
 				SdtNode current_node = i.next().getValue();
 				if (current_node.hasSprite())
 				{
-					if (current_node.hasSprite() && currentNode.getSprite().getName().equalsIgnoreCase("default"))
+					if (current_node.hasSprite() && current_node.getSprite().getName().equalsIgnoreCase("default"))
 						continue;
+					
 					switch (current_node.getSprite().getType())
 					{
 						case MODEL:
@@ -4735,8 +4736,7 @@ public class sdt3d extends SdtApplication
 			Integer width = new Integer(dim[0]);
 			Integer height = new Integer(dim[1]);
 
-			currentSprite.setIconSize(width.intValue(), height
-					.intValue());
+			currentSprite.setSize(width.intValue(), height.intValue(), -1);
 			return true;
 		}
 
@@ -5133,7 +5133,7 @@ public class sdt3d extends SdtApplication
 							width = width.replace("s", "");
 						}
 						currentSymbol.setWidth(Double.valueOf(width));
-						currentSymbol.isIconHugging(false);
+						currentSymbol.setIconHugging(false);
 
 						break;
 					}
@@ -5146,7 +5146,7 @@ public class sdt3d extends SdtApplication
 							height = height.replace("s", "");
 						}
 						currentSymbol.setHeight(Double.valueOf(height));
-						currentSymbol.isIconHugging(false);
+						currentSymbol.setIconHugging(false);
 
 						break;
 					}

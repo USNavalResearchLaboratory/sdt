@@ -39,12 +39,7 @@ public class SdtSpriteModel extends SdtSprite
 	private double length = -1.0;
 
 	private double modelRadius = -1.0;
-
-	// icon w/h needs to be int so can't overrid
-	private double width = 32.0;
-
-	private double height = 32.0;
-
+	
 	private double modelLength = -1.0;
 
 	private double heading = 0.0; // a.k.a. "yaw"
@@ -71,6 +66,8 @@ public class SdtSpriteModel extends SdtSprite
 	public SdtSpriteModel(SdtSprite template)
 	{
 		super(template);
+		this.iconWidth = 32;
+		this.iconHeight = 32;
 	}
 
 
@@ -81,8 +78,8 @@ public class SdtSpriteModel extends SdtSprite
 		this.position = template.position;
 		this.length = template.length;
 		this.modelRadius = template.modelRadius;
-		this.width = template.width;
-		this.height = template.height;
+		this.iconWidth = template.iconWidth;
+		this.iconHeight = template.iconHeight;
 		this.modelLength = template.modelLength;
 		this.heading = template.heading;
 		this.modelPitch = template.modelPitch;
@@ -269,41 +266,24 @@ public class SdtSpriteModel extends SdtSprite
 		return 0.0;
 	}
 
-
-	@Override
-	public double getHeight()
-	{
-		return this.height;
-	}
-
-
-	@Override
-	public double getWidth()
-	{
-		return this.width;
-	}
-
-
 	public void setSize(double width, double height, double length)
 	{
 		// We don't (currently) have kml model sizing info
 		// so setSize and setLength only applicable to 3d models
-		this.width = width;
-		this.height = height;
-		// set icon size to our width and height as symbols ues that
-		this.iconWidth = (int) width;
-		this.iconHeight = (int) height;
+		this.iconWidth = width;
+		this.iconHeight = height;
+		
 		// If no length is set, default to width
 		if (length < 0 && width > 0)
-			length = this.width;
+			length = this.iconWidth;
 		// If both length and width are set, default to width
 		if (length > 0 && width > 0)
-			length = this.width;
+			length = this.iconWidth;
 		// if length < 32, reset width & height to length
 		if (length > 0 && length < 32)
 		{
-			this.width = -length;
-			this.height = -length;
+			this.iconWidth = -length;
+			this.iconHeight = -length;
 		}
 		// if no length or width set use default width (32) as the h,w,l
 		if (length < 0 && width < 0)
@@ -349,7 +329,7 @@ public class SdtSpriteModel extends SdtSprite
 		modelLength = lengthInMeters;
 	}
 
-
+	// TODO: is modelLength used?
 	public double getModelLength()
 	{
 		return this.modelLength;
@@ -362,7 +342,7 @@ public class SdtSpriteModel extends SdtSprite
 		// so setSize and setLength only applicable to 3d models
 		if (lengthInMeters < 0.0)
 		{
-			modelRadius = Math.sqrt(3 * this.width * this.width) / 2.0;
+			modelRadius = Math.sqrt(3 * this.iconWidth * this.iconWidth) / 2.0;
 			return;
 		}
 		net.java.joglutils.model.geometry.Vec4 bMin = model.getBounds().min;
@@ -379,11 +359,11 @@ public class SdtSpriteModel extends SdtSprite
 		sizeScale = lengthInMeters / pLength; // meters per pixel for this model
 		length = lengthInMeters;
 		if (pLength > length)
-			modelRadius = Math.sqrt(3 * (this.width * sizeScale) * (this.width * sizeScale)) / 2.0;
+			modelRadius = Math.sqrt(3 * (this.iconWidth * sizeScale) * (this.iconWidth * sizeScale)) / 2.0;
 		else
-			modelRadius = Math.sqrt(3 * this.width * this.width) / 2.0;
+			modelRadius = Math.sqrt(3 * this.iconWidth * this.iconWidth) / 2.0;
 
-		this.height = pHeight * sizeScale;
+		this.iconHeight = pHeight * sizeScale;
 	} // end WWModel3D.setLength()
 
 
@@ -446,7 +426,9 @@ public class SdtSpriteModel extends SdtSprite
 			double s = (pSize * modelRadius) / this.model.getBounds().getRadius();
 			// Don't let model get smaller than our requested size
 			if ((length > 0.0) && (sizeScale > s))
+			{
 				s = sizeScale;
+			}
 			// System.out.println("s " + s + " modelRadius " + modelRadius);
 			return s;
 		}

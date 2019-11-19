@@ -42,9 +42,9 @@ public class SdtSprite
 	// default icon size preserves source image aspect ratio
 	// with a fixed minimum dimension of 32 pixels
 
-	protected int iconWidth = -32;
+	protected double iconWidth = -32;
 
-	protected int iconHeight = -32;
+	protected double iconHeight = -32;
 
 	private int imageWidth = 0;
 
@@ -221,7 +221,7 @@ public class SdtSprite
 
 	Dimension getIconSize()
 	{
-		return new Dimension(iconWidth, iconHeight);
+		return new Dimension((int) iconWidth, (int) iconHeight);
 	}
 
 
@@ -236,20 +236,12 @@ public class SdtSprite
 		return iconHeight;
 	}
 
-
-	// Due to the overly convoluted model code override the
-	// sprite size so we have the correct dimensions for
-	// calculating symbol size. Don't want to fix this mess
-	// and break other code like model sizing right now!
-	void setModelSize(int width, int height)
-	{
-		iconWidth = width;
-		iconHeight = height;
-
-	}
-
-
-	void setIconSize(int width, int height)
+	/*
+	 * length not used for icon sprites.
+	 * 
+	 * TODO: revisit this when length is reworked
+	 */
+	public void setSize(double width, double height, double length)
 	{
 		if (width < 0 && height < 0)
 		{
@@ -490,7 +482,7 @@ public class SdtSprite
 					Integer width = new Integer(dim[0]);
 					Integer height = new Integer(dim[1]);
 
-					theSprite.setIconSize(width.intValue(), height.intValue());
+					theSprite.setSize(width.intValue(), height.intValue(), -1); 
 				}
 				if (type.equalsIgnoreCase("3ds"))
 				{
