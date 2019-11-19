@@ -1918,22 +1918,6 @@ public class sdt3d extends SdtApplication
 					toggleTcpOn();
 				}
 
-				if (fileThread != null && openFile != null)
-				{
-					fileThread.stopThread();
-					fileThread.stopRead();
-					fileThread.clear();
-					try
-					{
-						Thread.currentThread();
-						Thread.sleep(1000); // sleep for 1000 ms
-					}
-					catch (InterruptedException ie)
-					{
-						// If this thread was interrupted by another thread
-					}
-				}
-
 				// Reset system modes
 				this.setOfflineMode("off");
 				this.setElevationData("on");
@@ -1956,6 +1940,22 @@ public class sdt3d extends SdtApplication
 
 			} // end hard reset
 
+			if (fileThread != null && openFile != null)
+			{
+				fileThread.stopThread();
+				fileThread.stopRead();
+				fileThread.clear();
+				try
+				{
+					Thread.currentThread();
+					Thread.sleep(1000); // sleep for 1000 ms
+				}
+				catch (InterruptedException ie)
+				{
+					// If this thread was interrupted by another thread
+				}
+			}
+			
 			logDebugOutput = false;
 			debugItem.setSelected(false);
 			try
@@ -1993,6 +1993,7 @@ public class sdt3d extends SdtApplication
 			}
 			else
 			{
+				loadUserPreferencesFile();
 				// clear("all") stops reading input file
 				// so remove all rednerables directly
 				removeNodes();
@@ -2114,7 +2115,7 @@ public class sdt3d extends SdtApplication
 					openFile = fc.getSelectedFile();
 					String fileName = openFile.getAbsolutePath();
 					// Do a hard system reset
-					resetSystemState(true);
+					resetSystemState(false);
 
 					loadInputFile(fileName, true);
 
