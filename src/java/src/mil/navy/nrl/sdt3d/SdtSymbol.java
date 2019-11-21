@@ -109,14 +109,14 @@ public class SdtSymbol
 		this.symbolType = type;
 	}
 
-
-	public String getType()
+	
+	public Type getSymbolType()
 	{
-		return this.symbolType;
+		return SdtSymbol.getType(symbolType);
 	}
 
 
-	public void isIconHugging(boolean iconHugging)
+	public void setIconHugging(boolean iconHugging)
 	{
 		isIconHugging = iconHugging;
 	}
@@ -539,6 +539,18 @@ public class SdtSymbol
 			double d = loc.distanceTo3(dc.getView().getEyePoint());
 
 			currentSize = ((getMaxDimension() * this.getScale()) / 2) * dc.getView().computePixelSizeAtDistance(d);
+
+			// TODO: ask the model SdtSpriteModel what its current size is
+			// to get accurate sphere size as we zoom in.
+			
+			if (sdtNode.getSprite().getType() == SdtSprite.Type.MODEL)
+			{	
+				if (currentSize < ((getMaxDimension() * this.getScale()) / 2))
+				{
+					currentSize = ((getMaxDimension() * this.getScale()) / 2);
+				}
+			}
+			
 			if (currentSize < 2)
 				currentSize = 2;
 		}
@@ -786,12 +798,6 @@ public class SdtSymbol
 		attributes.setOutlineOpacity(0.35);
 		attributes.setOutlineWidth(getOutlineWidth());
 		return attributes;
-	}
-
-
-	public Type getSymbolType()
-	{
-		return SdtSymbol.getType(symbolType);
 	}
 
 }

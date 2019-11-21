@@ -6,10 +6,12 @@ import java.util.Vector;
 import gov.nasa.worldwind.layers.AirspaceLayer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.render.DrawContext;
+import gov.nasa.worldwind.render.airspaces.Airspace;
+import gov.nasa.worldwind.util.Logging;
 
 public class SdtSymbolLayer extends RenderableLayer
 {
-	private Vector<SdtCone> list;
+	private Vector<SdtSymbol> symbolList;
 
 	private AirspaceLayer airspaceLayer;
 
@@ -17,70 +19,80 @@ public class SdtSymbolLayer extends RenderableLayer
 	/** Creates a new instance of SymbolLayer */
 	public SdtSymbolLayer()
 	{
-		list = new Vector<SdtCone>();
+		symbolList = new Vector<SdtSymbol>();
 		airspaceLayer = new AirspaceLayer();
 	}
 
 
 	public void addSymbol(SdtSymbol symbol)
 	{
-		if (symbol instanceof SdtCone)
+		if (!symbolList.contains(symbol))
 		{
-			if (!list.contains(symbol))
-				list.add((SdtCone) symbol);
+			symbolList.add(symbol);
 		}
-		else
+		
+		if (!(symbol instanceof SdtCone))
+		{
 			airspaceLayer.addAirspace(symbol.getAirspace());
+		}
 	}
 
 
 	public void removeSymbol(SdtSymbol symbol)
 	{
-		if (symbol instanceof SdtCone && list.contains(symbol))
-			list.remove(symbol);
-		else if (symbol.getAirspace() != null)
-			airspaceLayer.removeAirspace(symbol.getAirspace());
-	}
+		if (symbolList.contains(symbol))
+		{
+			symbolList.remove(symbol);
+		}
 
-
-	public void removeRenderables(SdtSymbol symbol)
-	{
-		if (symbol instanceof SdtCone && list.contains(symbol))
-			list.remove(symbol);
-		else if (symbol.getAirspace() != null)
-			airspaceLayer.removeAirspace(symbol.getAirspace());
-	}
-
-
-	void addRenderable(SdtSymbol symbol)
-	{
 		if (symbol.getAirspace() != null)
-			airspaceLayer.addAirspace(symbol.getAirspace());
-		else if (symbol instanceof SdtCone && !list.contains(symbol))
-			list.add((SdtCone) symbol);
+		{
+			airspaceLayer.removeAirspace(symbol.getAirspace());
+		}
 	}
 
 
+	/**
+	 * We are overriding the SdtSymbolLayer's doRender method.
+	 * (SdtSymbolLayer is a RenderableLayer) and then calling
+	 * AirspaceLayer's doRender method to actually render
+	 * the airspaces after we reset the various airspace attributes
+	 * (asl, msl, iconhugging etc).
+	 * 
+	 * TODO: AirspaceLayer is now deprecated and needs to be replaced
+	 * by a RenderableLayer.  Probably will simple to do if
+	 * Airspaces if the RenderableLayer can now render Airspaces.
+	 */
 	@Override
 	protected void doRender(DrawContext dc)
-	{
-
-		Iterator<SdtCone> it = list.iterator();
+	{		
+		// For now (pre rewrite) call symbol.updatePosition (so symbols are 
+		// rendered according to zoom level during the airspace layer's render 
+		// pass (and not just when the node position changes).
+		
+		// We completly rewrote rendering for SdtCones (to handle elevation
+		// azimuth etc?) so call that render function directly here. 
+		Iterator<SdtSymbol> it = symbolList.iterator();
 		try
 		{
-			while (it.hasNext())
+			while (it.hasNext()) 
 			{
 				SdtSymbol symbol = it.next();
-				((SdtCone) symbol).render(dc);
+				if (symbol.getSymbolType() == SdtSymbol.Type.CONE)
+				{
+					((SdtCone) symbol).render(dc);
+				}
+				else
+				{
+					symbol.updatePosition(dc);
+				}
 			}
 		}
-		// handle any exceptions
 		catch (Exception e)
 		{
-			// handle
 			e.printStackTrace();
 		}
-
+		
 		airspaceLayer.render(dc);
 
 	} // doRender

@@ -1918,22 +1918,6 @@ public class sdt3d extends SdtApplication
 					toggleTcpOn();
 				}
 
-				if (fileThread != null && openFile != null)
-				{
-					fileThread.stopThread();
-					fileThread.stopRead();
-					fileThread.clear();
-					try
-					{
-						Thread.currentThread();
-						Thread.sleep(1000); // sleep for 1000 ms
-					}
-					catch (InterruptedException ie)
-					{
-						// If this thread was interrupted by another thread
-					}
-				}
-
 				// Reset system modes
 				this.setOfflineMode("off");
 				this.setElevationData("on");
@@ -1956,6 +1940,22 @@ public class sdt3d extends SdtApplication
 
 			} // end hard reset
 
+			if (fileThread != null && openFile != null)
+			{
+				fileThread.stopThread();
+				fileThread.stopRead();
+				fileThread.clear();
+				try
+				{
+					Thread.currentThread();
+					Thread.sleep(1000); // sleep for 1000 ms
+				}
+				catch (InterruptedException ie)
+				{
+					// If this thread was interrupted by another thread
+				}
+			}
+			
 			logDebugOutput = false;
 			debugItem.setSelected(false);
 			try
@@ -1993,6 +1993,7 @@ public class sdt3d extends SdtApplication
 			}
 			else
 			{
+				loadUserPreferencesFile();
 				// clear("all") stops reading input file
 				// so remove all rednerables directly
 				removeNodes();
@@ -2114,7 +2115,7 @@ public class sdt3d extends SdtApplication
 					openFile = fc.getSelectedFile();
 					String fileName = openFile.getAbsolutePath();
 					// Do a hard system reset
-					resetSystemState(true);
+					resetSystemState(false);
 
 					loadInputFile(fileName, true);
 
@@ -4373,8 +4374,9 @@ public class sdt3d extends SdtApplication
 				SdtNode current_node = i.next().getValue();
 				if (current_node.hasSprite())
 				{
-					if (current_node.hasSprite() && currentNode.getSprite().getName().equalsIgnoreCase("default"))
+					if (current_node.hasSprite() && current_node.getSprite().getName().equalsIgnoreCase("default"))
 						continue;
+					
 					switch (current_node.getSprite().getType())
 					{
 						case MODEL:
@@ -4735,8 +4737,7 @@ public class sdt3d extends SdtApplication
 			Integer width = new Integer(dim[0]);
 			Integer height = new Integer(dim[1]);
 
-			currentSprite.setIconSize(width.intValue(), height
-					.intValue());
+			currentSprite.setSize(width.intValue(), height.intValue(), -1);
 			return true;
 		}
 
@@ -5133,7 +5134,7 @@ public class sdt3d extends SdtApplication
 							width = width.replace("s", "");
 						}
 						currentSymbol.setWidth(Double.valueOf(width));
-						currentSymbol.isIconHugging(false);
+						currentSymbol.setIconHugging(false);
 
 						break;
 					}
@@ -5146,7 +5147,7 @@ public class sdt3d extends SdtApplication
 							height = height.replace("s", "");
 						}
 						currentSymbol.setHeight(Double.valueOf(height));
-						currentSymbol.isIconHugging(false);
+						currentSymbol.setIconHugging(false);
 
 						break;
 					}
