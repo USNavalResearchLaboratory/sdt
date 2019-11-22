@@ -1993,9 +1993,9 @@ public class sdt3d extends SdtApplication
 			}
 			else
 			{
-				loadUserPreferencesFile();
 				// clear("all") stops reading input file
 				// so remove all rednerables directly
+
 				removeNodes();
 				removeRegions();
 				removeTiles();
@@ -2008,6 +2008,7 @@ public class sdt3d extends SdtApplication
 				// sprite assignments and such that should be persistent
 				// across a soft reset.
 				// loadUserConfigFile(currentConfigFile);
+				loadUserPreferencesFile();
 				loadInputFile(currentConfigFile, false);
 			}
 
@@ -4465,10 +4466,7 @@ public class sdt3d extends SdtApplication
 			tileLayer.removeAllRenderables();
 			markerLayer.setMarkers(new ArrayList<Marker>());
 			userDefinedMarkerLayer.setMarkers(new ArrayList<Marker>());
-			;
-			kmlPanelLayer.removeAllRenderables();
 			kmlLayer.removeAllRenderables();
-
 		}
 
 
@@ -4737,7 +4735,7 @@ public class sdt3d extends SdtApplication
 			Integer width = new Integer(dim[0]);
 			Integer height = new Integer(dim[1]);
 
-			currentSprite.setSize(width.intValue(), height.intValue(), -1);
+			currentSprite.setSize(width.intValue(), height.intValue());
 			return true;
 		}
 

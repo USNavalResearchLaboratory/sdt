@@ -34,14 +34,17 @@ public class SdtSprite
 
 	private Type spriteType = Type.INVALID;
 
-	private double fixedLength = -1.0; // in meters
+	// We need to define fixedLength in SdtSprite rather than SdtSpriteModel
+	// as we don't know when processing sdt sprite setLength commands what 
+	// kind of sprite we have.  (Loading the model gives us that info).
+	protected double fixedLength = -1.0; // in meters
 
 	private String spritePath = null; // path to validate sprite source
 
 	private java.net.URL iconURL = null; // path to images retrieved from jar files
+	
 	// default icon size preserves source image aspect ratio
 	// with a fixed minimum dimension of 32 pixels
-
 	protected double iconWidth = -32;
 
 	protected double iconHeight = -32;
@@ -71,6 +74,7 @@ public class SdtSprite
 
 	public boolean isRealSize()
 	{
+		// Only applies to models.
 		return false;
 	}
 
@@ -235,13 +239,15 @@ public class SdtSprite
 	{
 		return iconHeight;
 	}
-
-	/*
-	 * length not used for icon sprites.
-	 * 
-	 * TODO: revisit this when length is reworked
-	 */
-	public void setSize(double width, double height, double length)
+	
+	
+	public double getSymbolSize()
+	{
+		return iconWidth > iconHeight ? iconWidth : iconHeight;
+	}
+		
+	
+	public void setSize(double width, double height)
 	{
 		if (width < 0 && height < 0)
 		{
@@ -357,7 +363,6 @@ public class SdtSprite
 		this.spriteName = "";
 		return false;
 	} // end SdtSprite.LoadURL()
-		// TODO: LJT keep this?
 
 
 	/**
@@ -482,16 +487,14 @@ public class SdtSprite
 					Integer width = new Integer(dim[0]);
 					Integer height = new Integer(dim[1]);
 
-					theSprite.setSize(width.intValue(), height.intValue(), -1); 
+					theSprite.setSize(width.intValue(), height.intValue()); 
 				}
 				if (type.equalsIgnoreCase("3ds"))
 				{
 					// Initially use the icon size to calculate the model length in
 					// case no model length is given
 					((SdtSpriteModel) theSprite).setSize(theSprite.getIconSize().width,
-						theSprite.getIconSize().height,
-						theSprite.getFixedLength() * theSprite.getScale());
-					((SdtSpriteModel) theSprite).setModelLength(this.getFixedLength());
+						theSprite.getIconSize().height);
 
 					String lighting = getTextValue(el, "light");
 					if (lighting != null)
@@ -590,12 +593,9 @@ public class SdtSprite
 			SdtSpriteModel spriteModel = new SdtSpriteModel(this);
 			spriteModel.setModel(theModel);
 			spriteModel.setType(Type.MODEL);
-			// Initially use the icon size to calculate the model length in
-			// case no model length is given
 			spriteModel.setSize(spriteModel.getIconSize().width,
-				spriteModel.getIconSize().height,
-				spriteModel.getFixedLength() * spriteModel.getScale());
-			spriteModel.setModelLength(this.getFixedLength());
+				spriteModel.getIconSize().height);
+			
 			// We need the spritePath so we can reload the model when
 			// we assign the model to the node.
 			spriteModel.setSpritePath(spritePath);

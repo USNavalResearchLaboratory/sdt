@@ -125,8 +125,9 @@ public class SdtSymbol
 	public boolean isIconHugging()
 	{
 		// if a real world length has been set for the sprite (kml & 3ds), don't scale the symbol
-		if (sdtNode != null && sdtNode.hasSprite() && sdtNode.getSprite().getFixedLength() > 0)
-			return false;
+		// TODO: Use other real world indicator than 32
+		//if (sdtNode != null && sdtNode.hasSprite() && (sdtNode.getSprite().getFixedLength() > 0 && sdtNode.getSprite().getWidth() == 32))
+		//	return false;
 		return isIconHugging;
 	}
 
@@ -257,8 +258,12 @@ public class SdtSymbol
 
 	public double getMaxDimension()
 	{
-		double max = (getWidth() > getHeight()) ? getWidth() : getHeight();
-		return max;
+		double size = width > height ? width : height;
+		if (sdtNode != null && sdtNode.getSprite() != null)
+		{
+			size = sdtNode.getSprite().getSymbolSize();
+		}
+		return size;		
 	}
 
 
@@ -271,18 +276,12 @@ public class SdtSymbol
 
 	public double getWidth()
 	{
-
+		
 		if (sdtNode != null && sdtNode.getSprite() != null)
 		{
-			// If we're an icon hugging symbol use the sprite's width
-			if (isIconHugging() && sdtNode.getSprite().getWidth() > 0)
-			{
-				return sdtNode.getSprite().getWidth();
-			}
-			// if the default width has not been changed return model length if set.
-			// Fix this when we subclass sprites...
-			if (sdtNode.getSprite().getFixedLength() > 0 && width == 32)
-				return sdtNode.getSprite().getFixedLength();
+			// Get the width from the sprite.  If the sprite is a model getSymbolSize
+			// checks to see if we are rendering in real-world size or not.
+			return sdtNode.getSprite().getSymbolSize();
 		}
 		// else return the default width or any scaleable symbol size set
 		return width;
@@ -293,9 +292,13 @@ public class SdtSymbol
 	public double getHeight()
 	{
 		// if we're an icon hugging symbol use the sprite's height
-		if ((isIconHugging())
-			&& sdtNode != null && sdtNode.getSprite() != null && sdtNode.getSprite().getHeight() > 0)
-			return sdtNode.getSprite().getHeight();
+		if (sdtNode != null && sdtNode.getSprite() != null && sdtNode.getSprite().getHeight() > 0)
+		{
+			if (isIconHugging)
+			{
+				return sdtNode.getSprite().getHeight();
+			}
+		}
 
 		if (height == 0)
 			return getWidth();
@@ -527,9 +530,6 @@ public class SdtSymbol
 		double currentSize = 2;
 		if (dc.getView() == null)
 		{
-			// View has not been initialized yet - let's make a non fixed one
-			System.out.println("SdtSymbol::getRadius() view not yet initialized.");
-
 			return getMaxDimension() / 2;
 		}
 
@@ -538,19 +538,17 @@ public class SdtSymbol
 			Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
 			double d = loc.distanceTo3(dc.getView().getEyePoint());
 
-			currentSize = ((getMaxDimension() * this.getScale()) / 2) * dc.getView().computePixelSizeAtDistance(d);
-
-			// TODO: ask the model SdtSpriteModel what its current size is
-			// to get accurate sphere size as we zoom in.
-			
-			if (sdtNode.getSprite().getType() == SdtSprite.Type.MODEL)
-			{	
-				if (currentSize < ((getMaxDimension() * this.getScale()) / 2))
-				{
-					currentSize = ((getMaxDimension() * this.getScale()) / 2);
-				}
+			if (sdtNode != null && sdtNode.getSprite().isRealSize())
+			{
+				// Just use scale here as iconHugging scale factor
+				// doesn't apply for realSize sprites
+				currentSize = ((getMaxDimension() * this.scale) / 2); 
 			}
-			
+			else
+			{
+				currentSize = ((getMaxDimension() * this.getScale()) / 2) * dc.getView().computePixelSizeAtDistance(d);
+			}
+
 			if (currentSize < 2)
 				currentSize = 2;
 		}

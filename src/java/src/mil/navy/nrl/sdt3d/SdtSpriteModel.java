@@ -36,12 +36,10 @@ public class SdtSpriteModel extends SdtSprite
 
 	private Position position = null;
 
-	private double length = -1.0;
+	//private double length = -1.0;
 
 	private double modelRadius = -1.0;
 	
-	private double modelLength = -1.0;
-
 	private double heading = 0.0; // a.k.a. "yaw"
 
 	private double modelPitch = 0.0;
@@ -62,12 +60,13 @@ public class SdtSpriteModel extends SdtSprite
 
 	boolean useLighting = false;
 
+	boolean viewAtRealSize = false;
 
 	public SdtSpriteModel(SdtSprite template)
 	{
 		super(template);
-		this.iconWidth = 32;
-		this.iconHeight = 32;
+		//this.iconWidth = 32;
+		//this.iconHeight = 32;
 	}
 
 
@@ -76,11 +75,9 @@ public class SdtSpriteModel extends SdtSprite
 		super(template);
 		this.model = template.model;
 		this.position = template.position;
-		this.length = template.length;
 		this.modelRadius = template.modelRadius;
 		this.iconWidth = template.iconWidth;
 		this.iconHeight = template.iconHeight;
-		this.modelLength = template.modelLength;
 		this.heading = template.heading;
 		this.modelPitch = template.modelPitch;
 		this.modelYaw = template.modelYaw;
@@ -266,7 +263,16 @@ public class SdtSpriteModel extends SdtSprite
 		return 0.0;
 	}
 
-	public void setSize(double width, double height, double length)
+	// We override this here so that once we know the sprite is a model
+	// we can set the model radius correctly when only real world dimensiont
+	// is set.
+	public void setFixedLength(double length)
+	{
+		fixedLength = length;
+		setModelRadius();
+	}
+	
+	public void setSize(double width, double height)
 	{
 		// We don't (currently) have kml model sizing info
 		// so setSize and setLength only applicable to 3d models
@@ -274,23 +280,28 @@ public class SdtSpriteModel extends SdtSprite
 		this.iconHeight = height;
 		
 		// If no length is set, default to width
-		if (length < 0 && width > 0)
+		/*
+		if (inLength < 0 && width > 0)
+		{
 			length = this.iconWidth;
+		}
 		// If both length and width are set, default to width
-		if (length > 0 && width > 0)
+		if (inLength > 0 && width > 0)
 			length = this.iconWidth;
+		
 		// if length < 32, reset width & height to length
-		if (length > 0 && length < 32)
+		if (inLength > 0 && length < 32)
 		{
 			this.iconWidth = -length;
 			this.iconHeight = -length;
 		}
 		// if no length or width set use default width (32) as the h,w,l
-		if (length < 0 && width < 0)
+		if (inLength < 0 && width < 0)
 		{
 			length = 32 * getScale();
 		}
-		setLength(length);
+		*/
+		setModelRadius();
 
 	}
 
@@ -298,13 +309,14 @@ public class SdtSpriteModel extends SdtSprite
 	@Override
 	public boolean isRealSize()
 	{
-		return (length > 0.0);
-	}
-
-
-	public double getLength()
-	{
-		return this.length;
+		// TODO: Make real size boolean for clarity
+		if ((getFixedLength() > 0.0 && iconWidth == -32)
+				|| viewAtRealSize)
+		{
+			System.out.println("We are real size");
+		}
+		
+		return (viewAtRealSize || (getFixedLength() > 0.0 && iconWidth == -32));
 	}
 
 
@@ -320,31 +332,19 @@ public class SdtSpriteModel extends SdtSprite
 		return this.useLighting;
 	}
 
-
-	void setModelLength(double lengthInMeters)
+	/*
+	 * modelRadius is used by SdtSpriteModel::computeSizeScale()	
+	 * to get size
+	 */
+	void setModelRadius()
 	{
-		// If user set a modelLength we are using real-world
-		// dimensions. Otherwise length is calculated from model
-		// bounds and size overrides.
-		modelLength = lengthInMeters;
-	}
-
-	// TODO: is modelLength used?
-	public double getModelLength()
-	{
-		return this.modelLength;
-	}
-
-
-	void setLength(double lengthInMeters)
-	{
-		// We don't (currently) have kml model sizing info
-		// so setSize and setLength only applicable to 3d models
-		if (lengthInMeters < 0.0)
+		sizeScale = 1.0;
+		double lengthInMeters = iconWidth;
+		if (getFixedLength() > 0)
 		{
-			modelRadius = Math.sqrt(3 * this.iconWidth * this.iconWidth) / 2.0;
-			return;
+			lengthInMeters = getFixedLength();
 		}
+		System.out.println("lengthInMeters>" + lengthInMeters);
 		net.java.joglutils.model.geometry.Vec4 bMin = model.getBounds().min;
 		net.java.joglutils.model.geometry.Vec4 bMax = model.getBounds().max;
 		double pHeight = Math.abs(bMax.z - bMin.z);
@@ -356,14 +356,20 @@ public class SdtSpriteModel extends SdtSprite
 			pLength = pWidth;
 			pWidth = temp;
 		}
+		lengthInMeters = lengthInMeters * sizeScale;
 		sizeScale = lengthInMeters / pLength; // meters per pixel for this model
-		length = lengthInMeters;
-		if (pLength > length)
+		
+		System.out.println("lengthInMeters> " + lengthInMeters + " sizeScale>" + sizeScale + " name>" + getName());
+		
+		if (pLength > lengthInMeters)
 			modelRadius = Math.sqrt(3 * (this.iconWidth * sizeScale) * (this.iconWidth * sizeScale)) / 2.0;
 		else
 			modelRadius = Math.sqrt(3 * this.iconWidth * this.iconWidth) / 2.0;
 
+		System.out.println("Model radius>" + modelRadius);
+		
 		this.iconHeight = pHeight * sizeScale;
+		
 	} // end WWModel3D.setLength()
 
 
@@ -384,31 +390,48 @@ public class SdtSpriteModel extends SdtSprite
 		}
 
 		// Reset the size now that we have a scale
-		setSize(getIconSize().width,
-			getIconSize().height,
-			getFixedLength() * getScale());
+		setSize(getIconSize().width,getIconSize().height);
 
 	}
 
-
-	public double getSizeScale()
+	public double getSymbolSize()
 	{
-		return this.sizeScale;
+		double size = iconWidth > iconHeight ? iconWidth : iconHeight;
+		
+		if (getFixedLength() > 0) 
+		{
+			if (viewAtRealSize)
+			{
+				size = getFixedLength();
+			}
+			else
+			{
+				if (iconWidth > 0)
+				{
+					size = iconWidth;
+				}
+				else
+				{
+					size = getFixedLength();
+				}
+					
+			}
+		}
+		return size;
 	}
+	
 
-
-	public double getModelRadius()
-	{
-		return this.modelRadius;
-	}
-
-
+	/*
+	 * computeSizeScale() is called by the node render function to get model elevation
+	 * for models following terrain and by the model3d layer to
+	 * scale and calculate feedback rectangle
+	 */
 	public double computeSizeScale(DrawContext dc, Vec4 loc)
 	{
-		// This is called by the node render function to get model elevation
-		// for models following terrain and by the model3d layer to
-		// scale and calculate feedback rectangle
-		if (modelLength > 0.0)
+		viewAtRealSize = false;
+		
+		// TODO: Use a real world indicator?
+		if (getFixedLength() > 0.0 && iconWidth == -32)
 		{
 			// A real-world length (in meters) was set
 			// for this model
@@ -425,11 +448,16 @@ public class SdtSpriteModel extends SdtSprite
 			// if (pSize < 1.0) pSize = 1.0;
 			double s = (pSize * modelRadius) / this.model.getBounds().getRadius();
 			// Don't let model get smaller than our requested size
+			double length = (iconWidth > iconHeight) ? iconWidth : iconHeight;
+
+			// If both length and size were set use the max?
+			length = (getFixedLength() > length) ? getFixedLength() : length;
+			
 			if ((length > 0.0) && (sizeScale > s))
 			{
+				viewAtRealSize = true;
 				s = sizeScale;
 			}
-			// System.out.println("s " + s + " modelRadius " + modelRadius);
 			return s;
 		}
 	} // end WWModel3D.computeSizeScale()
