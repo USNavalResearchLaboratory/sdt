@@ -95,8 +95,9 @@ public class SdtCone extends SdtSymbol implements Renderable
 		gl.glRotated(p.getLatitude().getDegrees() * orientation.sin(), 0, 1, 0);
 		// elevation = degrees tilted up from the surface
 		gl.glRotated(elevation.getDegrees(), 0, -1, 0);
-		gl.glRotated(p.getLatitude().getDegrees() * elevation.sin(), -1, 0, 0);
-
+		//gl.glRotated(p.getLatitude().getDegrees() * elevation.sin(), -1, 0, 0);
+        gl.glRotated(elevation.sin(), -1, 0, 0);
+        
 		Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
 		double d = loc.distanceTo3(dc.getView().getEyePoint());
 

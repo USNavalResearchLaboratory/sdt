@@ -12,7 +12,7 @@ WX_LIBS = `$(WX_CONFIG_PATH) --libs`
 #
 SYSTEM_FLAGS = $(WX_FLAGS)
 SYSTEM_INCLUDES = -I/Developer/Headers/FlatCarbon 
-SYSTEM_LIBS = $(WX_LIBS) -framework Carbon -framework Cocoa -framework WebKit -framework CoreAudio \
+SYSTEM_LIBS = -framework Carbon -framework Cocoa -framework WebKit -framework CoreAudio \
 -framework AudioToolbox -framework AudioUnit -framework System -liconv -lz -lresolv
 SYSTEM_REZ = `$(WX_CONFIG_PATH) --rescomp`
 
