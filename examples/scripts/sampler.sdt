@@ -35,7 +35,8 @@ sprite saucer image saucer.gif
 sprite car image car.gif
 sprite satellite image satellite.png
 sprite man image 3D_Man_Walking.kmz length 8
-sprite woman image Female01/doc.kml scale 1 length 10
+sprite woman image Female01/doc.kml length 10 size 30,30 
+sprite woman-fixed image Female01/doc.kml length 10 
 
 #
 # Assign sprite types to nodes
@@ -133,6 +134,9 @@ node man pos -112.072344,40.492057 type man label green,"Unscaleable 3D KML Man"
 
 # put a 3d woman kml sprite next to car
 node woman pos -112.072344,40.491057 type woman label green,"Scaleable 3D KML Woman"
+
+# add a 3d fixed woman kml sprite
+node woman-fixed pos -112.073844,40.491057 type woman-fixed label green,"Fixed 3D KML Woman"
 
 
 input sampler.include

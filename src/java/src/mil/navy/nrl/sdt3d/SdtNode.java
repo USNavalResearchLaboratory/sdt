@@ -655,10 +655,11 @@ public class SdtNode implements Renderable
 	@Override
 	public void render(DrawContext dc)
 	{
-		if (!nodeInVisibleLayer()
-			||
-			!(getNodeUpdate() || getLinkUpdate()))
-			return;
+		if (!nodeInVisibleLayer())
+			return; // ljt wth??
+			//||
+			//!(getNodeUpdate() || getLinkUpdate()))
+			//return;
 
 		Position oldPos = position;
 		if (position == null)
@@ -675,70 +676,92 @@ public class SdtNode implements Renderable
 			switch (sprite.getType())
 			{
 				case ICON:
-
+				{
 					if (getFollowTerrain())
 					{
-						if (this.icon != null)
-							this.icon.setPosition(terrainElevation);
 						position = terrainElevation;
 					}
 					else
 					{
 						if (!getUseAbsoluteElevation())
 						{
-							if (this.icon != null)
-								this.icon.setPosition(aglPosition);
 							position = aglPosition;
 						}
 						else
 						{
 							// else we're at absolute elevation
-							if (this.icon != null)
-								this.icon.setPosition(mslPosition);
 							position = mslPosition;
 						}
 					}
-					break;
+					if (icon != null) 
+					{
+						icon.setPosition(position);
+					}
+				}
+				break;
 				case MODEL:
+				{	
+					Position modelSymbolPosition = null;
 					if (!getFollowTerrain())
 					{
 						if (!getUseAbsoluteElevation())
+						{
 							position = aglPosition;
+						}
 						else
+						{
 							position = mslPosition;
+						}
+						modelSymbolPosition = new Position(position.getLatitude(), position.getLongitude(), 
+								position.getElevation() + (((SdtSpriteModel) this.sprite).getHeight() / 2.0));
 					}
 					else
 					{
+	
 						double elevation = dc.getGlobe().getElevation(position.getLatitude(), position.getLongitude());
+						
+						// We are doing this outside of the subsequent if/else loop
+						// as computeSizeScale sets real size boolean
+						Vec4 loc = dc.getGlobe().computePointFromPosition(position);
+						double localSize = (((SdtSpriteModel) this.sprite).computeSizeScale(dc, loc));
+
 						if (this.sprite.isRealSize())
+						{
 							elevation += (((SdtSpriteModel) this.sprite).getHeight() / 2.0);
+						}
 						else
 						{
-							Vec4 loc = dc.getGlobe().computePointFromPosition(position);
-							double localSize = (((SdtSpriteModel) this.sprite).computeSizeScale(dc, loc));
 							elevation += localSize * 4;
 						}
-						position = new Position(position.getLatitude(), position.getLongitude(), elevation);
+						modelSymbolPosition = new Position(position.getLatitude(), position.getLongitude(), elevation);						
 					}
 
-					// The model3DLayer rendering code gets model position from the model sprite
-					((SdtSpriteModel) this.sprite).setPosition(position);
+					// Reset model and symbol position
+					((SdtSpriteModel) this.sprite).setPosition(modelSymbolPosition);
+					if (getSymbol() != null)
+						getSymbol().setPosition(modelSymbolPosition);
 
 					// For 3d models the sprite _IS_ the model so set p/y/r
 					this.sprite.setHeading(this.heading, this.yaw, null);
 					this.sprite.setRoll(this.roll);
 					this.sprite.setPitch(this.pitch);
-					break;
+				}
+				break;
 				case KML:
+				{
 					if (this.colladaRoot == null)
 						this.colladaRoot = ((SdtSpriteKml) this.sprite).getColladaRoot(this.kmlRoot);
 
 					if (this.colladaRoot != null)
 					{
 						if (!getUseAbsoluteElevation())
+						{
 							position = aglPosition;
+						}
 						else
+						{
 							position = mslPosition;
+						}
 						colladaRoot.setPosition(position);
 						((SdtSpriteKml) this.sprite).computeSizeScale(dc, this.colladaRoot, position);
 						// This heading code could be cleaned up now that everything is working
@@ -747,7 +770,8 @@ public class SdtNode implements Renderable
 						this.colladaRoot.setRoll(Angle.fromDegrees(-(this.roll + this.sprite.getModelRoll())));
 						this.colladaRoot.setPitch(Angle.fromDegrees(this.pitch + this.sprite.getModelPitch()));
 					}
-					break;
+				}
+				break;
 				case NONE:
 					// TBD: Do we really want to return here?
 					System.out.println("SdtNode::Render() WARNING No valid sprite type assigned\n");
@@ -771,13 +795,14 @@ public class SdtNode implements Renderable
 					position = mslPosition;
 			}
 		}
+		
 		// Update Label position
 		if (hasLabel())
 		{
 			if (followTerrain)
 			{
 				double alt = 0.0;
-
+				
 				// LJT TEST - do this for kml too?
 				if (this.sprite != null && this.sprite instanceof SdtSpriteModel
 					&& ((SdtSpriteModel) this.sprite).isRealSize())
@@ -798,10 +823,11 @@ public class SdtNode implements Renderable
 			}
 		}
 
+		
 		if (hasSymbol())
 		{
 			// Update symbol coordinates
-			getSymbol().updatePosition(dc);
+			getSymbol().updateSymbolCoordinates(dc);
 		}
 
 		if (!oldPos.equals(position) || getLinkUpdate())
@@ -1005,19 +1031,20 @@ public class SdtNode implements Renderable
 
 
 	public void setPosition(Position pos)
-	{
+	{		
 		if (hasTrail && pos != position && pos != null)
 			updateTrail(pos);
 
 		Position oldPos = position;
 		this.position = pos;
 
-		// Set our heading if pos changed and flag to recreate links
+		// Set our heading if pos changed and flag to recreate links and model elevation
 		if ((null != oldPos) && (!pos.equals(oldPos)))
 		{
-			this.computeHeading(this.position, oldPos);
+			computeHeading(this.position, oldPos);
 			setLinkUpdate(true);
 		}
+		setNodeUpdate(true);
 
 	} // setPosition
 
@@ -1224,11 +1251,11 @@ public class SdtNode implements Renderable
 			Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
 		double z = Math.atan2(y, x);
 		// convert heading to degrees
-		double heading = (z * (180.0 / Math.PI));
+		heading = (z * (180.0 / Math.PI));
 		// Convert to navigational heading
 		heading = normalize(heading);
 		heading = heading + 180;
-
+		
 		return heading;
 	} // computeHeading
 
@@ -1251,7 +1278,9 @@ public class SdtNode implements Renderable
 			this.sprite = theSprite;
 
 		if (hasSymbol())
+		{
 			getSymbol().setInitialized(false);
+		}
 
 	}
 
@@ -1285,6 +1314,7 @@ public class SdtNode implements Renderable
 			symbol = null;
 		}
 		this.symbol = theSymbol;
+		setNodeUpdate(true);
 	}
 
 

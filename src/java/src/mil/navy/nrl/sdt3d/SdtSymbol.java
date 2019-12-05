@@ -37,6 +37,8 @@ public class SdtSymbol
 	protected boolean isScalable = false;
 
 	protected boolean isAbsolutePositioning = false;
+	
+	protected Position position = null;
 
 	protected Angle orientation = Angle.fromDegrees(0);
 
@@ -141,8 +143,14 @@ public class SdtSymbol
 	public boolean isScalable()
 	{
 		// if a real world length has been set for the sprite (kml & 3ds), don't scale the symbol
-		if (sdtNode != null && sdtNode.hasSprite() && sdtNode.getSprite().getFixedLength() > 0)
-			return false;
+		if (sdtNode != null && sdtNode.hasSprite()) 
+		{
+			//if (sdtNode.getSprite().getFixedLength() > 0 && sdtNode.getSprite().isRealSize())
+			if (sdtNode.getSprite().isRealSize())
+			{
+				return false;
+			}
+		}
 		return isScalable;
 	}
 
@@ -260,8 +268,20 @@ public class SdtSymbol
 	{
 		double size = width > height ? width : height;
 		if (sdtNode != null && sdtNode.getSprite() != null)
+		{	
+			if (isIconHugging())
+			{
+				size = sdtNode.getSprite().getWidth();
+			}
+			
+			if (sdtNode.getSprite().getType() == SdtSprite.Type.MODEL)
+			{
+				size = sdtNode.getSprite().getSymbolSize();
+			}
+		}
+		if (size <= 0)
 		{
-			size = sdtNode.getSprite().getSymbolSize();
+			size = 32;
 		}
 		return size;		
 	}
@@ -281,7 +301,10 @@ public class SdtSymbol
 		{
 			// Get the width from the sprite.  If the sprite is a model getSymbolSize
 			// checks to see if we are rendering in real-world size or not.
-			return sdtNode.getSprite().getSymbolSize();
+			if (isIconHugging())
+			{
+				return sdtNode.getSprite().getSymbolSize();
+			}
 		}
 		// else return the default width or any scaleable symbol size set
 		return width;
@@ -396,15 +419,29 @@ public class SdtSymbol
 		return true;
 	}
 
-
+	/* 
+	 * Called by sdtNode render pass to update symbol position
+	 */
+	protected void setPosition(Position pos)
+	{
+		this.position = pos;
+	}
+	
+	
 	protected Position getPosition()
 	{
-		// add exception handling
-		if (sdtNode != null && sdtNode.getPosition() != null)
-			return sdtNode.getPosition();
-		else
-			return new Position(LatLon.ZERO, 0);
+		if (position == null)
+		{
+			// If our position has not yet been set in the node render
+			// pass use the node's position.
+			if (sdtNode != null)
+			{
+				return sdtNode.getPosition();
+			}
+			return new Position(LatLon.ZERO,0);
 
+		}
+		return position;
 	}
 
 
@@ -595,7 +632,7 @@ public class SdtSymbol
 	} // normalize
 
 
-	public void updatePosition(DrawContext dc)
+	public void updateSymbolCoordinates(DrawContext dc)
 	{
 		Position pos = getPosition();
 		// If we've changed attributes we might not have reinitialized yet...

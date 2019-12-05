@@ -19,6 +19,7 @@ import org.xml.sax.SAXException;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.ogc.collada.ColladaRoot;
+import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.UserFacingIcon;
 import net.java.joglutils.model.ModelFactory;
 import net.java.joglutils.model.ModelLoadException;
@@ -53,8 +54,8 @@ public class SdtSprite
 
 	private int imageHeight = 0;
 
-	protected float scale = 1;
-
+	protected float scale = 1;	
+	
 	// Default to useAbsoluteYaw to false so any node heading will be used
 	// if no orientation is set
 	private boolean useAbsoluteYaw = false;
@@ -229,21 +230,36 @@ public class SdtSprite
 	}
 
 
-	public double getWidth()
+	double getWidth()
 	{
 		return iconWidth;
 	}
 
 
-	public double getHeight()
+	double getHeight()
 	{
 		return iconHeight;
 	}
 	
+	double getLength()
+	{
+		// no length for icon sprites
+		return iconWidth;
+	}
 	
 	public double getSymbolSize()
 	{
-		return iconWidth > iconHeight ? iconWidth : iconHeight;
+		double size = iconWidth > iconHeight ? iconWidth : iconHeight;
+		
+		// if symbol size not set - use default 32??
+		
+		if (size <= 0)
+		{
+			size = 32.0;
+		}
+		
+		return size;
+		//return iconWidth > iconHeight ? iconWidth : iconHeight;
 	}
 		
 	
@@ -312,8 +328,8 @@ public class SdtSprite
 	// Load sprite from jar
 	boolean LoadURL(java.net.URL spritePath) throws IOException
 	{
-		iconWidth = -32;
-		iconHeight = -32;
+		//iconWidth = -32;
+		//iconHeight = -32;
 		imageWidth = 0;
 		imageHeight = 0;
 
@@ -561,6 +577,10 @@ public class SdtSprite
 		return null;
 	}
 
+	public void setModelElevation(DrawContext dc)
+	{
+		return;
+	}
 
 	// Try to load it as a Model, kml/kmz, or an Icon, else use default Model
 	SdtSprite Load(String spritePath) throws IOException
@@ -571,8 +591,6 @@ public class SdtSprite
 		if (spritePath.endsWith(".xml") | spritePath.endsWith(".XML"))
 			return LoadXMLFile(spritePath);
 
-		iconWidth = -32;
-		iconHeight = -32;
 		imageWidth = 0;
 		imageHeight = 0;
 
@@ -674,6 +692,12 @@ public class SdtSprite
 	public void setSpritePath(String spritePath)
 	{
 		this.spritePath = spritePath;
+	}
+
+
+	public void setRealSize(boolean isRealSize) {
+		// TODO Auto-generated method stub
+		
 	}
 
 } // end class SdtSprite

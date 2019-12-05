@@ -3206,6 +3206,7 @@ public class sdt3d extends SdtApplication
 		{
 			if (currentSprite == null)
 				return false;
+			
 			if (0 == val.length() || null == currentSprite)
 				return false; // no <imageFile>
 
@@ -3295,8 +3296,6 @@ public class sdt3d extends SdtApplication
 		{
 			if (0 == type.length() || null == currentNode)
 				return false; // no <Type>
-
-			currentNode.setNodeUpdate(true);
 
 			SdtSprite theSprite = spriteTable.get(type);
 
@@ -4736,6 +4735,10 @@ public class sdt3d extends SdtApplication
 			Integer height = new Integer(dim[1]);
 
 			currentSprite.setSize(width.intValue(), height.intValue());
+			// If we are setting a size specifically, we are not
+			// a real size model - e.g. the model will stay in sight
+			// as the view changes
+			currentSprite.setRealSize(false);
 			return true;
 		}
 
@@ -5044,8 +5047,6 @@ public class sdt3d extends SdtApplication
 
 			if (attrs.length < 1)
 				return false; // wait for symbol type
-
-			currentNode.setNodeUpdate(true);
 
 			// See if it's a valid symbol type
 			String symbolType = attrs[0];
