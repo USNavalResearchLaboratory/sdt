@@ -1987,8 +1987,8 @@ public class sdt3d extends SdtApplication
 				clear("all");
 
 				loadUserPreferencesFile();
-				// loadUserConfigFile(currentConfigFile);
-				// loadInputFile(currentConfigFile);
+				this.getSdtLayerPanel().update(getWwd(), "wwj");
+				this.getSdtLayerPanel().update(getWwd(), "all");
 
 			}
 			else
@@ -2004,16 +2004,9 @@ public class sdt3d extends SdtApplication
 				clearAllRenderables();
 				this.elevationBuilder.clear();
 				setStatus("");
-				// User config file should be used to load commands like
-				// sprite assignments and such that should be persistent
-				// across a soft reset.
-				// loadUserConfigFile(currentConfigFile);
-				loadUserPreferencesFile();
 				loadInputFile(currentConfigFile, false);
 			}
 
-			this.getSdtLayerPanel().update(getWwd(), "wwj");
-			this.getSdtLayerPanel().update(getWwd(), "all");
 
 			getWwd().redraw();
 			if (sharedFrame != null)

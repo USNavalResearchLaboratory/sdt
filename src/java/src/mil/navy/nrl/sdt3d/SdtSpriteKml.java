@@ -27,7 +27,6 @@ import gov.nasa.worldwind.ogc.kml.KMLAbstractFeature;
 import gov.nasa.worldwind.ogc.kml.KMLLookAt;
 import gov.nasa.worldwind.ogc.kml.KMLPlacemark;
 import gov.nasa.worldwind.ogc.kml.KMLRoot;
-//import gov.nasa.worldwind.ogc.kml.custom.CustomKMLRoot;
 import gov.nasa.worldwind.ogc.kml.impl.KMLController;
 import gov.nasa.worldwind.ogc.kml.impl.KMLModelPlacemarkImpl;
 import gov.nasa.worldwind.ogc.kml.impl.KMLRenderable;
@@ -108,10 +107,13 @@ public class SdtSpriteKml extends SdtSprite
 		return kmlRoot;
 	}
 
-
+	/*
+	 * Kml collada roots cannot be shared as 3d model meshs can.
+	 */
 	public ColladaRoot getColladaRoot(KMLRoot kmlRoot)
 	{
 		ColladaRoot colladaRoot = null;
+		
 		if (kmlRoot != null && kmlRoot.getFeature() != null)
 		{
 			KMLAbstractFeature kmlAbstractFeature = kmlRoot.getFeature();
