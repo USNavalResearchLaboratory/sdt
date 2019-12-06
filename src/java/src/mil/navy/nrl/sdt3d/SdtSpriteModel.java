@@ -34,10 +34,6 @@ public class SdtSpriteModel extends SdtSprite
 			X, Y, Z
 	};
 
-	private Position position = null;
-
-	private double length = -1.0;
-
 	private double modelRadius = -1.0;
 	
 	private double heading = 0.0; // a.k.a. "yaw"
@@ -118,11 +114,12 @@ public class SdtSpriteModel extends SdtSprite
 	}
 
 
-	public void setPosition(Position pos)
+	@Override
+	protected void setPosition(Position position)
 	{
 		// The model3DLayer needs model position.
 		// this is called by node render function
-		this.position = pos;
+		this.position = position;
 	}
 
 
@@ -463,7 +460,7 @@ public class SdtSpriteModel extends SdtSprite
 	{
 		// Needed for valid symbol size
 		viewAtRealSize = false;
-		
+				
 		if (getFixedLength() > 0.0 && isRealSize)
 		{
 			// A real-world length (in meters) was set

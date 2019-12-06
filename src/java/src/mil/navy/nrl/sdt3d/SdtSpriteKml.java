@@ -240,29 +240,29 @@ public class SdtSpriteKml extends SdtSprite
 	}
 	
 	
-	/*
-	 * modelRadius is used by SdtSpriteModel::computeSizeScale()	
-	 * to get size
-	 */
-	
-	// Called by node rendering function
-	public void computeSizeScale(DrawContext dc, ColladaRoot nodeColladaRoot, Position position)
+	@Override
+	public void setPosition(Position position)
 	{
+		// The model3DLayer needs model position.
+		// this is called by node render function
+		this.position = position;
+	}
+	
+	/*
+	 * Called by node rendering function
+	 */	
+	public Vec4 computeSizeScale(DrawContext dc, Vec4 loc)
+	{
+		Vec4 modelScaleVec;
 		if (getFixedLength() > 0.0 && isRealSize)
 		{
 			// if "real-world" size use fixed length
 			double localSize = getFixedLength();
 			Double scale = (double) getScale();
-			Vec4 modelScaleVec = new Vec4(localSize * scale, localSize * scale, localSize * scale);
-			nodeColladaRoot.setModelScale(modelScaleVec);
-
+			modelScaleVec = new Vec4(localSize * scale, localSize * scale, localSize * scale);
 		}
 		else
-		{
-			Vec4 loc = dc.getGlobe().computePointFromPosition(position);
-			if (	loc == null)
-				return;
-			
+		{			
 			double d = loc.distanceTo3(dc.getView().getEyePoint());
 			double pSize = dc.getView().computePixelSizeAtDistance(d);			
 
@@ -293,9 +293,9 @@ public class SdtSpriteKml extends SdtSprite
 			// and scale size behaves erractically (when same kml is loaded
 			// multiple times??)
 			Double scale = (double) getScale();
-			Vec4 modelScaleVec = new Vec4(pSize * scale, pSize * scale, pSize * scale);
-			nodeColladaRoot.setModelScale(modelScaleVec);
+			modelScaleVec = new Vec4(pSize * scale, pSize * scale, pSize * scale);
 		}
+		return modelScaleVec;
 	}
 
 

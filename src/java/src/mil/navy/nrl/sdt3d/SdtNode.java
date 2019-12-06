@@ -28,6 +28,7 @@ import gov.nasa.worldwind.render.Path;
 import gov.nasa.worldwind.render.Renderable;
 import gov.nasa.worldwind.render.ShapeAttributes;
 import gov.nasa.worldwind.render.UserFacingIcon;
+import gov.nasa.worldwind.render.WWIcon;
 import gov.nasa.worldwindx.examples.PathPositionColors.ExamplePositionColors;
 import gov.nasa.worldwindx.examples.util.DirectedPath;
 import mil.navy.nrl.sdt3d.SdtSprite.Type;
@@ -635,6 +636,32 @@ public class SdtNode implements Renderable
 	}
 
 
+	/*
+	 * Called by node's render function to override elevation
+	 * based on node's agl,msl,terrain positioning
+	 */
+	public void setPositionElevation(double globeElevation)
+	{
+
+		if (getFollowTerrain())
+		{	
+			position = new Position(position, globeElevation);
+		}
+		else
+		{
+			if (!getUseAbsoluteElevation())
+			{
+				position = new Position(position, getAltitude() + globeElevation);
+			}
+			else
+			{
+				// Else we're at absolute elevation
+				position = new Position(position, altitude);
+			}
+		}
+	}
+	
+	
 	/**
 	 * Sdt nodes are put in a dummy layer called during each rendering pass to
 	 * centralize updating the positions of all the node renderables (icon,
@@ -656,10 +683,7 @@ public class SdtNode implements Renderable
 	public void render(DrawContext dc)
 	{
 		if (!nodeInVisibleLayer())
-			return; // ljt wth??
-			//||
-			//!(getNodeUpdate() || getLinkUpdate()))
-			//return;
+			return; 
 
 		Position oldPos = position;
 		if (position == null)
@@ -667,9 +691,12 @@ public class SdtNode implements Renderable
 
 		// Get the latest globe elevation and update the nodes elevation
 		double globeElevation = dc.getGlobe().getElevation(position.getLatitude(), position.getLongitude());
-		Position terrainElevation = new Position(position, globeElevation);
-		Position aglPosition = new Position(position, getAltitude() + globeElevation);
-		Position mslPosition = new Position(position, altitude);
+		setPositionElevation(globeElevation);
+		
+		// We can get our loc vector before doing any overrides
+		// for sprite types
+		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
+		double modelHeightOffset = sprite.getHeight() / 2.0;
 
 		if (hasSprite())
 		{
@@ -677,22 +704,6 @@ public class SdtNode implements Renderable
 			{
 				case ICON:
 				{
-					if (getFollowTerrain())
-					{
-						position = terrainElevation;
-					}
-					else
-					{
-						if (!getUseAbsoluteElevation())
-						{
-							position = aglPosition;
-						}
-						else
-						{
-							// else we're at absolute elevation
-							position = mslPosition;
-						}
-					}
 					if (icon != null) 
 					{
 						icon.setPosition(position);
@@ -701,74 +712,61 @@ public class SdtNode implements Renderable
 				break;
 				case MODEL:
 				{	
-					Position modelSymbolPosition = null;
+					Position modelPosition = null;
 					if (!getFollowTerrain())
 					{
-						if (!getUseAbsoluteElevation())
-						{
-							position = aglPosition;
-						}
-						else
-						{
-							position = mslPosition;
-						}
-						modelSymbolPosition = new Position(position.getLatitude(), position.getLongitude(), 
-								position.getElevation() + (((SdtSpriteModel) this.sprite).getHeight() / 2.0));
+						modelPosition = new Position(position.getLatitude(), position.getLongitude(), 
+							position.getElevation() + modelHeightOffset);
 					}
 					else
 					{
-	
 						double elevation = dc.getGlobe().getElevation(position.getLatitude(), position.getLongitude());
 						
 						// We are doing this outside of the subsequent if/else loop
-						// as computeSizeScale sets real size boolean
-						Vec4 loc = dc.getGlobe().computePointFromPosition(position);
-						double localSize = (((SdtSpriteModel) this.sprite).computeSizeScale(dc, loc));
+						// as computeSizeScale sets viewAtRealSize boolean
+						//double localSize = ((SdtSpriteModel) sprite).computeSizeScale(dc, loc);
 
 						if (this.sprite.isRealSize())
 						{
-							elevation += (((SdtSpriteModel) this.sprite).getHeight() / 2.0);
+							elevation += modelHeightOffset;
 						}
 						else
 						{
+							double localSize = ((SdtSpriteModel) sprite).computeSizeScale(dc, loc);
 							elevation += localSize * 4;
 						}
-						modelSymbolPosition = new Position(position.getLatitude(), position.getLongitude(), elevation);						
+						modelPosition = new Position(position.getLatitude(), position.getLongitude(), elevation);						
 					}
 
 					// Reset model and symbol position
-					((SdtSpriteModel) this.sprite).setPosition(modelSymbolPosition);
 					if (getSymbol() != null)
-						getSymbol().setPosition(modelSymbolPosition);
-
-					// For 3d models the sprite _IS_ the model so set p/y/r
-					this.sprite.setHeading(this.heading, this.yaw, null);
-					this.sprite.setRoll(this.roll);
-					this.sprite.setPitch(this.pitch);
+					{
+						getSymbol().setPosition(modelPosition);
+					}
+					sprite.setPosition(modelPosition);
+					sprite.setHeading(heading, yaw, null);
+					sprite.setRoll(roll);
+					sprite.setPitch(pitch);
 				}
 				break;
 				case KML:
 				{
-					if (this.colladaRoot == null)
-						this.colladaRoot = ((SdtSpriteKml) this.sprite).getColladaRoot(this.kmlRoot);
-
-					if (this.colladaRoot != null)
+					if (colladaRoot == null)
 					{
-						if (!getUseAbsoluteElevation())
-						{
-							position = aglPosition;
-						}
-						else
-						{
-							position = mslPosition;
-						}
+						colladaRoot = ((SdtSpriteKml) this.sprite).getColladaRoot(kmlRoot);
+					}
+
+					if (colladaRoot != null)
+					{
 						colladaRoot.setPosition(position);
-						((SdtSpriteKml) this.sprite).computeSizeScale(dc, this.colladaRoot, position);
+						Vec4 modelScaleVector = ((SdtSpriteKml) sprite).computeSizeScale(dc, loc);
+						colladaRoot.setModelScale(modelScaleVector);
+
 						// This heading code could be cleaned up now that everything is working
-						this.sprite.setHeading(this.yaw, this.heading, this.colladaRoot);
+						sprite.setHeading(yaw, heading, colladaRoot);
 						// kml roll is the reverse of models (and our default)
-						this.colladaRoot.setRoll(Angle.fromDegrees(-(this.roll + this.sprite.getModelRoll())));
-						this.colladaRoot.setPitch(Angle.fromDegrees(this.pitch + this.sprite.getModelPitch()));
+						colladaRoot.setRoll(Angle.fromDegrees(-(roll + sprite.getModelRoll())));
+						colladaRoot.setPitch(Angle.fromDegrees(pitch + sprite.getModelPitch()));
 					}
 				}
 				break;
@@ -782,19 +780,6 @@ public class SdtNode implements Renderable
 			}
 		}
 
-		// Else we only have a symbol, still need a location update
-		if (getSprite() == null || getSprite().getType() == SdtSprite.Type.NONE)
-		{
-			if (getFollowTerrain())
-				position = new Position(position, globeElevation);
-			else
-			{
-				if (!getUseAbsoluteElevation())
-					position = aglPosition;
-				else
-					position = mslPosition;
-			}
-		}
 		
 		// Update Label position
 		if (hasLabel())
@@ -802,15 +787,20 @@ public class SdtNode implements Renderable
 			if (followTerrain)
 			{
 				double alt = 0.0;
-				
-				// LJT TEST - do this for kml too?
-				if (this.sprite != null && this.sprite instanceof SdtSpriteModel
-					&& ((SdtSpriteModel) this.sprite).isRealSize())
-					alt += ((SdtSpriteModel) this.sprite).getHeight() / 2.0;
-				getLabel().setPosition(new Position(position, alt));
+				if (hasSprite() && sprite != null && sprite.isRealSize())
+				{
+					switch (sprite.getType())
+					{
+						case MODEL:
+						case KML:
+							getLabel().setPosition(new Position(position, alt + modelHeightOffset));
+						default:
+							break;
+					}
+				}
 			}
 			else
-			{ // Annotations always assume the elevation is the offset above
+			{ 	// Annotations always assume the elevation is the offset above
 				// ground level. So we need to subtract the globe elevation
 				// from the intended altitude if we're set to msl
 				if (useAbsoluteElevation)

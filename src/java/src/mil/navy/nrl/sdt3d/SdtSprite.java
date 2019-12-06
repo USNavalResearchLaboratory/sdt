@@ -18,6 +18,7 @@ import org.xml.sax.SAXException;
 
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.ogc.collada.ColladaRoot;
 import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.UserFacingIcon;
@@ -55,6 +56,9 @@ public class SdtSprite
 	private int imageHeight = 0;
 
 	protected float scale = 1;	
+	
+	// Used by models only
+	protected Position position = null;
 	
 	// Default to useAbsoluteYaw to false so any node heading will be used
 	// if no orientation is set
@@ -100,6 +104,7 @@ public class SdtSprite
 		this.imageHeight = template.imageHeight;
 		this.scale = template.scale;
 		this.useAbsoluteYaw = template.useAbsoluteYaw;
+		this.position = template.position;
 
 	}
 
@@ -695,8 +700,15 @@ public class SdtSprite
 	}
 
 
-	public void setRealSize(boolean isRealSize) {
-		// TODO Auto-generated method stub
+	public void setRealSize(boolean isRealSize) 
+	{
+		// Models only
+	}
+
+
+	protected void setPosition(Position pos) 
+	{
+		// Models only
 		
 	}
 
