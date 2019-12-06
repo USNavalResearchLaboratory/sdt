@@ -2142,6 +2142,9 @@ public class sdt3d extends SdtApplication
 				clear("all");
 
 				loadUserPreferencesFile();
+				getSdtLayerPanel().update(getWwd(), "wwj");
+				getSdtLayerPanel().update(getWwd(), "all");
+
 				// loadUserConfigFile(currentConfigFile);
 				// loadInputFile(currentConfigFile);
 
@@ -2156,17 +2159,15 @@ public class sdt3d extends SdtApplication
 				removeLinkLabels();
 				removeKml();
 				clearAllRenderables();
-				this.elevationBuilder.clear();
-				setStatus("");
+				//this.elevationBuilder.clear();
+				//setStatus("");
 				// User config file should be used to load commands like
 				// sprite assignments and such that should be persistent
 				// across a soft reset.
 				// loadUserConfigFile(currentConfigFile);
-				loadInputFile(currentConfigFile, false);
+				//loadInputFile(currentConfigFile, false);
 			}
 
-			this.getSdtLayerPanel().update(getWwd(), "wwj");
-			this.getSdtLayerPanel().update(getWwd(), "all");
 
 			getWwd().redraw();
 			if (sharedFrame != null)
@@ -2269,7 +2270,7 @@ public class sdt3d extends SdtApplication
 					openFile = fc.getSelectedFile();
 					String fileName = openFile.getAbsolutePath();
 					// Do a hard system reset
-					resetSystemState(true);
+					resetSystemState(false);
 
 					loadInputFile(fileName, true);
 
