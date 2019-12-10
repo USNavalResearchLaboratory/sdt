@@ -722,10 +722,6 @@ public class SdtNode implements Renderable
 					{
 						double elevation = dc.getGlobe().getElevation(position.getLatitude(), position.getLongitude());
 						
-						// We are doing this outside of the subsequent if/else loop
-						// as computeSizeScale sets viewAtRealSize boolean
-						//double localSize = ((SdtSpriteModel) sprite).computeSizeScale(dc, loc);
-
 						if (this.sprite.isRealSize())
 						{
 							elevation += modelHeightOffset;
@@ -787,16 +783,20 @@ public class SdtNode implements Renderable
 			if (followTerrain)
 			{
 				double alt = 0.0;
-				if (hasSprite() && sprite != null && sprite.isRealSize())
+				if (hasSprite() && sprite != null) 
 				{
 					switch (sprite.getType())
 					{
-						case MODEL:
-						case KML:
-							getLabel().setPosition(new Position(position, alt + modelHeightOffset));
-						default:
-							break;
+					case MODEL:
+					case KML:
+						getLabel().setPosition(new Position(position, alt + modelHeightOffset));
+					default:
+						break;
 					}
+				}
+				else
+				{
+					getLabel().setPosition(new Position(position,alt));
 				}
 			}
 			else
@@ -809,7 +809,9 @@ public class SdtNode implements Renderable
 					getLabel().setPosition(new Position(position, altOffset));
 				}
 				else
+				{
 					getLabel().setPosition(new Position(position, altitude));
+				}
 			}
 		}
 
@@ -1256,6 +1258,7 @@ public class SdtNode implements Renderable
 		this.colladaRoot = null;
 		this.kmlRoot = null;
 		this.kmlController = null;
+		this.icon = null;
 
 		// The node needs to have a unique Model to render so
 		// copy the one the sprite has loaded. We get a little savings by loading the
@@ -1265,7 +1268,9 @@ public class SdtNode implements Renderable
 			this.sprite = new SdtSpriteModel((SdtSpriteModel) theSprite);
 		}
 		else
+		{
 			this.sprite = theSprite;
+		}
 
 		if (hasSymbol())
 		{

@@ -327,7 +327,8 @@ public class SdtSpriteModel extends SdtSprite
 	 * commands whether one or both will be set.
 	 * 
 	 * The model radius is used during the rendering pass to 
-	 * compute the model's size in pixels.
+	 * compute the model's size in pixels (and symbol via node
+	 * render.
 	 * 
 	 * "fixedLength" defines the real-world physical size of the model 
 	 * in meters
@@ -428,7 +429,6 @@ public class SdtSpriteModel extends SdtSprite
 		
 		if (getFixedLength() > 0) 
 		{
-			//if (viewAtRealSize)
 			if (isRealSize() && getFixedLength() > 0)
 			{
 				size = getFixedLength();

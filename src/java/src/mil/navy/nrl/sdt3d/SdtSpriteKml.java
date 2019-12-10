@@ -67,7 +67,7 @@ public class SdtSpriteKml extends SdtSprite
 	private Double modelRoll = 999.0;
 
 	boolean isRealSize = true;
-
+	
 	public SdtSpriteKml(SdtSprite template)
 	{
 		super(template);
@@ -254,7 +254,7 @@ public class SdtSpriteKml extends SdtSprite
 	 * Called by node rendering function
 	 */	
 	public Vec4 computeSizeScale(DrawContext dc, Vec4 loc)
-	{
+	{		
 		Vec4 modelScaleVec;
 		if (getFixedLength() > 0.0 && isRealSize)
 		{

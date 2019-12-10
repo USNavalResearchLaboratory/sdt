@@ -220,7 +220,9 @@ public class Model3DLayer extends AbstractLayer
 
 	private double computeSize(DrawContext dc, Vec4 loc)
 	{
-		// LJT WHAT IS THIS?  REMOVE?
+		// TODO: Why are we alwasy setting maintainContstantSize to true?
+		// are we even using this?
+		
 		// We always set maintainConstantSize to true
 		if (this.maintainConstantSize)
 			return size;
