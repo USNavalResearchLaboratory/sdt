@@ -27,7 +27,6 @@ import gov.nasa.worldwind.ogc.kml.KMLAbstractFeature;
 import gov.nasa.worldwind.ogc.kml.KMLLookAt;
 import gov.nasa.worldwind.ogc.kml.KMLPlacemark;
 import gov.nasa.worldwind.ogc.kml.KMLRoot;
-//import gov.nasa.worldwind.ogc.kml.custom.CustomKMLRoot;
 import gov.nasa.worldwind.ogc.kml.impl.KMLController;
 import gov.nasa.worldwind.ogc.kml.impl.KMLModelPlacemarkImpl;
 import gov.nasa.worldwind.ogc.kml.impl.KMLRenderable;
@@ -67,7 +66,8 @@ public class SdtSpriteKml extends SdtSprite
 
 	private Double modelRoll = 999.0;
 
-
+	boolean isRealSize = true;
+	
 	public SdtSpriteKml(SdtSprite template)
 	{
 		super(template);
@@ -107,10 +107,13 @@ public class SdtSpriteKml extends SdtSprite
 		return kmlRoot;
 	}
 
-
+	/*
+	 * Kml collada roots cannot be shared as 3d model meshs can.
+	 */
 	public ColladaRoot getColladaRoot(KMLRoot kmlRoot)
 	{
 		ColladaRoot colladaRoot = null;
+		
 		if (kmlRoot != null && kmlRoot.getFeature() != null)
 		{
 			KMLAbstractFeature kmlAbstractFeature = kmlRoot.getFeature();
@@ -148,6 +151,13 @@ public class SdtSpriteKml extends SdtSprite
 	}
 
 
+	public double getSymbolSize()
+	{
+		double size = iconWidth > iconHeight ? iconWidth : iconHeight;
+		size = getFixedLength() > size ? getFixedLength() : size;
+		return size;
+	}
+	
 	public double getPitch()
 	{
 		if (this.modelPitch != 999.0)
@@ -224,24 +234,70 @@ public class SdtSpriteKml extends SdtSprite
 	{
 		this.fileName = fileName;
 	}
-
-
-	// Called by node rendering function
-	public void computeSizeScale(DrawContext dc, ColladaRoot nodeColladaRoot, Position position)
+	
+	@Override
+	public void setRealSize(boolean isRealSize)
 	{
-		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
-		if (loc == null)
-			return;
-		double d = loc.distanceTo3(dc.getView().getEyePoint());
-		double localSize = 0;
-		if (getFixedLength() > 0)
-			localSize = getFixedLength();
+		this.isRealSize = isRealSize;
+	}
+	
+	
+	@Override
+	public void setPosition(Position position)
+	{
+		// The model3DLayer needs model position.
+		// this is called by node render function
+		this.position = position;
+	}
+	
+	/*
+	 * Called by node rendering function
+	 */	
+	public Vec4 computeSizeScale(DrawContext dc, Vec4 loc)
+	{		
+		Vec4 modelScaleVec;
+		if (getFixedLength() > 0.0 && isRealSize)
+		{
+			// if "real-world" size use fixed length
+			double localSize = getFixedLength();
+			Double scale = (double) getScale();
+			modelScaleVec = new Vec4(localSize * scale, localSize * scale, localSize * scale);
+		}
 		else
-			localSize = dc.getView().computePixelSizeAtDistance(d);
-		Double scale = (double) getScale();
-		Vec4 modelScaleVec = new Vec4(localSize * scale, localSize * scale, localSize * scale);
-		nodeColladaRoot.setModelScale(modelScaleVec);
+		{			
+			double d = loc.distanceTo3(dc.getView().getEyePoint());
+			double pSize = dc.getView().computePixelSizeAtDistance(d);			
 
+			// First see if psize is less than our fixed length
+			double fixedLength = getFixedLength();
+			double width = (iconWidth > iconHeight) ? iconWidth : iconHeight;
+			if (fixedLength < 0.0 && width > 0) fixedLength = iconWidth;
+			
+			pSize = pSize * fixedLength;
+			if (pSize < fixedLength)
+			{
+				pSize = fixedLength;
+			}
+			else
+			{
+				// If not calculate psize for iconWidth
+				d = loc.distanceTo3(dc.getView().getEyePoint());
+				pSize = dc.getView().computePixelSizeAtDistance(d);			
+				width = (iconWidth > iconHeight) ? iconWidth : iconHeight;
+				pSize = pSize * width;
+				if (pSize < width)
+					pSize = width;
+			}
+
+			// Finally scale the model 
+			
+			// TODO: scale is not working properly - models get turned upside down
+			// and scale size behaves erractically (when same kml is loaded
+			// multiple times??)
+			Double scale = (double) getScale();
+			modelScaleVec = new Vec4(pSize * scale, pSize * scale, pSize * scale);
+		}
+		return modelScaleVec;
 	}
 
 

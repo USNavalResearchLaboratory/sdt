@@ -1987,15 +1987,15 @@ public class sdt3d extends SdtApplication
 				clear("all");
 
 				loadUserPreferencesFile();
-				// loadUserConfigFile(currentConfigFile);
-				// loadInputFile(currentConfigFile);
+				this.getSdtLayerPanel().update(getWwd(), "wwj");
+				this.getSdtLayerPanel().update(getWwd(), "all");
 
 			}
 			else
 			{
-				loadUserPreferencesFile();
 				// clear("all") stops reading input file
 				// so remove all rednerables directly
+
 				removeNodes();
 				removeRegions();
 				removeTiles();
@@ -2004,15 +2004,9 @@ public class sdt3d extends SdtApplication
 				clearAllRenderables();
 				this.elevationBuilder.clear();
 				setStatus("");
-				// User config file should be used to load commands like
-				// sprite assignments and such that should be persistent
-				// across a soft reset.
-				// loadUserConfigFile(currentConfigFile);
 				loadInputFile(currentConfigFile, false);
 			}
 
-			this.getSdtLayerPanel().update(getWwd(), "wwj");
-			this.getSdtLayerPanel().update(getWwd(), "all");
 
 			getWwd().redraw();
 			if (sharedFrame != null)
@@ -3205,6 +3199,7 @@ public class sdt3d extends SdtApplication
 		{
 			if (currentSprite == null)
 				return false;
+			
 			if (0 == val.length() || null == currentSprite)
 				return false; // no <imageFile>
 
@@ -3294,8 +3289,6 @@ public class sdt3d extends SdtApplication
 		{
 			if (0 == type.length() || null == currentNode)
 				return false; // no <Type>
-
-			currentNode.setNodeUpdate(true);
 
 			SdtSprite theSprite = spriteTable.get(type);
 
@@ -4465,10 +4458,7 @@ public class sdt3d extends SdtApplication
 			tileLayer.removeAllRenderables();
 			markerLayer.setMarkers(new ArrayList<Marker>());
 			userDefinedMarkerLayer.setMarkers(new ArrayList<Marker>());
-			;
-			kmlPanelLayer.removeAllRenderables();
 			kmlLayer.removeAllRenderables();
-
 		}
 
 
@@ -4737,7 +4727,11 @@ public class sdt3d extends SdtApplication
 			Integer width = new Integer(dim[0]);
 			Integer height = new Integer(dim[1]);
 
-			currentSprite.setSize(width.intValue(), height.intValue(), -1);
+			currentSprite.setSize(width.intValue(), height.intValue());
+			// If we are setting a size specifically, we are not
+			// a real size model - e.g. the model will stay in sight
+			// as the view changes
+			currentSprite.setRealSize(false);
 			return true;
 		}
 
@@ -5046,8 +5040,6 @@ public class sdt3d extends SdtApplication
 
 			if (attrs.length < 1)
 				return false; // wait for symbol type
-
-			currentNode.setNodeUpdate(true);
 
 			// See if it's a valid symbol type
 			String symbolType = attrs[0];
