@@ -2068,21 +2068,6 @@ public class sdt3d extends SdtApplication
 					toggleTcpOn();
 				}
 
-				if (fileThread != null && openFile != null)
-				{
-					fileThread.stopThread();
-					fileThread.stopRead();
-					fileThread.clear();
-					try
-					{
-						Thread.currentThread();
-						Thread.sleep(1000); // sleep for 1000 ms
-					}
-					catch (InterruptedException ie)
-					{
-						// If this thread was interrupted by another thread
-					}
-				}
 
 				if (scenarioThread != null && !scenarioThread.stopped()) {
 					scenarioThread.stopThread();
@@ -2111,6 +2096,22 @@ public class sdt3d extends SdtApplication
 
 			} // end hard reset
 
+			if (fileThread != null && openFile != null)
+			{
+				fileThread.stopThread();
+				fileThread.stopRead();
+				fileThread.clear();
+				try
+				{
+					Thread.currentThread();
+					Thread.sleep(1000); // sleep for 1000 ms
+				}
+				catch (InterruptedException ie)
+				{
+					// If this thread was interrupted by another thread
+				}
+			}
+			
 			logDebugOutput = false;
 			debugItem.setSelected(false);
 			try
@@ -2142,6 +2143,7 @@ public class sdt3d extends SdtApplication
 				clear("all");
 
 				loadUserPreferencesFile();
+
 				getSdtLayerPanel().update(getWwd(), "wwj");
 				getSdtLayerPanel().update(getWwd(), "all");
 
@@ -2153,19 +2155,16 @@ public class sdt3d extends SdtApplication
 			{
 				// clear("all") stops reading input file
 				// so remove all rednerables directly
+
 				removeNodes();
 				removeRegions();
 				removeTiles();
 				removeLinkLabels();
 				removeKml();
 				clearAllRenderables();
-				//this.elevationBuilder.clear();
-				//setStatus("");
-				// User config file should be used to load commands like
-				// sprite assignments and such that should be persistent
-				// across a soft reset.
-				// loadUserConfigFile(currentConfigFile);
-				//loadInputFile(currentConfigFile, false);
+				this.elevationBuilder.clear();
+				setStatus("");
+				loadInputFile(currentConfigFile, false);
 			}
 
 
@@ -3360,6 +3359,7 @@ public class sdt3d extends SdtApplication
 		{
 			if (currentSprite == null)
 				return false;
+			
 			if (0 == val.length() || null == currentSprite)
 				return false; // no <imageFile>
 
@@ -3449,8 +3449,6 @@ public class sdt3d extends SdtApplication
 		{
 			if (0 == type.length() || null == currentNode)
 				return false; // no <Type>
-
-			currentNode.setNodeUpdate(true);
 
 			SdtSprite theSprite = spriteTable.get(type);
 
@@ -4563,8 +4561,9 @@ public class sdt3d extends SdtApplication
 				SdtNode current_node = i.next().getValue();
 				if (current_node.hasSprite())
 				{
-					if (current_node.hasSprite() && currentNode.getSprite().getName().equalsIgnoreCase("default"))
+					if (current_node.hasSprite() && current_node.getSprite().getName().equalsIgnoreCase("default"))
 						continue;
+					
 					switch (current_node.getSprite().getType())
 					{
 						case MODEL:
@@ -4653,10 +4652,7 @@ public class sdt3d extends SdtApplication
 			tileLayer.removeAllRenderables();
 			markerLayer.setMarkers(new ArrayList<Marker>());
 			userDefinedMarkerLayer.setMarkers(new ArrayList<Marker>());
-			;
-			kmlPanelLayer.removeAllRenderables();
 			kmlLayer.removeAllRenderables();
-
 		}
 
 
@@ -4925,8 +4921,11 @@ public class sdt3d extends SdtApplication
 			Integer width = new Integer(dim[0]);
 			Integer height = new Integer(dim[1]);
 
-			currentSprite.setIconSize(width.intValue(), height
-					.intValue());
+			currentSprite.setSize(width.intValue(), height.intValue());
+			// If we are setting a size specifically, we are not
+			// a real size model - e.g. the model will stay in sight
+			// as the view changes
+			currentSprite.setRealSize(false);
 			return true;
 		}
 
@@ -5236,8 +5235,6 @@ public class sdt3d extends SdtApplication
 			if (attrs.length < 1)
 				return false; // wait for symbol type
 
-			currentNode.setNodeUpdate(true);
-
 			// See if it's a valid symbol type
 			String symbolType = attrs[0];
 			if (SdtSymbol.getType(symbolType) == SdtSymbol.Type.INVALID)
@@ -5323,7 +5320,7 @@ public class sdt3d extends SdtApplication
 							width = width.replace("s", "");
 						}
 						currentSymbol.setWidth(Double.valueOf(width));
-						currentSymbol.isIconHugging(false);
+						currentSymbol.setIconHugging(false);
 
 						break;
 					}
@@ -5336,7 +5333,7 @@ public class sdt3d extends SdtApplication
 							height = height.replace("s", "");
 						}
 						currentSymbol.setHeight(Double.valueOf(height));
-						currentSymbol.isIconHugging(false);
+						currentSymbol.setIconHugging(false);
 
 						break;
 					}

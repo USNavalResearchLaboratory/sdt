@@ -146,7 +146,7 @@ public class SdtRegion extends SdtSymbol
 			case SPHERE:
 			{
 				super.initialize(dc);
-				updatePosition(dc);
+				updateSymbolCoordinates(dc);
 				break;
 			}
 			case BOX:

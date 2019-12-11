@@ -32,7 +32,13 @@ public class SdtCone extends SdtSymbol implements Renderable
 		super(type, theNode);
 	}
 
+	public double getWidth()
+	{
+		return width;
 
+	}
+	
+	
 	@Override
 	public void setLAzimuth(double d)
 	{
@@ -95,8 +101,9 @@ public class SdtCone extends SdtSymbol implements Renderable
 		gl.glRotated(p.getLatitude().getDegrees() * orientation.sin(), 0, 1, 0);
 		// elevation = degrees tilted up from the surface
 		gl.glRotated(elevation.getDegrees(), 0, -1, 0);
-		gl.glRotated(p.getLatitude().getDegrees() * elevation.sin(), -1, 0, 0);
-
+		//gl.glRotated(p.getLatitude().getDegrees() * elevation.sin(), -1, 0, 0);
+        gl.glRotated(elevation.sin(), -1, 0, 0);
+        
 		Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
 		double d = loc.distanceTo3(dc.getView().getEyePoint());
 
@@ -121,11 +128,26 @@ public class SdtCone extends SdtSymbol implements Renderable
 			// TODO: Do we want to make cone base min equal to min dimension?
 			currentHeight = currentWidth * 3.14159;
 			currentWidth *= dc.getView().computePixelSizeAtDistance(d); // orientation
-			currentHeight *= dc.getView().computePixelSizeAtDistance(d); // elevation
+			currentHeight *= dc.getView().computePixelSizeAtDistance(d); // elevation			
 		}
 
 		currentWidth = currentWidth * this.getScale();
 		currentHeight = currentHeight * this.getScale();
+				
+		if (sdtNode.getSprite().getType() == SdtSprite.Type.MODEL)
+		{	
+			if (currentWidth < (getWidth() * this.getScale()))
+			{
+				currentWidth = (getWidth() * this.getScale());
+				currentHeight = ((getWidth() * 3.14159) * this.getScale());
+			}
+			if (currentHeight < (getHeight() * this.getScale()))
+			{
+				currentHeight = ((getWidth() * 3.14159) * this.getScale());
+				currentWidth = (getWidth() * this.getScale());
+			}
+		}
+
 
 		// System.out.println(sdtNode.getName() + "H:" + getHeight() + " W: " + getWidth() + " lAz " + getLAzimuth() + "
 		// rAz " + getRAzimuth() + " new h" + height + " new w " + width + " curH " + currentHeight + " curW " +

@@ -18,11 +18,65 @@ import org.xml.sax.SAXException;
 
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.ogc.collada.ColladaRoot;
+import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.UserFacingIcon;
 import net.java.joglutils.model.ModelFactory;
 import net.java.joglutils.model.ModelLoadException;
 import net.java.joglutils.model.geometry.Model;
+
+/**
+ * SdtSprites objects are initially created when the sprite type is defined.
+ * 
+ * 3D Models are loaded at this time and "owned" by the SdtSprite in the 
+ * sprite table.
+ * 
+ * When a SdtModelSprite is assigned to a node, we create a _copy_ of the sprite
+ * and keep a _reference_ to the model in the node's sprite.  (This way the model 
+ * is only loaded once and we only keep references to the common model "mesh")
+ * 
+ * KML ColladaRoots however cannot share _references_ to their model vectors (at 
+ * least without needing to change a lot of WWJ code IIRC) so a node's SdtSpriteKml
+ * returns a reference to a new colladaRoot object to be managed by an SdtNode.
+ * 
+ * Historically (and currently until this is rewritten) we had a common object
+ * managing kml models that could be assigned to a node or be independently rendered.
+ * As the code evolved, we used a SdtSpriteKML to manage both.  "independent"
+ * SdtSpriteKML types keep a KML collada root in the sprite class while an sdt
+ * node keeps calls SdtSpriteKML::GetColladaRoot to get a new collada root
+ * managed by the sdt node.  This "shared" class should be
+ * split apart.
+ * 
+ * Each sdt node keeps a unique sprite object (that may be an icon SdtSprite, a
+ * SdtSpriteModel, or a SdtSpriteKML).  The sprite classes manage sprite specific
+ * things like calculatingRealSize (which is handled differently for kml and 
+ * sprite models), or managing heading, pitch roll which are node position 
+ * dependent.
+ * 
+ * Sdt nodes are put in a "dummy" renderable layer.  The sdtNode's render function
+ * is responsible for setting the position of all its renderables (symbols, labels,
+ * sprites, etc) considering agl, msl, model size, etc.  There is some redundancy
+ * here that could be cleaned up.  For example SdtNode::Render calculates model
+ * size to get the position offset for models rendered on the globe surface (so
+ * 3d models don't disappear below the surface when rendered at terrain).  It then
+ * passes this overridden position to the symbol as well as the model size so that
+ * any associated symbols can be rendered correctly when the symbol is rendered in
+ * its rendering pass.
+ * 
+ * Model3DLayer maintains a list of SdtSpriteModels as its list
+ * of renderables.  It gets the models w,h orientation etc from the SdtSpriteModel
+ * when transforming it. 
+ * 
+ * It may make sense to have a common layer here rather than a model and
+ * a symbol layer... TBD.  WWJ has moved away from having specific layers for
+ * specific renderable types so this may now be simpler to do.
+ * 
+ * There is _plenty_ of additional clean up we could do as time allows.
+ * 
+ * @author ljt
+ *
+ */
 
 public class SdtSprite
 {
@@ -34,24 +88,30 @@ public class SdtSprite
 
 	private Type spriteType = Type.INVALID;
 
-	private double fixedLength = -1.0; // in meters
+	// We need to define fixedLength in SdtSprite rather than SdtSpriteModel
+	// as we don't know when processing sdt sprite setLength commands what 
+	// kind of sprite we have.  (Loading the model gives us that info).
+	protected double fixedLength = -1.0; // in meters
 
 	private String spritePath = null; // path to validate sprite source
 
 	private java.net.URL iconURL = null; // path to images retrieved from jar files
+	
 	// default icon size preserves source image aspect ratio
 	// with a fixed minimum dimension of 32 pixels
+	protected double iconWidth = -32;
 
-	protected int iconWidth = -32;
-
-	protected int iconHeight = -32;
+	protected double iconHeight = -32;
 
 	private int imageWidth = 0;
 
 	private int imageHeight = 0;
 
-	protected float scale = 1;
-
+	protected float scale = 1;	
+	
+	// Used by models only
+	protected Position position = null;
+	
 	// Default to useAbsoluteYaw to false so any node heading will be used
 	// if no orientation is set
 	private boolean useAbsoluteYaw = false;
@@ -71,6 +131,7 @@ public class SdtSprite
 
 	public boolean isRealSize()
 	{
+		// Only applies to models.
 		return false;
 	}
 
@@ -95,6 +156,7 @@ public class SdtSprite
 		this.imageHeight = template.imageHeight;
 		this.scale = template.scale;
 		this.useAbsoluteYaw = template.useAbsoluteYaw;
+		this.position = template.position;
 
 	}
 
@@ -221,35 +283,44 @@ public class SdtSprite
 
 	Dimension getIconSize()
 	{
-		return new Dimension(iconWidth, iconHeight);
+		return new Dimension((int) iconWidth, (int) iconHeight);
 	}
 
 
-	public double getWidth()
+	double getWidth()
 	{
 		return iconWidth;
 	}
 
 
-	public double getHeight()
+	double getHeight()
 	{
 		return iconHeight;
 	}
-
-
-	// Due to the overly convoluted model code override the
-	// sprite size so we have the correct dimensions for
-	// calculating symbol size. Don't want to fix this mess
-	// and break other code like model sizing right now!
-	void setModelSize(int width, int height)
+	
+	double getLength()
 	{
-		iconWidth = width;
-		iconHeight = height;
-
+		// no length for icon sprites
+		return iconWidth;
 	}
-
-
-	void setIconSize(int width, int height)
+	
+	public double getSymbolSize()
+	{
+		double size = iconWidth > iconHeight ? iconWidth : iconHeight;
+		
+		// if symbol size not set - use default 32??
+		
+		if (size <= 0)
+		{
+			size = 32.0;
+		}
+		
+		return size;
+		//return iconWidth > iconHeight ? iconWidth : iconHeight;
+	}
+		
+	
+	public void setSize(double width, double height)
 	{
 		if (width < 0 && height < 0)
 		{
@@ -314,8 +385,8 @@ public class SdtSprite
 	// Load sprite from jar
 	boolean LoadURL(java.net.URL spritePath) throws IOException
 	{
-		iconWidth = -32;
-		iconHeight = -32;
+		//iconWidth = -32;
+		//iconHeight = -32;
 		imageWidth = 0;
 		imageHeight = 0;
 
@@ -365,7 +436,6 @@ public class SdtSprite
 		this.spriteName = "";
 		return false;
 	} // end SdtSprite.LoadURL()
-		// TODO: LJT keep this?
 
 
 	/**
@@ -490,16 +560,14 @@ public class SdtSprite
 					Integer width = new Integer(dim[0]);
 					Integer height = new Integer(dim[1]);
 
-					theSprite.setIconSize(width.intValue(), height.intValue());
+					theSprite.setSize(width.intValue(), height.intValue()); 
 				}
 				if (type.equalsIgnoreCase("3ds"))
 				{
 					// Initially use the icon size to calculate the model length in
 					// case no model length is given
 					((SdtSpriteModel) theSprite).setSize(theSprite.getIconSize().width,
-						theSprite.getIconSize().height,
-						theSprite.getFixedLength() * theSprite.getScale());
-					((SdtSpriteModel) theSprite).setModelLength(this.getFixedLength());
+						theSprite.getIconSize().height);
 
 					String lighting = getTextValue(el, "light");
 					if (lighting != null)
@@ -566,6 +634,10 @@ public class SdtSprite
 		return null;
 	}
 
+	public void setModelElevation(DrawContext dc)
+	{
+		return;
+	}
 
 	// Try to load it as a Model, kml/kmz, or an Icon, else use default Model
 	SdtSprite Load(String spritePath) throws IOException
@@ -576,8 +648,6 @@ public class SdtSprite
 		if (spritePath.endsWith(".xml") | spritePath.endsWith(".XML"))
 			return LoadXMLFile(spritePath);
 
-		iconWidth = -32;
-		iconHeight = -32;
 		imageWidth = 0;
 		imageHeight = 0;
 
@@ -598,12 +668,9 @@ public class SdtSprite
 			SdtSpriteModel spriteModel = new SdtSpriteModel(this);
 			spriteModel.setModel(theModel);
 			spriteModel.setType(Type.MODEL);
-			// Initially use the icon size to calculate the model length in
-			// case no model length is given
 			spriteModel.setSize(spriteModel.getIconSize().width,
-				spriteModel.getIconSize().height,
-				spriteModel.getFixedLength() * spriteModel.getScale());
-			spriteModel.setModelLength(this.getFixedLength());
+				spriteModel.getIconSize().height);
+			
 			// We need the spritePath so we can reload the model when
 			// we assign the model to the node.
 			spriteModel.setSpritePath(spritePath);
@@ -682,6 +749,19 @@ public class SdtSprite
 	public void setSpritePath(String spritePath)
 	{
 		this.spritePath = spritePath;
+	}
+
+
+	public void setRealSize(boolean isRealSize) 
+	{
+		// Models only
+	}
+
+
+	protected void setPosition(Position pos) 
+	{
+		// Models only
+		
 	}
 
 } // end class SdtSprite
