@@ -32,7 +32,13 @@ public class SdtCone extends SdtSymbol implements Renderable
 		super(type, theNode);
 	}
 
+	public double getWidth()
+	{
+		return width;
 
+	}
+	
+	
 	@Override
 	public void setLAzimuth(double d)
 	{

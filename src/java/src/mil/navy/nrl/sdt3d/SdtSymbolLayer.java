@@ -84,7 +84,7 @@ public class SdtSymbolLayer extends RenderableLayer
 				}
 				else
 				{
-					symbol.updatePosition(dc);
+					symbol.updateSymbolCoordinates(dc);
 				}
 			}
 		}
