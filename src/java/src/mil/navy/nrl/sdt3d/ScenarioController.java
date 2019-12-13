@@ -26,6 +26,9 @@ public class ScenarioController implements PropertyChangeListener
 	public static final String POSITION_CHANGE = "positionChange";
 	public static final String PLAY_STOPPED = "playStopped";
 	public static final String PLAY_STARTED = "playStarted";
+	public static final String PLAY_STARTING = "playStarting";
+	
+	boolean recording = false;
 	
 	// TODO: Not yet implemented
 	public static final String RESUME_LIVE_PLAY = "resumeLivePlay";
@@ -49,6 +52,11 @@ public class ScenarioController implements PropertyChangeListener
 		initController();
 	}
 
+	public void initController()
+	{
+		getView().setListener(this);		
+	}
+	
 	
 	ScenarioModel getScenarioModel()
 	{
@@ -114,28 +122,42 @@ public class ScenarioController implements PropertyChangeListener
 	}
 
 	
-	public void initController()
+	private void startRecording()
 	{
-		getView().setListener(this);
-		
 		getView().initPlayback();
-
-		startCommandMapTimer();		
+		
+		startCommandMapTimer();
+		
+		recording = true;
 	}
 	
 	
-	public void stopController()
+	public void reset()
 	{
-		commandMapTimer.stop();
-		
 		getView().stopPlayback();
-
-		//getView().stopScenarioPlayback();
+		
+		recording = false;
+		stopCommandMapTimer();
+		scenarioSliderTimeMap = new LinkedHashMap<Integer,Long>();
+		commandMapTimer = null;
+		scenarioModel.resetModel();
+	
 	}
 	
 	@Override
 	public void propertyChange(PropertyChangeEvent event)
-	{		
+	{	
+		if (event.getPropertyName().equals(PLAY_STARTING))
+		{
+			//System.out.println("Controller propertyChange PLAY_STARTING");
+
+			if (!recording)
+			{
+				startRecording();
+			}
+
+		}
+
 		//System.out.println("ScenarioController::propertyChange");
 		if (event.getPropertyName().equals(PLAY_STOPPED))
 		{	                		
@@ -143,10 +165,11 @@ public class ScenarioController implements PropertyChangeListener
 			listener.modelPropertyChange(ScenarioController.SCENARIO_PLAYBACK_STOPPED, null, null);
 			
 		}
+		
 		if (event.getPropertyName().equals(PLAY_STARTED))
 		{	                		
-			//System.out.println("Controller propertyChange PLAY_STARTED");  
-			// getCommandAtSliderTime fires SCENARIO_PLAYBACK
+			//System.out.println("Controller propertyChange PLAY_STARTED");
+
 			getCommandAtSliderTime(event);
 		}
 		
@@ -165,16 +188,21 @@ public class ScenarioController implements PropertyChangeListener
 		// If no value provided start at beginning
 		if (sliderStartTime == 0)
 		{
-			Map.Entry<Integer, Long> entry = scenarioSliderTimeMap.entrySet().iterator().next();
-			sliderStartTime = entry.getKey();
-		}
-
-		if (!scenarioSliderTimeMap.containsKey(sliderStartTime))
+			if (!scenarioSliderTimeMap.isEmpty())
+			{
+				Map.Entry<Integer, Long> entry = scenarioSliderTimeMap.entrySet().iterator().next();
+				sliderStartTime = entry.getKey();
+			}
+		} 
+		else 
 		{
-			System.out.println("ScenarioController::propertyChange() map does not contain key>" + event.getNewValue());
-			// Stop playback
-			getView().startStopButtonActionPerformed();
-			return;
+			if (!scenarioSliderTimeMap.containsKey(sliderStartTime))
+			{	
+				System.out.println("ScenarioController::propertyChange() map does not contain key>" + event.getNewValue());
+				// Stop playback
+				getView().startStopButtonActionPerformed();
+				return;
+			}
 		}
 
 		
@@ -205,5 +233,13 @@ public class ScenarioController implements PropertyChangeListener
 		
 		commandMapTimer.start();
 
+	}
+	
+	private void stopCommandMapTimer()
+	{
+		if (commandMapTimer != null)
+		{
+			commandMapTimer.stop();
+		}
 	}
 }
