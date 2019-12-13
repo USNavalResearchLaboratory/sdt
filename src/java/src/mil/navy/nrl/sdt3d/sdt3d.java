@@ -355,7 +355,7 @@ public class sdt3d extends SdtApplication
 		boolean playbackScenario = false;
 		
 		boolean playbackStopped = false;
-		
+				
 		private PropertyChangeSupport propChangeSupport = new PropertyChangeSupport(this);
 		
 		// used to calculate wait interval when writing log file
@@ -1700,6 +1700,7 @@ public class sdt3d extends SdtApplication
 			if (scenarioThread != null)
 			{
     				scenarioThread.stopThread();
+    				
 			}
 		}
 		
@@ -1906,7 +1907,22 @@ public class sdt3d extends SdtApplication
 		 */
 		void resetSystemState(boolean hardReset)
 		{
-
+			if (fileThread != null && openFile != null)
+			{
+				fileThread.stopThread();
+				fileThread.stopRead();
+				fileThread.clear();
+				try
+				{
+					Thread.currentThread();
+					Thread.sleep(1000); // sleep for 1000 ms
+				}
+				catch (InterruptedException ie)
+				{
+					// If this thread was interrupted by another thread
+				}
+			}
+			
 			if (hardReset)
 			{
 
@@ -1924,27 +1940,9 @@ public class sdt3d extends SdtApplication
 					tcpSocketThread = null;
 					toggleTcpOn();
 				}
-
-				if (fileThread != null && openFile != null)
-				{
-					fileThread.stopThread();
-					fileThread.stopRead();
-					fileThread.clear();
-					try
-					{
-						Thread.currentThread();
-						Thread.sleep(1000); // sleep for 1000 ms
-					}
-					catch (InterruptedException ie)
-					{
-						// If this thread was interrupted by another thread
-					}
-				}
-
-				if (scenarioThread != null && !scenarioThread.stopped()) {
-					scenarioThread.stopThread();
-					scenarioThread = null;
-				}
+								
+				// Stop scenario recording and reset state
+				startStopScenarioRecording("off");
 				
 				// Reset system modes
 				this.setOfflineMode("off");
@@ -1975,21 +1973,6 @@ public class sdt3d extends SdtApplication
 				
 			} // end hard reset
 
-			if (fileThread != null && openFile != null)
-			{
-				fileThread.stopThread();
-				fileThread.stopRead();
-				fileThread.clear();
-				try
-				{
-					Thread.currentThread();
-					Thread.sleep(1000); // sleep for 1000 ms
-				}
-				catch (InterruptedException ie)
-				{
-					// If this thread was interrupted by another thread
-				}
-			}
 			
 			logDebugOutput = false;
 			try
@@ -3821,7 +3804,7 @@ public class sdt3d extends SdtApplication
 		} // setLogDebugOutput
 
 
-		private boolean setRecordScenario(String val)
+		private boolean startStopScenarioRecording(String val)
 		{
 			if (0 == val.length())
 			{
@@ -3840,9 +3823,16 @@ public class sdt3d extends SdtApplication
 			{
 				if (val.equalsIgnoreCase("off"))
 				{
-					// TODO: fix when fully implement record start/stop
+					if (scenarioThread != null) 
+					{ 
+						scenarioThread.stopRecording();
+						stopScenarioThread();
+					}
+					scenarioController.reset();
+					scenarioThread = null;						
 					recordScenario = false;
-					scenarioController.stopController();
+					playbackScenario = false;
+
 				}
 				else
 				{
@@ -7453,17 +7443,13 @@ public class sdt3d extends SdtApplication
 		}
 		
 		void processCmd(String pendingCmd, String val,boolean scenarioCmd)
-		{			
-			// If we are "taping" the scenario, update our model 
-			// TODO: regardless of command success?  I guess replay can fail just as well..
+		{						
 			
-			// total hack for now so we can continue recording after stoppage
-			//if (pendingCmd.equalsIgnoreCase("recordScenario"))
-			//{
-			//	this.doCmd(pendingCmd, val);
-			//	return;
-			//}
-			
+			/*
+			 * If we are recording the scenario either update our model
+			 * if we are not playing it back, or the buffered command
+			 * model if we are.
+			 */
 			if (recordScenario)
 			{
 				if (!playbackScenario && !scenarioCmd) 
@@ -7480,7 +7466,6 @@ public class sdt3d extends SdtApplication
 				}	
 			}
 			
-			
 			if ((playbackScenario && !scenarioCmd)
 					||
 					playbackStopped)
@@ -7489,6 +7474,14 @@ public class sdt3d extends SdtApplication
 				return;
 			}
 		
+			/*
+			 * If we are no longer scenario recording/playback, don't play back
+			 * any scenario commands
+			 */
+			if (!recordScenario && scenarioCmd)
+			{
+				return;
+			}
 			if (parser.doCmd(pendingCmd, val))
 			{
 				logDebugOutput(pendingCmd, val);
@@ -7532,7 +7525,6 @@ public class sdt3d extends SdtApplication
 		 */
 		public synchronized boolean onInput(String str, SdtCmdParser parser, boolean scenarioCmd)
 		{
-			//System.out.println("onInput str> " + str);
 			currentNode = parser.currentNode;
 			currentSprite = parser.currentSprite;
 			currentRegion = parser.currentRegion;

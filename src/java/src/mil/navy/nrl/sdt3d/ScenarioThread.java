@@ -22,8 +22,18 @@ import java.util.TimeZone;
 
 public class ScenarioThread extends SocketThread
 {
+	/*
+	 * stopFlag is used for scenario play/pause control
+	 */
 	protected boolean stopFlag = false;
 	
+	/* 
+	 * stopRecordingFlag is set when we want to completely stop
+	 * recording - e.g. a hard reset occurs or when the
+	 * user stops recording (when that is implemented)
+	 */
+	protected boolean stopRecordingFlag = false;
+		
 	private boolean running = false;
 
 	private ScenarioModel scenarioModel;
@@ -39,6 +49,7 @@ public class ScenarioThread extends SocketThread
 	public ScenarioThread(sdt3d.AppFrame theApp, ScenarioController scenarioController, HashMap<Integer, String> int2Cmd, Long scenarioPlaybackStartTime)
 	{
 		super(theApp, 0);
+
 		this.scenarioController = scenarioController;
 		this.scenarioModel = scenarioController.getScenarioModel();
 		this.scenarioPlaybackStartTime = scenarioPlaybackStartTime;
@@ -59,7 +70,15 @@ public class ScenarioThread extends SocketThread
 		stopFlag = true;
 	}
 
+	/*
+	 * Called when we stop recording completely.
+	 */
+	public void stopRecording()
+	{
+		stopRecordingFlag = true;
+	}
 	
+		
 	private ScenarioModel getScenarioModel()
 	{
 		return this.scenarioModel;
@@ -120,6 +139,13 @@ public class ScenarioThread extends SocketThread
 
 		while (itr.hasNext())
 		{
+			/*
+			 * Recording has been completely stopped, exit thread.
+			 */
+			if (stopRecordingFlag)
+			{
+				return;
+			}
 			Entry<Long, Map<Integer,String>> entry = itr.next();
 				
 			Map<Integer, String> cmdMap = entry.getValue();
@@ -140,6 +166,8 @@ public class ScenarioThread extends SocketThread
 			if (lastTime < scenarioPlaybackStartTime)
 			{
 				value = " " + pendingCmd + " \"" + value + " \"\n";
+				
+				//System.out.println("lastTime> " + lastTime + " scenarioPlaybackStartTime> " + scenarioPlaybackStartTime);
 			}
 			else
 			{
@@ -159,6 +187,7 @@ public class ScenarioThread extends SocketThread
 					if (!stopFlag)
 					{
 						waitTime = (long) (waitTime * speedFactor);
+
 						sleep(waitTime);
 					}
 				}
@@ -194,6 +223,9 @@ public class ScenarioThread extends SocketThread
 	} // end ScenarioThread::run()
 
 
+	/*
+	 * Not currently used
+	 */
 	void playbackBufferedCommands()
 	{
 		String value = null;

@@ -39,7 +39,10 @@ public class ScenarioPlaybackPanel extends JPanel
     static final int PLAYING = 2;
     private static final int RECORDING = 3;
     private static final int RECORDING_STOPPED = 4;
-
+    private static final int STARTING = 5; // redo all these static cmds
+    // when sdt3d complete stops playback - cleanup
+    private static final int STOPPED = 6;
+    
     private int playMode = PLAYING; 
 
     // elapsedSecs is total taped scenario time
@@ -50,7 +53,10 @@ public class ScenarioPlaybackPanel extends JPanel
     public ScenarioPlaybackPanel()
     {
         initComponents();
-               
+        
+        this.startStopButton.setEnabled(true);
+        this.playMode = STARTING;
+  
     }
     
     /*
@@ -64,18 +70,24 @@ public class ScenarioPlaybackPanel extends JPanel
     		
     		setPlayMode(RECORDING);
     		
-             
+    		startStopButton.setText("Stop");
+    
     }
     
-    
+    // deconflict with stop scenario playback
+    // make this reset
     public void stopPlayback()
     {
+    		System.out.println("Stopping playback");
 		// clean all this starting/stopping up!!
-
-    		startStopButtonActionPerformed();
-    		
-    		setPlayMode(RECORDING_STOPPED);
-     		
+		startStopButton.setText("Start Recording");
+		setPlayMode(STOPPED);
+		//setPlayMode(RECORDING_STOPPED);
+		scenarioSlider.setValue(0);
+		player.stop();
+    		player = null;
+    		scenarioSecs = 0;
+    		elapsedSecs = 0;
     }
     
     private void initComponents()
@@ -185,7 +197,7 @@ public class ScenarioPlaybackPanel extends JPanel
 
                 //---- "Stop" Button ----
                 this.startStopButton = new JButton();
-                this.startStopButton.setText("Stop");
+                this.startStopButton.setText("Start Recording");
                 this.startStopButton.setEnabled(false);
                 this.startStopButton.addActionListener(new ActionListener()
                 {
@@ -409,6 +421,23 @@ public class ScenarioPlaybackPanel extends JPanel
     
     void startStopButtonActionPerformed()
     {
+    	
+    		if (playMode == STARTING || playMode == STOPPED)
+    		{
+    			// Rename playMode RESET
+    			// All recording has been reset
+    			startStopButton.setText("Stop");
+    			speedFactorSpinner.setEnabled(false);
+    			elapsedSecs = 0;
+    			scenarioSecs = 0;
+     		setScenarioTime(scenarioSecs);
+    			//System.out.println("PLAY_PAUSED PLAYBACK scenarioSecs> " + scenarioSecs);
+    			setPlayMode(STARTING);   			
+    			firePropertyChange(ScenarioController.PLAY_STARTING, null, scenarioSecs);
+
+			return;
+    		}
+    	
     		if (playMode == PLAY_PAUSED)
     		{   			
     			startStopButton.setText("Stop");
@@ -421,7 +450,7 @@ public class ScenarioPlaybackPanel extends JPanel
     		}
     		else
     		{
-    			startStopButton.setText("Start");    			
+    			startStopButton.setText("Play");    			
     			speedFactorSpinner.setEnabled(true);
     			
     			setPlayMode(PLAY_PAUSED);
@@ -509,15 +538,18 @@ public class ScenarioPlaybackPanel extends JPanel
     
     
     void setPlayMode(int mode)
-    {
+    {    	
     		// If we stopped recording and now want to replay restart out player
-    		if (this.playMode == RECORDING_STOPPED)
+    		if (playMode == RECORDING_STOPPED)
     		{
-    			player.start();
+    			if (player != null)
+    			{
+    				player.start();
+    			}
     		}
     	
-        this.playMode = mode;
-        if ((this.playMode == PLAYING || this.playMode == RECORDING) 
+        playMode = mode;
+        if ((playMode == PLAYING || playMode == RECORDING  || playMode == STARTING) 
         		&& player == null)
         {
             initPlayer();
