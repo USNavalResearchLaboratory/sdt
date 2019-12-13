@@ -7413,10 +7413,15 @@ public class sdt3d extends SdtApplication
 		        {
 		            public void propertyChange(PropertyChangeEvent event)
 		            {
-		            	stopScenarioThread();
+		            		stopScenarioThread();
+		            		if (event.getPropertyName().equals(ScenarioController.RECORDING_STARTED))
+		            		{
+		            			//System.out.println("RECORDING_STARTED sdt3d\n");
+		            			recordScenario = true;
+		            		}
 		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK))
 		                {
-		                		System.out.println("SCENARIO_PLAYBACK sdt3d\n");
+		                		//System.out.println("SCENARIO_PLAYBACK sdt3d\n");
 		                		scenarioController.appendBufferModel();
 	                			
 		                		// oldValue: sliderStartTime, newValue: scenarioStartTime
@@ -7426,13 +7431,13 @@ public class sdt3d extends SdtApplication
 						}
 		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK_STOPPED))
 		                {	
-		                		System.out.println("SCEANRIO_PLAYBACK_STOPPED sdt3d\n");
+		                		//System.out.println("SCEANRIO_PLAYBACK_STOPPED sdt3d\n");
 		                		playbackScenario = true;
 		                		playbackStopped = true;		                		
 		                }
 		                if (event.getPropertyName().equals(ScenarioController.RESUME_LIVE_PLAY))
 		                	{
-		                		System.out.println("RESUME_LIVE_PLAY sdt3d\n");
+		                		//System.out.println("RESUME_LIVE_PLAY sdt3d\n");
 		                		// TODO: Need to playback what is in the buffer prior to resuming play
 		                		scenarioController.appendBufferModel();
 		                		playbackScenario = false;

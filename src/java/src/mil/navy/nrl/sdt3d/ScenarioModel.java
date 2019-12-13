@@ -51,12 +51,12 @@ public class ScenarioModel
 
 	void  resetModel()
 	{
-		sdtCommandMap.clear();
-		//sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
+		sdtCommandMap.clear(); // probably don't need clear
+		sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
 		synMap = Collections.synchronizedMap(sdtCommandMap);
 
-		//sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
 		sdtBufferCommandMap.clear();
+		sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
 		synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
 	}
 	
