@@ -20,6 +20,7 @@ public class ScenarioController implements PropertyChangeListener
 	public static final String SCENARIO_PLAYBACK = "scenarioPlayback";
 	public static final String SCENARIO_PLAYBACK_STOPPED = "scenarioPlaybackStopped";
 	public static final String SCENARIO_STARTED = "scenarioStarted";
+	public static final String RECORDING_STARTED = "recordingStarted"; // TODO: cleanup
 
 	public static final String SKIP_BACK = "skipBack";
 	public static final String SKIP_FORWARD = "skipForward";
@@ -155,6 +156,7 @@ public class ScenarioController implements PropertyChangeListener
 			{
 				startRecording();
 			}
+			listener.modelPropertyChange(ScenarioController.RECORDING_STARTED, null, null);		
 
 		}
 
