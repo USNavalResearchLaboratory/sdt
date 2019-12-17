@@ -16,18 +16,14 @@ import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
  */
 public class ScenarioController implements PropertyChangeListener
 {
-	public static final String SCENARIO_MODIFIED = "scenarioModified";
-	public static final String SCENARIO_PLAYBACK = "scenarioPlayback";
-	public static final String SCENARIO_PLAYBACK_STOPPED = "scenarioPlaybackStopped";
-	public static final String SCENARIO_STARTED = "scenarioStarted";
+	public static final String START_SCENARIO_PLAYBACK = "scenarioPlayback";
+	public static final String STOP_SCENARIO_PLAYBACK = "scenarioPlaybackStopped";
 	public static final String RECORDING_STARTED = "recordingStarted"; // TODO: cleanup
-
+	public static final String RECORDING_STOPPED = "recordingStopped";
+	
 	public static final String SKIP_BACK = "skipBack";
 	public static final String SKIP_FORWARD = "skipForward";
 	public static final String POSITION_CHANGE = "positionChange";
-	public static final String PLAY_STOPPED = "playStopped";
-	public static final String PLAY_STARTED = "playStarted";
-	public static final String PLAY_STARTING = "playStarting";
 	
 	boolean recording = false;
 	
@@ -132,23 +128,39 @@ public class ScenarioController implements PropertyChangeListener
 		recording = true;
 	}
 	
-	
+	/*
+	 * Reset stops all recording and clears the data model
+	 * Called by a hard system reset.
+	 */
 	public void reset()
 	{
-		getView().stopPlayback();
+		getView().clearRecording();
 		
 		recording = false;
 		stopCommandMapTimer();
 		scenarioSliderTimeMap = new LinkedHashMap<Integer,Long>();
 		commandMapTimer = null;
-		scenarioModel.resetModel();
+		scenarioModel.clearModelState();
 	
+	}
+	
+	/*
+	 * Stop recording is called when the user stops recording.
+	 * The data model is retained for user playback.
+	 */
+	
+	public void stopRecording()
+	{
+		getView().stopRecording();
+		recording = false;
+		stopCommandMapTimer();
+		commandMapTimer = null;
 	}
 	
 	@Override
 	public void propertyChange(PropertyChangeEvent event)
 	{	
-		if (event.getPropertyName().equals(PLAY_STARTING))
+		if (event.getPropertyName().equals(RECORDING_STARTED))
 		{
 			//System.out.println("Controller propertyChange PLAY_STARTING");
 
@@ -160,15 +172,20 @@ public class ScenarioController implements PropertyChangeListener
 
 		}
 
+		if (event.getPropertyName().equals(RECORDING_STOPPED))
+		{
+			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
+		}
+		
 		//System.out.println("ScenarioController::propertyChange");
-		if (event.getPropertyName().equals(PLAY_STOPPED))
+		if (event.getPropertyName().equals(STOP_SCENARIO_PLAYBACK))
 		{	                		
 			//System.out.println("Controller propertyChange PLAY_STOPPED");
-			listener.modelPropertyChange(ScenarioController.SCENARIO_PLAYBACK_STOPPED, null, null);
+			listener.modelPropertyChange(ScenarioController.STOP_SCENARIO_PLAYBACK, null, null);
 			
 		}
 		
-		if (event.getPropertyName().equals(PLAY_STARTED))
+		if (event.getPropertyName().equals(START_SCENARIO_PLAYBACK))
 		{	                		
 			//System.out.println("Controller propertyChange PLAY_STARTED");
 
@@ -210,7 +227,7 @@ public class ScenarioController implements PropertyChangeListener
 		
 		// Get the command map key for the scenario slider time
 		Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
-		listener.modelPropertyChange(ScenarioController.SCENARIO_PLAYBACK, sliderStartTime, scenarioPlaybackStartTime);		
+		listener.modelPropertyChange(ScenarioController.START_SCENARIO_PLAYBACK, sliderStartTime, scenarioPlaybackStartTime);		
 	}
 	
 	

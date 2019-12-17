@@ -1,11 +1,20 @@
 package mil.navy.nrl.sdt3d;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+
+import javax.swing.text.html.HTMLDocument.Iterator;
 
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
 
@@ -49,8 +58,43 @@ public class ScenarioModel
 	}
 	
 
-	void  resetModel()
+	void loadModel()
 	{
+		LinkedHashMap<Long,Map<Integer,String>> sdtCommandMap = null; //new LinkedHashMap<Long, Map<Integer,String>>();
+		FileInputStream fis;
+		try {
+			fis = new FileInputStream("hashmap.ser");
+			ObjectInputStream ois = new ObjectInputStream(fis);
+			sdtCommandMap = (LinkedHashMap<Long, Map<Integer, String>>) ois.readObject();
+			System.out.println(sdtCommandMap);
+			ois.close();
+			fis.close();
+
+		} catch (IOException | ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("Deserialized hashmap..");
+		
+	}
+	
+	
+	void  clearModelState()
+	{
+		/*FileOutputStream fos;
+		try {
+			fos = new FileOutputStream("hashmap.ser");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(sdtCommandMap);
+			oos.close();
+			fos.close();
+	
+		}  catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
+		
 		sdtCommandMap.clear(); // probably don't need clear
 		sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
 		synMap = Collections.synchronizedMap(sdtCommandMap);
@@ -58,6 +102,8 @@ public class ScenarioModel
 		sdtBufferCommandMap.clear();
 		sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
 		synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
+		
+		//loadModel();
 	}
 	
 	

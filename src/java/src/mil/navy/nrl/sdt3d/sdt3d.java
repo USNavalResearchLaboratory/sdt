@@ -351,7 +351,9 @@ public class sdt3d extends SdtApplication
 		private boolean logDebugOutput = false;
 		
 		boolean recordScenario = true;
-		
+		// clean up these booleans
+		boolean playbackOnly = false;
+				
 		boolean playbackScenario = false;
 		
 		boolean playbackStopped = false;
@@ -3832,6 +3834,8 @@ public class sdt3d extends SdtApplication
 					scenarioThread = null;						
 					recordScenario = false;
 					playbackScenario = false;
+					playbackStopped = false; // consolidate these booleans
+					playbackOnly = false;
 
 				}
 				else
@@ -7418,8 +7422,29 @@ public class sdt3d extends SdtApplication
 		            		{
 		            			//System.out.println("RECORDING_STARTED sdt3d\n");
 		            			recordScenario = true;
+		            			playbackOnly = false;
+		            			
 		            		}
-		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK))
+		            		if (event.getPropertyName().equals(ScenarioController.RECORDING_STOPPED))
+		            		{
+		            			// The user stopped recording, keep the data model available
+		            			// and don't reset controller
+		            			
+		            			//System.out.println("RECORDING_STOPPED sdt3d\n");
+		            			
+		    					if (scenarioThread != null) 
+		    					{ 
+		    						scenarioThread.stopRecording();
+		    						stopScenarioThread();
+		    					}
+		    					scenarioController.stopRecording();
+		    					scenarioThread = null;
+		    					recordScenario = false;
+		    					playbackOnly = true;
+
+		            		}
+
+		                if (event.getPropertyName().equals(ScenarioController.START_SCENARIO_PLAYBACK))
 		                {
 		                		//System.out.println("SCENARIO_PLAYBACK sdt3d\n");
 		                		scenarioController.appendBufferModel();
@@ -7429,7 +7454,7 @@ public class sdt3d extends SdtApplication
 	                			playbackScenario = true;	  
 	                			playbackStopped = false;
 						}
-		                if (event.getPropertyName().equals(ScenarioController.SCENARIO_PLAYBACK_STOPPED))
+		                if (event.getPropertyName().equals(ScenarioController.STOP_SCENARIO_PLAYBACK))
 		                {	
 		                		//System.out.println("SCEANRIO_PLAYBACK_STOPPED sdt3d\n");
 		                		playbackScenario = true;
@@ -7448,14 +7473,13 @@ public class sdt3d extends SdtApplication
 		}
 		
 		void processCmd(String pendingCmd, String val,boolean scenarioCmd)
-		{						
-			
+		{									
 			/*
 			 * If we are recording the scenario either update our model
 			 * if we are not playing it back, or the buffered command
 			 * model if we are.
 			 */
-			if (recordScenario)
+			if (recordScenario && !playbackOnly)
 			{
 				if (!playbackScenario && !scenarioCmd) 
 				{
@@ -7481,12 +7505,23 @@ public class sdt3d extends SdtApplication
 		
 			/*
 			 * If we are no longer scenario recording/playback, don't play back
-			 * any scenario commands
+			 * any scenario commands (fix this text)
+			 * 
+			 * or if we have stopped recording and are just playing back the scenario
+			 * 
+			 * clean all these booleans up
 			 */
-			if (!recordScenario && scenarioCmd)
+			if (!recordScenario && scenarioCmd && !playbackOnly)
 			{
 				return;
 			}
+			
+			if (playbackOnly && !scenarioCmd)
+			{
+				return;
+			}
+			
+			
 			if (parser.doCmd(pendingCmd, val))
 			{
 				logDebugOutput(pendingCmd, val);
