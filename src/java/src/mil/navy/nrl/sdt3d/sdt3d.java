@@ -7471,6 +7471,7 @@ public class sdt3d extends SdtApplication
 		}
 		
 		
+		
 		private void createPropertyChangeListener()
 		{
 		    propChangeSupport.addPropertyChangeListener(new PropertyChangeListener()
@@ -7501,9 +7502,20 @@ public class sdt3d extends SdtApplication
 		    					scenarioThread = null;
 		    					recordScenario = false;
 		    					playbackOnly = true;
-
 		            		}
 
+		            		/*
+		            		if (event.getPropertyName().equals(ScenarioController.SAVE_STATE))
+		            		{
+		            			scenarioController.saveState();
+		            		}
+		            		*/
+		            		if (event.getPropertyName().equals(ScenarioController.LOAD_STATE))
+		            		{
+		            			resetSystemState(false);
+		            			//scenarioController.loadState();
+		            		}
+		            		
 		                if (event.getPropertyName().equals(ScenarioController.START_SCENARIO_PLAYBACK))
 		                {
 		                		//System.out.println("SCENARIO_PLAYBACK sdt3d\n");
