@@ -24,6 +24,8 @@ public class ScenarioPlaybackPanel extends JPanel
     private JButton reverseButton;
     private JButton startStopButton;
     private JButton stopRecordingButton;
+    private JButton saveStateButton;
+    private JButton loadStateButton;
     private JButton forwardButton;
     private JButton fastForwardButton;
     private JLabel speedLabel;
@@ -111,6 +113,7 @@ public class ScenarioPlaybackPanel extends JPanel
 		setPlayMode(STOP_RECORDING);
 		playbackOnly = true;
 		startStopButtonActionPerformed();
+		
     }
     
     private void initComponents()
@@ -322,7 +325,37 @@ public class ScenarioPlaybackPanel extends JPanel
                 speedPanel.add(this.stopRecordingButton);
                 speedPanel.add(Box.createHorizontalStrut(3));
                 speedPanel.add(Box.createHorizontalGlue());
-
+                
+                saveStateButton = new JButton();
+                saveStateButton.setText("Save state");
+                saveStateButton.setEnabled(true);;
+                saveStateButton.addActionListener(new ActionListener()
+                	{
+                		public void actionPerformed(ActionEvent e)
+                		{
+                			saveStateButtonActionPerformed();
+                		}
+                	});
+                speedPanel.add(saveStateButton);
+                speedPanel.add(Box.createHorizontalStrut(3));
+                speedPanel.add(Box.createHorizontalGlue());
+            
+                
+                loadStateButton = new JButton();
+                loadStateButton.setText("Load state");
+                loadStateButton.setEnabled(true);;
+                loadStateButton.addActionListener(new ActionListener()
+                	{
+                		public void actionPerformed(ActionEvent e)
+                		{
+                			loadStateButtonActionPerformed();
+                		}
+                	});
+                speedPanel.add(loadStateButton);
+                speedPanel.add(Box.createHorizontalStrut(3));
+                speedPanel.add(Box.createHorizontalGlue());
+ 
+                
             }
             positionPanel.add(speedPanel);
             positionPanel.add(Box.createVerticalGlue());
@@ -458,7 +491,7 @@ public class ScenarioPlaybackPanel extends JPanel
      }
     
     
-    void stopRecordingButtonActionPerformed()
+    private void stopRecordingButtonActionPerformed()
     {
     		stopRecordingButton.setEnabled(false);
     		stopRecordingButton.setText("Playback Only Mode");
@@ -466,6 +499,24 @@ public class ScenarioPlaybackPanel extends JPanel
     		firePropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
     }
     
+    
+    private void saveStateButtonActionPerformed()
+    {
+    		saveStateButton.setEnabled(false);
+    		firePropertyChange(ScenarioController.SAVE_STATE, null, null);
+    }
+ 
+    
+    private void loadStateButtonActionPerformed()
+    {
+    		loadStateButton.setEnabled(false);
+    		initPlayback();
+    		//setPlayMode(PLAYING);
+    		playbackOnly = true;
+    		//updateEnabledState(true);
+    		firePropertyChange(ScenarioController.LOAD_STATE, null, null);
+    }
+ 
     
     void startStopButtonActionPerformed()
     {
@@ -549,6 +600,14 @@ public class ScenarioPlaybackPanel extends JPanel
     }
     
     
+    void setElapsedSecs(Integer elapsedSecs) 
+    {
+    		this.elapsedSecs = elapsedSecs;
+    		
+    		maxSliderValue = this.elapsedSecs;
+    		
+    }
+    
     private void initPlayer()
     {
         if (player != null)
@@ -569,7 +628,7 @@ public class ScenarioPlaybackPanel extends JPanel
             		{
              		updateScenarioTime(elapsedSecs);
             		}
-            		
+            		            		
             		if (playMode == PLAYING)
             		{
                 		scenarioSecs++;

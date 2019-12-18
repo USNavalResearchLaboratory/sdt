@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -57,44 +59,69 @@ public class ScenarioModel
 
 	}
 	
-
-	void loadModel()
+	
+	void loadState()
 	{
+		Instant startTime = Instant.now();
+
 		LinkedHashMap<Long,Map<Integer,String>> sdtCommandMap = null; //new LinkedHashMap<Long, Map<Integer,String>>();
 		FileInputStream fis;
 		try {
-			fis = new FileInputStream("hashmap.ser");
+			
+			fis = new FileInputStream("modelState.ser");
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			sdtCommandMap = (LinkedHashMap<Long, Map<Integer, String>>) ois.readObject();
-			System.out.println(sdtCommandMap);
+			//System.out.println(sdtCommandMap);
 			ois.close();
 			fis.close();
 
+			Instant endTime = Instant.now();
+			Duration interval = Duration.between(startTime, endTime);
+			System.out.println("loadModelState() Execution time in seconds: " + interval.getSeconds());
+
+			
 		} catch (IOException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("Deserialized hashmap..");
+	
+		//sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
+		synMap = Collections.synchronizedMap(sdtCommandMap);
+
+		sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
+		synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
 		
+		Instant endTime = Instant.now();
+		Duration interval = Duration.between(startTime, endTime);
+		System.out.println("loadModelState() Total execution time in seconds: " + interval.getSeconds());
 	}
 	
 	
-	void  clearModelState()
+	void saveState()
 	{
-		/*FileOutputStream fos;
+		FileOutputStream fos;
 		try {
-			fos = new FileOutputStream("hashmap.ser");
+			Instant startTime = Instant.now();
+			
+			fos = new FileOutputStream("modelState.ser");
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(sdtCommandMap);
 			oos.close();
 			fos.close();
+			
+			Instant endTime = Instant.now();
+			Duration interval = Duration.between(startTime, endTime);
+			System.out.println("saveModelState() Execution time in seconds: " + interval.getSeconds());
 	
 		}  catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		*/
-		
+		}		
+	}
+	
+	
+	void  clearModelState()
+	{	
 		sdtCommandMap.clear(); // probably don't need clear
 		sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
 		synMap = Collections.synchronizedMap(sdtCommandMap);
@@ -103,7 +130,6 @@ public class ScenarioModel
 		sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
 		synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
 		
-		//loadModel();
 	}
 	
 	

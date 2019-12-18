@@ -4,9 +4,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
 import javax.swing.Timer;
 
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
@@ -20,6 +29,8 @@ public class ScenarioController implements PropertyChangeListener
 	public static final String STOP_SCENARIO_PLAYBACK = "scenarioPlaybackStopped";
 	public static final String RECORDING_STARTED = "recordingStarted"; // TODO: cleanup
 	public static final String RECORDING_STOPPED = "recordingStopped";
+	public static final String SAVE_STATE = "saveState";
+	public static final String LOAD_STATE = "loadState";
 	
 	public static final String SKIP_BACK = "skipBack";
 	public static final String SKIP_FORWARD = "skipForward";
@@ -144,6 +155,64 @@ public class ScenarioController implements PropertyChangeListener
 	
 	}
 	
+	private void saveState()
+	{
+		getScenarioModel().saveState();
+		
+		FileOutputStream fos;
+		try {
+			fos = new FileOutputStream("controllerState.ser");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(scenarioSliderTimeMap);
+			oos.close();
+			fos.close();
+
+		}  catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
+	
+		
+	void loadState()
+	{
+		getScenarioModel().loadState();
+		
+		scenarioSliderTimeMap = null;
+		FileInputStream fis;
+		try {
+			fis = new FileInputStream("controllerState.ser");
+			ObjectInputStream ois = new ObjectInputStream(fis);			
+			scenarioSliderTimeMap = (Map<Integer, Long>) ois.readObject();
+			//System.out.println(scenarioSliderTimeMap);
+			ois.close();
+			fis.close();
+
+		} catch (IOException | ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		Integer elapsedSecs = getElapsedSecs();
+		
+		getView().setElapsedSecs(elapsedSecs);
+	}
+	
+	
+	Integer  getElapsedSecs()
+	{
+		System.out.println("here");
+		// hack for now
+		//Map.Entry<Integer, Long> entry = (Entry<Integer, Long>) scenarioSliderTimeMap.entrySet().toArray()[scenarioSliderTimeMap.size()];
+		Integer key = 0;
+		for (Map.Entry<Integer, Long> entry : scenarioSliderTimeMap.entrySet()) {
+			key = entry.getKey();
+			//ArrayList<String> value = entry.getValue();
+			}
+		
+		return key;  //Integer.valueOf(scenarioSliderTimeMap.entrySet().toArray()[scenarioSliderTimeMap.size()]);
+	}
+	
 	/*
 	 * Stop recording is called when the user stops recording.
 	 * The data model is retained for user playback.
@@ -176,6 +245,23 @@ public class ScenarioController implements PropertyChangeListener
 		{
 			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
 		}
+		
+		if (event.getPropertyName().equals(SAVE_STATE))
+		{
+			// Stop recording and save state
+			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
+			saveState();
+			//listener.modelPropertyChange(ScenarioController.SAVE_STATE, null, null);
+		}
+
+		if (event.getPropertyName().equals(LOAD_STATE))
+		{
+			// Stop recording and save state
+			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
+			loadState();
+			listener.modelPropertyChange(ScenarioController.LOAD_STATE, null, null);
+		}
+
 		
 		//System.out.println("ScenarioController::propertyChange");
 		if (event.getPropertyName().equals(STOP_SCENARIO_PLAYBACK))
