@@ -790,6 +790,9 @@ public class SdtNode implements Renderable
 					case MODEL:
 					case KML:
 						getLabel().setPosition(new Position(position, alt + modelHeightOffset));
+					case ICON:
+						getLabel().setPosition(new Position(position,alt));
+
 					default:
 						break;
 					}
