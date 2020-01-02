@@ -160,7 +160,8 @@ $(PROTOLIB_OBJS): $(BLD_DIR)/protolib
 	cp -L $(BLD_DIR)/protolib/build/$(notdir $@) $@
 
 $(BLD_DIR)/protolib: $(DL_DIR)/protolib.tgz
-	tar xf $< -C $(BLD_DIR)
+	mkdir $(BLD_DIR)/protolib
+	tar xvfz $< -C $(BLD_DIR)/protolib --strip-components=1
 	cd $(BLD_DIR)/protolib && ./waf configure --build-java
 	cd $(BLD_DIR)/protolib && ./waf build
 
@@ -170,7 +171,7 @@ $(DL_DIR)/protolib.tgz: protolib.tgz
 ## / Protolib ##
 
 protolib.tgz:
-	wget -O $@ http://downloads.pf.itd.nrl.navy.mil/protolib/nightly_snapshots/protolib-svnsnap.tgz
+	wget -O $@ https://github.com/USNavalResearchLaboratory/protolib/archive/v3.0b1.tar.gz
 
 ## Worldwind (and jogl, etc) ##
 $(WORLDWIND_OBJS): $(BLD_DIR)/worldwind
