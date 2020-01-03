@@ -9,9 +9,13 @@
 # replacing with github mirror (identical as of 7/8/2015)
 # faster, works on more networks since it's https:// instead of git://
 git clone https://github.com/sgothel/jogl-utils.git joglutils
+cd joglutils
+git checkout 7ea189170b6ae75b7e15be43344a785eb56bb48a
+cd ..
 
 # Omit .git directory
 rm -rf joglutils/.git
+
 
 # Change to unix line ends:
 #find joglutils -type f -exec dos2unix {} \;
