@@ -56,6 +56,7 @@ $(LIBPROTO):
 
 sdt:        $(DL_DIR) $(BLD_DIR) $(PROTOLIB) $(OBJ) $(LIBPROTO) 
 	$(CC) $(WX_CFLAGS) -o $@ $(OBJ) $(LIBPROTO) $(WX_LIBS) $(LIBS)	
+	mkdir -p ../bin
 	cp $@ ../bin/$@
 
 sdt.app: sdt ../src/macos/Info.plist.in
