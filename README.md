@@ -22,23 +22,14 @@ and joglutils available at:
 
 https://kenai.com/projects/jogl/sources/jogl-utils-git
 
-Versions of WWJ amd joglutils modified to work with the latest SDT3D
-code are co-hosted with the SDT3D code in the project file release
-section.  Details of modifications required to these distributions are
+Details of modifications required to these distributions are
 available in the docs directory.
 
-The sdt3d software and documentation are available at:
-
-<http://www.nrl.navy.mil/itd/ncs/products/sdt>
 
 SDT (2D)
 
 sdt is written in C++ using the freely-available, cross-platform 
 wxWindows library for graphical user interface applications.
-
-The software and documentation are available at:
-
-<http://www.nrl.navy.mil/itd/ncs/products/sdt>
 
 
 BUILDING
@@ -46,17 +37,6 @@ BUILDING
 See the sdt documentation in the docs directory for the latest build 
 instructions for both sdt and sdt3d or the README-SDT3D.txt and
 README-SDT.txt files located in the src distribution.
-
-TO DOWNLOAD THE LATEST SRC TREE:
-
-If you have developer access, check out the latest sdt3d project out of 
-SVN from our "pf.itd.nrl.navy.mil" server:
-
-sdt3d : SVN root = "/svnroot/sdt/trunk", module = "sdt"
-
-Otherwise get the nightly build from:
-
-http://downloads.pf.itd.nrl.navy.mil/sdt/
 
 Changes included in Release 2.2
 
