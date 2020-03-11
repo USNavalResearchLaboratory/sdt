@@ -159,6 +159,7 @@ $(PROTOLIB_OBJS): $(BLD_DIR)/protolib
 
 $(BLD_DIR)/protolib: $(DL_DIR)/protolib
 #	mkdir $(BLD_DIR)/protolib
+	rm -rf $(BLD_DIR)/protolib
 	mv $(DL_DIR)/protolib $(BLD_DIR)/protolib
 	cd $(BLD_DIR)/protolib && ./waf configure --build-java
 	cd $(BLD_DIR)/protolib && ./waf build

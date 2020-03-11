@@ -3,6 +3,7 @@ bin/*
 makefiles/build
 makefiles/*.log
 makefiles/logutils*
+makefiles/joglutils*
 makefiles/protolib*
 makefiles/sdt
 makefiles/sdt3d.zip
