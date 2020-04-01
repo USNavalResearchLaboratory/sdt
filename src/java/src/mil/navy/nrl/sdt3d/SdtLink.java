@@ -10,6 +10,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import gov.nasa.worldwind.WorldWind;
+import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.LatLon;
 import gov.nasa.worldwind.geom.Position;
@@ -19,11 +20,15 @@ import gov.nasa.worldwind.layers.AnnotationLayer;
 import gov.nasa.worldwind.layers.MarkerLayer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.render.Annotation;
+import gov.nasa.worldwind.render.BasicShapeAttributes;
 import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.FrameFactory;
 import gov.nasa.worldwind.render.GlobeAnnotation;
 import gov.nasa.worldwind.render.Material;
+import gov.nasa.worldwind.render.Path;
+import gov.nasa.worldwind.render.Path.PositionColors;
 import gov.nasa.worldwind.render.Polyline;
+import gov.nasa.worldwind.render.ShapeAttributes;
 import gov.nasa.worldwind.render.markers.BasicMarker;
 import gov.nasa.worldwind.render.markers.BasicMarkerAttributes;
 import gov.nasa.worldwind.render.markers.BasicMarkerShape;
@@ -31,7 +36,7 @@ import gov.nasa.worldwind.render.markers.Marker;
 
 public class SdtLink
 {
-	private SdtPolyline line = null;
+	private SdtPath line = null;
 
 	private SdtNode node1 = null;
 
@@ -238,7 +243,7 @@ public class SdtLink
 		if (!forceDraw && !linkInVisibleLayer())
 			return;
 
-		Polyline line = getLine();
+		Path line = getLine();
 		if (null != line)
 		{
 			setDrawn(true);
@@ -478,7 +483,7 @@ public class SdtLink
 	}
 
 
-	public Polyline getLine()
+	public Path getLine()
 	{
 		if (null == line)
 		{
@@ -487,7 +492,7 @@ public class SdtLink
 				ArrayList<Position> lp = new ArrayList<Position>();
 				lp.add(node1.getPosition());
 				lp.add(node2.getPosition());
-				line = new SdtPolyline();
+				line = new SdtPath();
 				line.setPositions(lp);
 				line.setToolTipText(getLinkIDText());
 				if ((0.0 == node1.getPosition().getElevation()) &&
@@ -502,14 +507,31 @@ public class SdtLink
 				{
 					line.setFollowTerrain(false);
 				}
-				line.setColor(lineColor);
-				line.setLineWidth(lineWidth);
+				
+				ShapeAttributes attrs = new BasicShapeAttributes();
+				attrs.setOutlineWidth(lineWidth);
+				attrs.setOutlineStipplePattern(getStipplePattern());
+				attrs.setOutlineStippleFactor(getStippleFactor());
+				attrs.setInteriorMaterial(new Material(lineColor));
+				attrs.setOutlineMaterial(new Material(lineColor));
+				attrs.setInteriorOpacity(getOpacity());
+				attrs.setOutlineOpacity(getOpacity());
+				line.setPathType(AVKey.GREAT_CIRCLE);
+
+				if (node1.getAltitude() == 0.0 && 
+					node2.getAltitude() == 0.0)
+				{
+					line.setAltitudeMode(WorldWind.CLAMP_TO_GROUND);
+				}
+				else
+				{
+					line.setAltitudeMode(WorldWind.RELATIVE_TO_GROUND);
+				}
 				line.setNumSubsegments(1);
-				line.setPathType(Polyline.GREAT_CIRCLE);
-				line.setStippleFactor(getStippleFactor());
-				line.setStipplePattern(getStipplePattern());
+				line.setAttributes(attrs);
 			}
 		}
+		
 		if (isDirectional() && getMarker() == null)
 		{
 			makeMarker();
@@ -570,10 +592,12 @@ public class SdtLink
 				(0.0 == node2.getAltitude()))
 			{
 				line.setFollowTerrain(true);
+				line.setAltitudeMode(WorldWind.CLAMP_TO_GROUND);
 			}
 			else
 			{
 				line.setFollowTerrain(false);
+				line.setAltitudeMode(WorldWind.RELATIVE_TO_GROUND);
 			}
 
 			if (!sdt3d.AppFrame.collapseLinks && totalLinks > 1)
@@ -668,8 +692,8 @@ public class SdtLink
 		this.stippleFactor = stippleFactor;
 
 		if (line != null)
-		{
-			line.setStippleFactor(stippleFactor);
+		{			
+			line.getAttributes().setOutlineStippleFactor(stippleFactor);
 		}
 
 	}
@@ -687,7 +711,7 @@ public class SdtLink
 
 		if (line != null)
 		{
-			line.setStipplePattern(stipplePattern);
+			line.getAttributes().setOutlineStipplePattern(stipplePattern);
 		}
 
 	}
@@ -707,7 +731,7 @@ public class SdtLink
 		this.lineColor = color;
 		if (line != null)
 		{
-			line.setColor(color);
+			line.getAttributes().setOutlineMaterial(new Material(lineColor));
 			// reset label color if it has not been explicity set
 			if (label != null && labelColor == null)
 				label.getAttributes().setBackgroundColor(lineColor);
@@ -725,7 +749,9 @@ public class SdtLink
 	{
 		lineWidth = width;
 		if (null != line)
-			line.setLineWidth(width);
+		{
+			line.getAttributes().setOutlineWidth(lineWidth);
+		}
 	}
 
 
@@ -739,11 +765,9 @@ public class SdtLink
 			return;
 		}
 
-		opacity = theOpacity * 255;
-		lineColor = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) opacity);
 		if (line != null)
 		{
-			line.setColor(lineColor);
+			line.getAttributes().setOutlineOpacity(theOpacity);
 		}
 	}
 
