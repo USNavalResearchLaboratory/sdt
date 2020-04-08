@@ -35,7 +35,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -44,6 +46,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.media.opengl.GL2;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
@@ -98,6 +101,7 @@ import gov.nasa.worldwind.globes.ElevationModel;
 import gov.nasa.worldwind.globes.FlatGlobe;
 import gov.nasa.worldwind.globes.Globe;
 import gov.nasa.worldwind.layers.AnnotationLayer;
+import gov.nasa.worldwind.layers.CompassLayer;
 import gov.nasa.worldwind.layers.IconLayer;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
@@ -113,6 +117,7 @@ import gov.nasa.worldwind.pick.PickedObjectList;
 import gov.nasa.worldwind.render.AbstractBrowserBalloon;
 import gov.nasa.worldwind.render.BalloonAttributes;
 import gov.nasa.worldwind.render.BasicBalloonAttributes;
+import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.GlobeAnnotation;
 import gov.nasa.worldwind.render.GlobeBrowserBalloon;
 import gov.nasa.worldwind.render.PointPlacemark;
@@ -140,6 +145,13 @@ import gov.nasa.worldwindx.examples.WMSLayersPanel;
 import gov.nasa.worldwindx.examples.util.BalloonController;
 import gov.nasa.worldwindx.examples.util.ExtentVisibilitySupport;
 import gov.nasa.worldwindx.examples.util.HotSpotController;
+import net.java.joglutils.model.ModelLoadException;
+import net.java.joglutils.model.iModel3DRenderer;
+import net.java.joglutils.model.examples.DisplayListRenderer;
+import builder.mil.nrl.atest.icon.Orientation;
+import builder.mil.nrl.atest.worldwind.jogl.Model3D;
+import builder.mil.nrl.atest.worldwind.openflight.LoaderFactory;
+import builder.mil.nrl.atest.worldwind.openflight.OpenFlightLoader;
 
 // Google protoBuf example
 //import mil.navy.nrl.sdtCommands.sdtCommandsProtos;
@@ -2051,6 +2063,60 @@ public class sdt3d extends SdtApplication
 		}
 
 
+		private Model3D loadOpenFlightModel(String input)
+		{
+			net.java.joglutils.model.geometry.Model model = null;
+			try
+			{
+				//URL url = rule.getURL();
+				File file = new File(input);
+				OpenFlightLoader loader =  new OpenFlightLoader(Orientation.Y_AXIS);
+				//model = loader.load(input);
+				
+				//String source = "jar:file:/Users/ljt/.m2/repository/mil/nrl/atest/atest-models/1.1.0/atest-models-1.1.0.jar!/3D_icons/SDBF_20110103/navair_models/NPSI_Models_P3C_DVC/culture/Brunswick/FLT/Day/brunswick_BlackBridge.flt";
+				String source = "jar:file:/Users/ljt/.m2/repository/mil/nrl/atest/atest-models/1.1.0/atest-models-1.1.0.jar!"
+						+ "/3D_icons/SDBF_20110103/SECORE_models/CM2_OpenFlight_Model_Library/Models/atv_manned.flt";
+					// "/3D_icons/SDBF_20110103/navair_models/NPSI_Models_P3C_DVC/culture/Whidbey/FLT/Day/US33808_hospital.flt";
+				
+				
+				//try {
+					//model = loader.load(file.toURI().toURL().toString());
+					model = loader.load(source);
+				//} catch (MalformedURLException e) {
+					// TODO Auto-generated catch block
+				//	e.printStackTrace();
+				//}				//source = LoaderFactory.load(input,
+				//		Orientation.Y_AXIS);
+						//url.toString(), rule.getOrientation());
+			}
+			catch (ModelLoadException e)
+			{
+				e.printStackTrace();
+			}	
+			
+			SdtOpenFlightLayer theLayer = new SdtOpenFlightLayer();
+			
+			// Insert the layer into the layer list just before the compass.
+			int compassPosition = 0;
+			LayerList layers = getWwd().getModel().getLayers();
+			for (Layer l : layers)
+			{
+				if (l instanceof CompassLayer)
+					compassPosition = layers.indexOf(l);
+			}
+			layers.add(compassPosition, theLayer);
+			
+			Model3D model3d = new Model3D(model);
+			
+			theLayer.addModel(model3d);
+			
+			DrawContext dc = getWwd().getSceneController().getDrawContext();
+			//DisplayListRenderer.getInstance().render(dc, model3d.getModel());
+			theLayer.render(dc);
+			
+			return model3d;
+		}
+
 		/*
 		 * (non-Javadoc)
 		 * 
@@ -2141,8 +2207,10 @@ public class sdt3d extends SdtApplication
 					kmlFile = fc.getSelectedFile();
 					String fileName = kmlFile.getAbsolutePath();
 
-					setKml(fileName);
-					setKmlFile(fileName);
+					Model3D model3D = loadOpenFlightModel(fileName);
+					
+					//setKml(fileName);
+					//setKmlFile(fileName);
 
 				}
 
