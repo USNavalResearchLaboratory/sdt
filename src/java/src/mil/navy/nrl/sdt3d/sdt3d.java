@@ -37,7 +37,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -46,7 +45,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.media.opengl.GL2;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
@@ -145,13 +143,6 @@ import gov.nasa.worldwindx.examples.WMSLayersPanel;
 import gov.nasa.worldwindx.examples.util.BalloonController;
 import gov.nasa.worldwindx.examples.util.ExtentVisibilitySupport;
 import gov.nasa.worldwindx.examples.util.HotSpotController;
-import net.java.joglutils.model.ModelLoadException;
-import net.java.joglutils.model.iModel3DRenderer;
-import net.java.joglutils.model.examples.DisplayListRenderer;
-import builder.mil.nrl.atest.icon.Orientation;
-import builder.mil.nrl.atest.worldwind.jogl.Model3D;
-import builder.mil.nrl.atest.worldwind.openflight.LoaderFactory;
-import builder.mil.nrl.atest.worldwind.openflight.OpenFlightLoader;
 
 // Google protoBuf example
 //import mil.navy.nrl.sdtCommands.sdtCommandsProtos;
@@ -248,6 +239,10 @@ public class sdt3d extends SdtApplication
 
 		protected int previousTabIndex;
 
+		private static final String MODEL_JAR_FILE = "models-1.1.0.jar";
+
+		protected static String MODEL_JAR_FILE_PATH = "";
+		
 		protected static final String[] servers = new String[] {
 			// "http://www2.demis.nl/WMS/wms.asp?WMS=WorldMap&WMTVER=1.0.0&request=capabilities",
 
@@ -824,6 +819,9 @@ public class sdt3d extends SdtApplication
 
 			// Load default user preferences file if it exists
 			loadUserPreferencesFile();
+			
+			MODEL_JAR_FILE_PATH =  "jar:file:" + findFile(MODEL_JAR_FILE) + "!";
+			
 			// TODO: LJT Deal with flat/round globe changes in multiframe?
 
 			// We need to store the main select listener so we can
@@ -2063,59 +2061,6 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private Model3D loadOpenFlightModel(String input)
-		{
-			net.java.joglutils.model.geometry.Model model = null;
-			try
-			{
-				//URL url = rule.getURL();
-				File file = new File(input);
-				OpenFlightLoader loader =  new OpenFlightLoader(Orientation.Y_AXIS);
-				//model = loader.load(input);
-				
-				//String source = "jar:file:/Users/ljt/.m2/repository/mil/nrl/atest/atest-models/1.1.0/atest-models-1.1.0.jar!/3D_icons/SDBF_20110103/navair_models/NPSI_Models_P3C_DVC/culture/Brunswick/FLT/Day/brunswick_BlackBridge.flt";
-				String source = "jar:file:/Users/ljt/.m2/repository/mil/nrl/atest/atest-models/1.1.0/atest-models-1.1.0.jar!"
-						+ "/3D_icons/SDBF_20110103/SECORE_models/CM2_OpenFlight_Model_Library/Models/atv_manned.flt";
-					// "/3D_icons/SDBF_20110103/navair_models/NPSI_Models_P3C_DVC/culture/Whidbey/FLT/Day/US33808_hospital.flt";
-				
-				
-				//try {
-					//model = loader.load(file.toURI().toURL().toString());
-					model = loader.load(source);
-				//} catch (MalformedURLException e) {
-					// TODO Auto-generated catch block
-				//	e.printStackTrace();
-				//}				//source = LoaderFactory.load(input,
-				//		Orientation.Y_AXIS);
-						//url.toString(), rule.getOrientation());
-			}
-			catch (ModelLoadException e)
-			{
-				e.printStackTrace();
-			}	
-			
-			SdtOpenFlightLayer theLayer = new SdtOpenFlightLayer();
-			
-			// Insert the layer into the layer list just before the compass.
-			int compassPosition = 0;
-			LayerList layers = getWwd().getModel().getLayers();
-			for (Layer l : layers)
-			{
-				if (l instanceof CompassLayer)
-					compassPosition = layers.indexOf(l);
-			}
-			layers.add(compassPosition, theLayer);
-			
-			Model3D model3d = new Model3D(model);
-			
-			theLayer.addModel(model3d);
-			
-			DrawContext dc = getWwd().getSceneController().getDrawContext();
-			//DisplayListRenderer.getInstance().render(dc, model3d.getModel());
-			theLayer.render(dc);
-			
-			return model3d;
-		}
 
 		/*
 		 * (non-Javadoc)
@@ -2207,10 +2152,8 @@ public class sdt3d extends SdtApplication
 					kmlFile = fc.getSelectedFile();
 					String fileName = kmlFile.getAbsolutePath();
 
-					Model3D model3D = loadOpenFlightModel(fileName);
-					
-					//setKml(fileName);
-					//setKmlFile(fileName);
+					setKml(fileName);
+					setKmlFile(fileName);
 
 				}
 
@@ -2435,7 +2378,7 @@ public class sdt3d extends SdtApplication
 					transparantIcon, options, options[2]);
 				if (ret == 3)
 					return;
-				viewState = ((OrbitView) getWwd().getView()).getRestorableState();
+			 	viewState = ((OrbitView) getWwd().getView()).getRestorableState();
 
 				// Save view to disk
 				if (ret == 1)
@@ -3263,24 +3206,23 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setImage(String val)
+		private boolean setImage(String fileName)
 		{
 			if (currentSprite == null)
 				return false;
 			
-			if (0 == val.length() || null == currentSprite)
+			if (0 == fileName.length() || null == currentSprite)
 				return false; // no <imageFile>
 
-			String fileName = findFile(val);
-			if (fileName == null)
-				return false;
-
+			
 			try
 			{
 				// We don't know the sprite type until we try load it.
 				// The load function will return either an icon sprite (SdtSprite)
 				// or a model subclass (WWModel3D or SdtKml)
-				SdtSprite newSprite = currentSprite.Load(fileName);
+				SdtSprite newSprite = currentSprite.load(fileName);
+				
+				
 				if (newSprite == null)
 					return false;
 
@@ -3362,6 +3304,7 @@ public class sdt3d extends SdtApplication
 
 			if (theSprite != null && theSprite.getType() == SdtSprite.Type.INVALID)
 				return false;
+			
 			if ((type.equalsIgnoreCase("NONE") && theSprite == null))
 			{
 				theSprite = new SdtSprite(type);
@@ -6050,8 +5993,7 @@ public class sdt3d extends SdtApplication
 
 
 		private boolean setStatus(String val)
-		{
-
+		{			
 			if ((0 == val.length()))
 			{
 				this.getStatusPanel().setText("");

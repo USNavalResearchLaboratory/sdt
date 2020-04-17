@@ -35,7 +35,7 @@ import gov.nasa.worldwind.util.WWIO;
 import gov.nasa.worldwind.util.WWUtil;
 import gov.nasa.worldwind.util.layertree.KMLLayerTreeNode;
 
-public class SdtSpriteKml extends SdtSprite
+public class SdtSpriteKml extends SdtSprite 
 {
 	String fileName = null;
 
