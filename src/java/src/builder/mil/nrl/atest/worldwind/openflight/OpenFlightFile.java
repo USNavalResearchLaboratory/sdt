@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import net.java.joglutils.model.examples.DisplayListRenderer;
-
-//import mil.nrl.atest.worldwind.jogl.DisplayListRenderer;
+import builder.mil.nrl.atest.worldwind.jogl.DisplayListRenderer;
 
 /**
  * Contains information about the flt file. This class keeps track of all of the vertex, face, material and other

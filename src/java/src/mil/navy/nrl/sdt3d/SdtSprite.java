@@ -3,6 +3,7 @@ package mil.navy.nrl.sdt3d;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
@@ -16,6 +17,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import builder.mil.nrl.atest.icon.Orientation;
+import builder.mil.nrl.atest.worldwind.openflight.LoaderFactory;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Vec4;
@@ -80,6 +83,7 @@ import net.java.joglutils.model.geometry.Model;
 
 public class SdtSprite
 {
+	
 	public enum Type {
 			MODEL, ICON, KML, NONE, INVALID
 	}
@@ -468,7 +472,134 @@ public class SdtSprite
 		return Integer.parseInt(getTextValue(ele, tagName));
 	}
 
+	/*
+	 * Set dimensions common to all sprites
+	 */
+	private void setSpriteDimensions(Element el, SdtSprite theSprite)
+	{
+		// get the length attribute
+		int length = getIntValue(el, "length");
+		
+		if (length > 0)
+		{
+			theSprite.setFixedLength(length);
+		}
+		
+		int scale = getIntValue(el, "scale");
+		if (scale > 0)
+		{
+			theSprite.setScale(scale);
+		}
+		
+		String size = getTextValue(el, "size");
+		if (size != null)
+		{
+			String[] dim = size.split(",");
+			// <dimensions> is in format "width,height"
+			if (dim.length == 2)
+			{
+				Integer width = new Integer(dim[0]);
+				Integer height = new Integer(dim[1]);
+				theSprite.setSize(width.intValue(), height.intValue()); 
+			}
+			else
+			{
+				System.out.println("SdtSprite::setDimension() Bad size dimensions in sprite kml.\n");
+			}
+		}
+	}
 
+	
+	private void setSpriteModelAttributes(Element el, SdtSprite theSprite, String type)
+	{
+		// Initially use the icon size to calculate the model length in
+		// case no model length is given
+		((SdtSpriteModel) theSprite).setSize(theSprite.getIconSize().width,
+				theSprite.getIconSize().height);
+
+		String lighting = getTextValue(el, "light");
+		if (lighting != null)
+			if (lighting.equalsIgnoreCase("on"))
+					((SdtSpriteModel) theSprite).setUseLighting(true);
+				else if (lighting.equalsIgnoreCase("off"))
+					((SdtSpriteModel) theSprite).setUseLighting(false);
+		
+		// get the orientation
+		String orientation = getTextValue(el, "orientation");
+		String[] coord = orientation.split(",");
+
+		if (coord.length > 0 && !coord[0].equalsIgnoreCase("x"))
+		{
+			// TODO: ljt cleanup 
+			if (type.equalsIgnoreCase("3ds")
+				||
+				type.equalsIgnoreCase("3db")
+				||
+				type.equalsIgnoreCase("flt"))
+				((SdtSpriteModel) theSprite).setModelPitch(new Double(coord[0]));
+			else
+				((SdtSpriteKml) theSprite).setModelPitch(new Double(coord[0]));
+
+		}
+		if (coord.length > 1 && !coord[1].equalsIgnoreCase("x"))
+		{
+			if (coord[1].endsWith("a"))
+			{
+				coord[1] = coord[1].replace("a", "");
+				theSprite.setAbsoluteYaw(true);
+				if (type.equalsIgnoreCase("3ds")
+						||
+						type.equalsIgnoreCase("3db")
+						||
+						type.equalsIgnoreCase("flt"))
+					((SdtSpriteModel) theSprite).setModelYaw(new Double(coord[1]));
+				else
+					((SdtSpriteKml) theSprite).setModelYaw(new Double(coord[1]));
+
+			}
+			else if (coord[1].endsWith("r"))
+			{
+				coord[1] = coord[1].replace("r", "");
+				theSprite.setAbsoluteYaw(false);
+				if (type.equalsIgnoreCase("3ds")
+						||
+						type.equalsIgnoreCase("3db")
+						||
+						type.equalsIgnoreCase("flt"))
+					((SdtSpriteModel) theSprite).setModelYaw(new Double(coord[1]));
+				else
+					((SdtSpriteKml) theSprite).setModelYaw(new Double(coord[1]));
+			}
+			else
+			{
+				// Else we use the default useAbsoluteYaw setting
+				if (type.equalsIgnoreCase("3ds")
+					||
+					type.equalsIgnoreCase("3db")
+					||
+					type.equalsIgnoreCase("flt"))
+					((SdtSpriteModel) theSprite).setModelYaw(new Double(coord[1]));
+				else
+					((SdtSpriteKml) theSprite).setModelYaw(new Double(coord[1]));
+			}
+		}
+
+		if (coord.length > 2 && !coord[2].equalsIgnoreCase("x"))
+		{
+			// TODO: cleanup make setmodelroll virtual
+			if (type.equalsIgnoreCase("3ds")
+				||
+				type.equalsIgnoreCase("3db")
+				||
+				type.equalsIgnoreCase("flt"))
+
+				((SdtSpriteModel) theSprite).setModelRoll(new Double(coord[2]));
+			else
+				((SdtSpriteKml) theSprite).setModelRoll(new Double(coord[2]));
+
+		}
+	}
+	
 	SdtSprite LoadXMLFile(String spritePath) throws IOException
 	{
 		Document doc = null;
@@ -515,118 +646,22 @@ public class SdtSprite
 
 				String name = getTextValue(el, "file");
 
-				// The xml file name may or may not be fully
-				// qualified - check to make sure we have a full path
-				String fileName = sdt3d.AppFrame.findFile(name);
-				if (fileName == null)
-					return null;
-
 				SdtSprite theSprite = null;
-				if (type.equalsIgnoreCase("kml"))
-				{
-					// Try load the kml model
-					theSprite = Load(fileName);
-				}
-				else if (type.equalsIgnoreCase("3ds"))
-				{
-					theSprite = Load(fileName);
+				theSprite = load(name);
 
-				}
 				if (theSprite == null)
 				{
 					System.out.println("SdtSprite::LoadXMLFile() no valid model found\n");
 					return null;
 				}
 
-				// get the length attribute
-				int length = getIntValue(el, "length");
-				if (length > 0)
-					theSprite.setFixedLength(length);
-
-				int scale = getIntValue(el, "scale");
-				if (scale > 0)
-					theSprite.setScale(scale);
-
-				String size = getTextValue(el, "size");
-				if (size != null)
+				setSpriteDimensions(el, theSprite);
+				
+				if (theSprite instanceof SdtModelDimensions)
 				{
-					String[] dim = size.split(",");
-					// <dimensions> is in format "width,height"
-					if (dim.length < 2)
-					{
-						System.out.println("Bad size dimensions in sprite kml!\n");
-						return null;
-					}
-					Integer width = new Integer(dim[0]);
-					Integer height = new Integer(dim[1]);
-
-					theSprite.setSize(width.intValue(), height.intValue()); 
-				}
-				if (type.equalsIgnoreCase("3ds"))
-				{
-					// Initially use the icon size to calculate the model length in
-					// case no model length is given
-					((SdtSpriteModel) theSprite).setSize(theSprite.getIconSize().width,
-						theSprite.getIconSize().height);
-
-					String lighting = getTextValue(el, "light");
-					if (lighting != null)
-						if (lighting.equalsIgnoreCase("on"))
-							((SdtSpriteModel) theSprite).setUseLighting(true);
-						else if (lighting.equalsIgnoreCase("off"))
-							((SdtSpriteModel) theSprite).setUseLighting(false);
-				}
-				// get the orientation
-				String orientation = getTextValue(el, "orientation");
-				String[] coord = orientation.split(",");
-
-				if (coord.length > 0 && !coord[0].equalsIgnoreCase("x"))
-				{
-					if (type.equalsIgnoreCase("3ds"))
-						((SdtSpriteModel) theSprite).setModelPitch(new Double(coord[0]));
-					else
-						((SdtSpriteKml) theSprite).setModelPitch(new Double(coord[0]));
-
-				}
-				if (coord.length > 1 && !coord[1].equalsIgnoreCase("x"))
-				{
-					if (coord[1].endsWith("a"))
-					{
-						coord[1] = coord[1].replace("a", "");
-						theSprite.setAbsoluteYaw(true);
-						if (type.equalsIgnoreCase("3ds"))
-							((SdtSpriteModel) theSprite).setModelYaw(new Double(coord[1]));
-						else
-							((SdtSpriteKml) theSprite).setModelYaw(new Double(coord[1]));
-
-					}
-					else if (coord[1].endsWith("r"))
-					{
-						coord[1] = coord[1].replace("r", "");
-						theSprite.setAbsoluteYaw(false);
-						if (type.equalsIgnoreCase("3ds"))
-							((SdtSpriteModel) theSprite).setModelYaw(new Double(coord[1]));
-						else
-							((SdtSpriteKml) theSprite).setModelYaw(new Double(coord[1]));
-					}
-					else
-					{
-						// Else we use the default useAbsoluteYaw setting
-						if (type.equalsIgnoreCase("3ds"))
-							((SdtSpriteModel) theSprite).setModelYaw(new Double(coord[1]));
-						else
-							((SdtSpriteKml) theSprite).setModelYaw(new Double(coord[1]));
-					}
+					setSpriteModelAttributes(el, theSprite, type);
 				}
 
-				if (coord.length > 2 && !coord[2].equalsIgnoreCase("x"))
-				{
-					if (type.equalsIgnoreCase("3ds"))
-						((SdtSpriteModel) theSprite).setModelRoll(new Double(coord[2]));
-					else
-						((SdtSpriteKml) theSprite).setModelRoll(new Double(coord[2]));
-
-				}
 				return theSprite;
 			}
 		}
@@ -640,43 +675,58 @@ public class SdtSprite
 	}
 
 	// Try to load it as a Model, kml/kmz, or an Icon, else use default Model
-	SdtSprite Load(String spritePath) throws IOException
+	SdtSprite load(String spritePath) throws IOException
 	{
 		// First see if it is an xml configuration file pointing
 		// to the model and setting orientation
-
 		if (spritePath.endsWith(".xml") | spritePath.endsWith(".XML"))
+		{
+			spritePath = sdt3d.AppFrame.findFile(spritePath);
 			return LoadXMLFile(spritePath);
+		}
 
 		imageWidth = 0;
 		imageHeight = 0;
 
-		// LJT TEST MOVE THIS TO WWMODEL3d?
-		// See if we have a valid model
-		Model theModel = null;
-		try
+		SdtSprite theSprite = loadModel(spritePath);
+		if (theSprite != null)
 		{
-			theModel = ModelFactory.createModel(spritePath);
+			return theSprite;
 		}
-		catch (ModelLoadException e)
+		
+		// TODO: fix this
+		// Double check that the sprite exists now that we've checked the jar file
+		// for the given path.
+		spritePath = sdt3d.AppFrame.findFile(spritePath);
+		if (spritePath == null)
 		{
-			theModel = null;
-			e.printStackTrace();
+			System.out.println("SdtSprite::load() sprite file " + spritePath + " does not exist.");
+			return null;
 		}
-		if (null != theModel)
-		{
-			SdtSpriteModel spriteModel = new SdtSpriteModel(this);
-			spriteModel.setModel(theModel);
-			spriteModel.setType(Type.MODEL);
-			spriteModel.setSize(spriteModel.getIconSize().width,
-				spriteModel.getIconSize().height);
-			
-			// We need the spritePath so we can reload the model when
-			// we assign the model to the node.
-			spriteModel.setSpritePath(spritePath);
 
-			return spriteModel;
+		
+		theSprite = loadKml(spritePath);
+		if (theSprite != null)
+		{
+			return theSprite;
 		}
+		
+
+		// It wasn't kml or a model, so lets see if it is a valid image file
+		theSprite = loadImage(spritePath);
+		if (theSprite != null)
+		{
+			return theSprite;
+		}
+		
+		this.spriteName = "";
+		return null;
+		
+	} // end SdtSprite.load()
+
+	
+	private SdtSprite loadKml(String spritePath)
+	{
 		if (spritePath.endsWith("kml") || spritePath.endsWith("kmz")
 			|| spritePath.endsWith("KML") || spritePath.endsWith("KMZ"))
 		{
@@ -690,14 +740,20 @@ public class SdtSprite
 			return spriteKml;
 
 		}
-		// It wasn't kml or a model, so lets see if it is a valid image file
-
+		return null;
+		
+	} // SdtSprite.loadKml()
+	
+	
+	private SdtSprite loadImage(String spritePath)
+	{
 		// Using an ImageIcon to load the image will block until the
 		// image is loaded (as opposed to getImage) but then we will
 		// have the dimensions of the image available to us
 		// Toolkit toolkit = Toolkit.getDefaultToolkit();
 		// Image image = toolkit.getImage(spritePath);
 
+		
 		ImageIcon img = new ImageIcon(spritePath);
 		Image image = img.getImage();
 		if (null != image)
@@ -740,12 +796,64 @@ public class SdtSprite
 
 			return this;
 		}
-
-		this.spriteName = "";
 		return null;
-	} // end SdtSprite.Load()
 
+	} // SdtSprite::loadImage
+	
+	
+	private SdtSprite loadModel(String spritePath)
+	{
+		Model theModel = null;
 
+		try
+		{
+			String fileName = sdt3d.AppFrame.findFile(spritePath);
+			String url = fileName;
+
+			if (fileName == null)
+			{
+				String jarFile[] = sdt3d.AppFrame.MODEL_JAR_FILE_PATH.split("jar:file:",2);
+				if (jarFile.length == 2)
+				{
+					String jarFilePath = jarFile[1].replace("!","");
+					File modelJarFile = new File(jarFilePath);
+					if (!modelJarFile.exists())
+					{
+						// TODO: fix this when jar access is properly implemented
+						// No file or jar file
+						System.out.println("SdtSprite::loadModel() No model jar file");
+						return null;
+					}
+				}
+				
+				url = sdt3d.AppFrame.MODEL_JAR_FILE_PATH + spritePath;
+			}
+			theModel = LoaderFactory.load(url, Orientation.Y_AXIS);
+		}
+		catch (ModelLoadException e)
+		{
+			e.printStackTrace();
+		}	
+	
+		if (null != theModel)
+		{
+			SdtSpriteModel spriteModel = new SdtSpriteModel(this);
+			spriteModel.setModel(theModel);
+			spriteModel.setType(Type.MODEL);
+			spriteModel.setSize(spriteModel.getIconSize().width,
+			spriteModel.getIconSize().height);
+		
+			// We need the spritePath so we can reload the model when
+			// we assign the model to the node.
+			spriteModel.setSpritePath(spritePath);
+
+			return spriteModel;
+		}
+	
+		return null;
+	}
+	
+	
 	public void setSpritePath(String spritePath)
 	{
 		this.spritePath = spritePath;
