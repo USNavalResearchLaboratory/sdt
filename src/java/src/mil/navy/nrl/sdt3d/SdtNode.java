@@ -696,10 +696,12 @@ public class SdtNode implements Renderable
 		// We can get our loc vector before doing any overrides
 		// for sprite types
 		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
-		double modelHeightOffset = sprite.getHeight() / 2.0;
 
+		double modelHeightOffset = 0;
 		if (hasSprite())
 		{
+			modelHeightOffset = sprite.getHeight() / 2.0;
+
 			switch (sprite.getType())
 			{
 				case ICON:

@@ -37,6 +37,8 @@ import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Optional;
@@ -49,10 +51,12 @@ import javax.imageio.ImageIO;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
+import javax.media.opengl.GLProfile;
 import javax.media.opengl.fixedfunc.GLLightingFunc;
 
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureIO;
+import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 
 import builder.mil.nrl.spg.logging.LoggerExt;
 
@@ -363,7 +367,26 @@ public class DisplayListRenderer
 		return compiledList;
 	}
 
-
+	public static Optional<URL> findLocalTextureFile(String modelFileName, String textureFileName, boolean debug)
+	{
+		// Get path to local textureFileName from model path
+		Path modelFilePath = FileSystems.getDefault().getPath(modelFileName);
+		String textureFilePath = modelFilePath.getParent() + File.separator + textureFileName;
+		
+		File textureFile = new File(textureFilePath);
+		if (textureFile.exists())
+		{
+			try {
+				return Optional.of(ResourceRetriever.getResourceAsUrl(textureFilePath.replaceAll("#", "%23")));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return Optional.empty();
+	}
+	
+	
 	public static Optional<URL> findTextureFile(String file, String textureFileName, boolean debug)
 	{
 		int lastIndex = textureFileName.lastIndexOf("/");
@@ -407,9 +430,14 @@ public class DisplayListRenderer
 		}
 
 		int jarInd = file.indexOf(".jar!/");
+
 		if (jarInd == -1)
-			return Optional.empty();
+		{
+			return findLocalTextureFile(file, strippedTextureFileName, debug);
+		}
+		
 		String jarPath = file.substring(0, jarInd + 6);
+			
 		StringBuilder textureFilePath = new StringBuilder(jarPath);
 		try
 		{

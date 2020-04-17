@@ -21,8 +21,7 @@ import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.layers.AbstractLayer;
 import gov.nasa.worldwind.render.DrawContext;
-import net.java.joglutils.model.iModel3DRenderer;
-import net.java.joglutils.model.examples.DisplayListRenderer;
+import builder.mil.nrl.atest.worldwind.jogl.DisplayListRenderer;
 
 /**
  *
@@ -150,8 +149,8 @@ public class Model3DLayer extends AbstractLayer
 			gl.glRotated(model.getRoll(), 0, 1, 0);
 
 			// Get an instance of the display list renderer
-			iModel3DRenderer renderer = DisplayListRenderer.getInstance();
-			renderer.render(gl, model.getModel());
+			DisplayListRenderer.getInstance().render(dc,model.getModel());
+
 			dc.getView().popReferenceCenter(dc);
 		}
 

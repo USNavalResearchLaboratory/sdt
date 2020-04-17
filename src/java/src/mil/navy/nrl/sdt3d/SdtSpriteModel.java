@@ -23,7 +23,7 @@ import net.java.joglutils.model.geometry.Model;
  * @author RodgersGB
  */
 
-public class SdtSpriteModel extends SdtSprite
+public class SdtSpriteModel extends SdtSprite 
 {
 	private AVList avlist = new AVListImpl();
 
@@ -487,6 +487,6 @@ public class SdtSpriteModel extends SdtSprite
 			return s;
 		}
 			
-	} // end WWModel3D.computeSizeScale()
+	} // end SdtObjModel.computeSizeScale()
 
-} // end class WWModel3D
+} // end class SdtObjModel
