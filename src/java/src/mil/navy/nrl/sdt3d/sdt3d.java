@@ -239,7 +239,7 @@ public class sdt3d extends SdtApplication
 
 		protected int previousTabIndex;
 
-		private static final String MODEL_JAR_FILE = "models-1.1.0.jar";
+		private static String MODEL_JAR_FILE = "models-1.1.0.jar";
 
 		protected static String MODEL_JAR_FILE_PATH = "";
 		
@@ -345,6 +345,7 @@ public class sdt3d extends SdtApplication
 			"+showWmsPanel",
 			"+showSdtControlPanel",
 			"+multiFrame",
+			"+modelJarFile",
 			null
 		};
 
@@ -819,8 +820,6 @@ public class sdt3d extends SdtApplication
 
 			// Load default user preferences file if it exists
 			loadUserPreferencesFile();
-			
-			MODEL_JAR_FILE_PATH =  "jar:file:" + findFile(MODEL_JAR_FILE) + "!";
 			
 			// TODO: LJT Deal with flat/round globe changes in multiframe?
 
@@ -3062,6 +3061,7 @@ public class sdt3d extends SdtApplication
 							imageFilePath = fc.getCurrentDirectory() + "\\" + imageFilePath;
 
 						f1 = new File(imageFilePath);
+						System.out.println("Path> " + imageFilePath);
 						if (!f1.exists())
 							continue;
 					}
@@ -5881,7 +5881,21 @@ public class sdt3d extends SdtApplication
 			return true;
 		}
 
-
+		private boolean setModelJarFile(String val)
+		{
+			MODEL_JAR_FILE = val;
+			String fileName = findFile(MODEL_JAR_FILE);
+			if (fileName != null)
+			{
+				MODEL_JAR_FILE_PATH =  "jar:file:" + findFile(MODEL_JAR_FILE) + "!";
+				
+				return true;
+			}
+			
+			return false;
+		}
+		
+		
 		private boolean setLookAt(String val)
 		{
 			if (!this.enableSdtViewControls)
@@ -7378,6 +7392,8 @@ public class sdt3d extends SdtApplication
 			}
 			else if (pendingCmd.equalsIgnoreCase("path"))
 				return setPath(val);
+			else if (pendingCmd.equalsIgnoreCase("modelJarFile"))
+				return setModelJarFile(val);
 			else if (pendingCmd.equalsIgnoreCase("status"))
 				return setStatus(val);
 			else if (pendingCmd.equalsIgnoreCase("region"))
