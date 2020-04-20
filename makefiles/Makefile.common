@@ -1,7 +1,7 @@
 ########################################################################
 # COMMON MAKEFILE STUFF
 #
-JDK=1.7
+JDK=1.8
 SHELL=/bin/sh
 
 .SUFFIXES: .cpp $(.SUFFIXES)
@@ -148,8 +148,13 @@ sdt3d.zip: $(JAR_DIR)/sdt3d.jar
 	mv $(WORK_DIR)/$@ $@
 
 $(JAR_DIR)/sdt3d.jar: $(PROTOLIBJNI) $(PROTOLIB_OBJS) $(WORLDWIND_OBJS) $(JOGLUTILS_OBJS)
-	javac -d $(BIN_DIR) -sourcepath $(SRC_DIR) -classpath $(JAR_DIR)/protolib-jni.jar:$(JAR_DIR)/worldwindx.jar:$(JAR_DIR)/worldwind.jar:$(JAR_DIR)/joglutils.jar:build/sdt3d/jars/jogl-all.jar:build/sdt3d/jars/gdal.jar:build/sdt3d/jars/gluegen-rt.jar $(SRC_DIR)/mil/navy/nrl/sdt3d/sdt3d.java
-	jar cfm $@ Manifest-$(PLATFORM).txt -C $(BIN_DIR) mil -C $(SRC_DIR) images
+	./getDependencies
+	cp commons-io-2.6.jar $(JAR_DIR)
+	cp commons-lang3-3.10.jar $(JAR_DIR)
+	cp commons-text-1.8.jar $(JAR_DIR)
+	cp juniversalchardet-1.0.3.jar $(JAR_DIR)
+	javac -d $(BIN_DIR) -sourcepath $(SRC_DIR) -classpath $(JAR_DIR)/protolib-jni.jar:$(JAR_DIR)/worldwindx.jar:$(JAR_DIR)/worldwind.jar:$(JAR_DIR)/joglutils.jar:build/sdt3d/jars/jogl-all.jar:build/sdt3d/jars/gdal.jar:build/sdt3d/jars/gluegen-rt.jar:build/sdt3d/jars/commons-io-2.6.jar:build/sdt3d/jars/commons-lang3-3.10.jar:build/sdt3d/jars/commons-text-1.8.jar:build/sdt3d/jars/juniversalchardet-1.0.3.jar:/builder/mil/nrl/*/* $(SRC_DIR)/mil/navy/nrl/sdt3d/sdt3d.java
+	jar cfm $@ Manifest-$(PLATFORM).txt -C $(BIN_DIR) mil -C $(BIN_DIR) builder -C $(SRC_DIR) images
 
 
 ## Protolib ##
