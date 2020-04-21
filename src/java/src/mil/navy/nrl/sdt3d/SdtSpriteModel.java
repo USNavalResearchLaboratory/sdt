@@ -23,8 +23,8 @@ import net.java.joglutils.model.geometry.Model;
  * @author RodgersGB
  */
 
-public class SdtSpriteModel extends SdtSprite 
-{
+public class SdtSpriteModel extends SdtModel 
+{	
 	private AVList avlist = new AVListImpl();
 
 	private Model model = null;
