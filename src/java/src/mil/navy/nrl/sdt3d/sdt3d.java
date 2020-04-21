@@ -815,6 +815,14 @@ public class sdt3d extends SdtApplication
 					e.printStackTrace();
 				}
 			}
+			
+			String fileName = findFile(MODEL_JAR_FILE);
+			if (fileName != null)
+			{
+				MODEL_JAR_FILE_PATH =  "jar:file:" + findFile(MODEL_JAR_FILE) + "!";
+			}
+			
+			
 			if (!initializeConfiguration())
 				return;
 
@@ -1947,6 +1955,14 @@ public class sdt3d extends SdtApplication
 
 				getWwd().setView(new BasicOrbitView());
 
+				
+				String fileName = findFile(MODEL_JAR_FILE);
+				if (fileName != null)
+				{
+					MODEL_JAR_FILE_PATH =  "jar:file:" + findFile(MODEL_JAR_FILE) + "!";
+				}
+		
+				
 			} // end hard reset
 
 			if (fileThread != null && openFile != null)
