@@ -1217,10 +1217,15 @@ node node1 symbol sphere,0xff0000</programlisting>
               If not found, it will search for the file in any path(s)
               previously specified with the sdt PATH command. Finally, it will
               look for the file in the same directory as the current input
-              script, if any. ("sdt3d" only)</para><para>Note that changing
-              the sprite's image will not change the image of nodes already
-              assigned the sprite, but any subsequent nodes assigned the
-              sprite will be associated with the new image. </para></entry>
+              script, if any. ("sdt3d" only)</para><para>NOTE: Paths to sdt
+              model sprites in jar files should set a path relative to the
+              model in the jar file. See <link
+              linkend="modelJarFile">modelJarFile</link> to set the model jar
+              file location. For example:<programlisting>sprite reagan image /CVN_76_RONALD_REAGAN/GEOMETRY/CVN-76_RONALD_REAGAN.3db 
+</programlisting></para><para>Note that changing the sprite's image will not
+              change the image of nodes already assigned the sprite, but any
+              subsequent nodes assigned the sprite will be associated with the
+              new image. </para></entry>
             </row>
 
             <row>
@@ -2612,7 +2617,14 @@ popdown info </programlisting></para>
       </sect3>
 
       <sect3>
-        <title id="lookAt"><link linkend="multiFrame">multiFrame
+        <title id="modelJarFile"><link linkend="modelJarFile">modelJarFile
+        &lt;fileName&gt;</link></title>
+
+        <para/>
+      </sect3>
+
+      <sect3>
+        <title id="multiFrame"><link linkend="multiFrame">multiFrame
         [on|off]</link></title>
 
         <para/>
@@ -3177,6 +3189,21 @@ listen off</programlisting></para></entry>
               &lt;lon&gt;,&lt;lat&gt;,&lt;alt&gt;</para><para>Note that the
               altitudeMode attribute is not currently supported. An "x" in an
               attribute will retain the current setting.</para></entry>
+            </row>
+
+            <row>
+              <entry><para><link id="modelJarFile"
+              linkend="modelJarFile">modelJarFile</link>
+              &lt;fileName&gt;</para></entry>
+
+              <entry>This command sets the name of any jar file containing 3D
+              models (.3ds, .3db,. flt). sdt3d will look for this jar file in
+              any sdt3d path locations if set, as fully qualified, or the
+              current user home directory. By default the application will
+              look for a model-1.1.0.jar file in the current home directory
+              unless the modelJarFile command overrides the file name. The
+              path for sprites in the jar file are relative to the jar file.
+              For example: <programlisting>sprite reagan image /CVN_76_RONALD_REAGAN/GEOMETRY/CVN-76_RONALD_REAGAN.3db size 200,200</programlisting></entry>
             </row>
 
             <row>
