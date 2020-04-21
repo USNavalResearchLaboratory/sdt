@@ -35,7 +35,7 @@ import gov.nasa.worldwind.util.WWIO;
 import gov.nasa.worldwind.util.WWUtil;
 import gov.nasa.worldwind.util.layertree.KMLLayerTreeNode;
 
-public class SdtSpriteKml extends SdtSprite 
+public class SdtSpriteKml extends SdtModel 
 {
 	String fileName = null;
 
@@ -107,6 +107,7 @@ public class SdtSpriteKml extends SdtSprite
 		return kmlRoot;
 	}
 
+	
 	/*
 	 * Kml collada roots cannot be shared as 3d model meshs can.
 	 */
@@ -444,5 +445,33 @@ public class SdtSpriteKml extends SdtSprite
 	public boolean isValid()
 	{
 		return kmlRoot != null;
+	}
+
+
+	@Override
+	public void setUseLighting(boolean useLighting) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void setModelPitch(double degrees) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void setModelYaw(double degrees) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void setModelRoll(double degrees) {
+		// TODO Auto-generated method stub
+		
 	}
 }

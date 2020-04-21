@@ -696,10 +696,13 @@ public class SdtNode implements Renderable
 		// We can get our loc vector before doing any overrides
 		// for sprite types
 		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
-		double modelHeightOffset = sprite.getHeight() / 2.0;
 
+		double modelHeightOffset = 0.0;
+		
 		if (hasSprite())
 		{
+			modelHeightOffset = sprite.getHeight() / 2.0;
+
 			switch (sprite.getType())
 			{
 				case ICON:
@@ -722,13 +725,13 @@ public class SdtNode implements Renderable
 					{
 						double elevation = dc.getGlobe().getElevation(position.getLatitude(), position.getLongitude());
 						
-						if (this.sprite.isRealSize())
+						if (sprite.isRealSize())
 						{
 							elevation += modelHeightOffset;
 						}
 						else
 						{
-							double localSize = ((SdtSpriteModel) sprite).computeSizeScale(dc, loc);
+							double localSize = ((SdtSpriteModel)sprite).computeSizeScale(dc, loc);
 							elevation += localSize * 4;
 						}
 						modelPosition = new Position(position.getLatitude(), position.getLongitude(), elevation);						
@@ -755,7 +758,7 @@ public class SdtNode implements Renderable
 					if (colladaRoot != null)
 					{
 						colladaRoot.setPosition(position);
-						Vec4 modelScaleVector = ((SdtSpriteKml) sprite).computeSizeScale(dc, loc);
+						Vec4 modelScaleVector = ((SdtSpriteKml)sprite).computeSizeScale(dc, loc);
 						colladaRoot.setModelScale(modelScaleVector);
 
 						// This heading code could be cleaned up now that everything is working
