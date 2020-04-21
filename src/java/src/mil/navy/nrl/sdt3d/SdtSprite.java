@@ -21,11 +21,8 @@ import builder.mil.nrl.atest.icon.Orientation;
 import builder.mil.nrl.atest.worldwind.openflight.LoaderFactory;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Position;
-import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.ogc.collada.ColladaRoot;
-import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.UserFacingIcon;
-import net.java.joglutils.model.ModelFactory;
 import net.java.joglutils.model.ModelLoadException;
 import net.java.joglutils.model.geometry.Model;
 
@@ -81,7 +78,7 @@ import net.java.joglutils.model.geometry.Model;
  *
  */
 
-public class SdtSprite
+public class SdtSprite implements SdtSpriteDimensions
 {
 	
 	public enum Type {
@@ -510,93 +507,55 @@ public class SdtSprite
 	}
 
 	
-	private void setSpriteModelAttributes(Element el, SdtSprite theSprite, String type)
+	private void setSpriteModelAttributes(Element el, SdtModel theSprite, String type)
 	{
 		// Initially use the icon size to calculate the model length in
 		// case no model length is given
-		((SdtSpriteModel) theSprite).setSize(theSprite.getIconSize().width,
+		theSprite.setSize(theSprite.getIconSize().width,
 				theSprite.getIconSize().height);
 
 		String lighting = getTextValue(el, "light");
-		if (lighting != null)
-			if (lighting.equalsIgnoreCase("on"))
-					((SdtSpriteModel) theSprite).setUseLighting(true);
-				else if (lighting.equalsIgnoreCase("off"))
-					((SdtSpriteModel) theSprite).setUseLighting(false);
 		
-		// get the orientation
+		if (lighting != null)
+		{
+			if (lighting.equalsIgnoreCase("on"))
+			{
+				theSprite.setUseLighting(true);
+			}
+			else 
+			{
+				theSprite.setUseLighting(false);
+			}
+		}
+		
+		// set orientation
 		String orientation = getTextValue(el, "orientation");
 		String[] coord = orientation.split(",");
-
 		if (coord.length > 0 && !coord[0].equalsIgnoreCase("x"))
 		{
-			// TODO: ljt cleanup 
-			if (type.equalsIgnoreCase("3ds")
-				||
-				type.equalsIgnoreCase("3db")
-				||
-				type.equalsIgnoreCase("flt"))
-				((SdtSpriteModel) theSprite).setModelPitch(new Double(coord[0]));
-			else
-				((SdtSpriteKml) theSprite).setModelPitch(new Double(coord[0]));
-
+			theSprite.setModelPitch(new Double(coord[0]));
 		}
+		
+		// set yaw
 		if (coord.length > 1 && !coord[1].equalsIgnoreCase("x"))
 		{
 			if (coord[1].endsWith("a"))
 			{
 				coord[1] = coord[1].replace("a", "");
 				theSprite.setAbsoluteYaw(true);
-				if (type.equalsIgnoreCase("3ds")
-						||
-						type.equalsIgnoreCase("3db")
-						||
-						type.equalsIgnoreCase("flt"))
-					((SdtSpriteModel) theSprite).setModelYaw(new Double(coord[1]));
-				else
-					((SdtSpriteKml) theSprite).setModelYaw(new Double(coord[1]));
-
 			}
 			else if (coord[1].endsWith("r"))
 			{
 				coord[1] = coord[1].replace("r", "");
 				theSprite.setAbsoluteYaw(false);
-				if (type.equalsIgnoreCase("3ds")
-						||
-						type.equalsIgnoreCase("3db")
-						||
-						type.equalsIgnoreCase("flt"))
-					((SdtSpriteModel) theSprite).setModelYaw(new Double(coord[1]));
-				else
-					((SdtSpriteKml) theSprite).setModelYaw(new Double(coord[1]));
 			}
-			else
-			{
-				// Else we use the default useAbsoluteYaw setting
-				if (type.equalsIgnoreCase("3ds")
-					||
-					type.equalsIgnoreCase("3db")
-					||
-					type.equalsIgnoreCase("flt"))
-					((SdtSpriteModel) theSprite).setModelYaw(new Double(coord[1]));
-				else
-					((SdtSpriteKml) theSprite).setModelYaw(new Double(coord[1]));
-			}
+			theSprite.setModelYaw(new Double(coord[1]));
 		}
 
+		// set roll
 		if (coord.length > 2 && !coord[2].equalsIgnoreCase("x"))
 		{
-			// TODO: cleanup make setmodelroll virtual
-			if (type.equalsIgnoreCase("3ds")
-				||
-				type.equalsIgnoreCase("3db")
-				||
-				type.equalsIgnoreCase("flt"))
-
-				((SdtSpriteModel) theSprite).setModelRoll(new Double(coord[2]));
-			else
-				((SdtSpriteKml) theSprite).setModelRoll(new Double(coord[2]));
-
+			theSprite.setModelRoll(new Double(coord[2]));
 		}
 	}
 	
@@ -659,7 +618,7 @@ public class SdtSprite
 				
 				if (theSprite instanceof SdtModelDimensions)
 				{
-					setSpriteModelAttributes(el, theSprite, type);
+					setSpriteModelAttributes(el, (SdtModel) theSprite, type);
 				}
 
 				return theSprite;
@@ -669,10 +628,6 @@ public class SdtSprite
 		return null;
 	}
 
-	public void setModelElevation(DrawContext dc)
-	{
-		return;
-	}
 
 	// Try to load it as a Model, kml/kmz, or an Icon, else use default Model
 	SdtSprite load(String spritePath) throws IOException
