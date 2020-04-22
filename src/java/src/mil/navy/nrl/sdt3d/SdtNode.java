@@ -28,7 +28,6 @@ import gov.nasa.worldwind.render.Path;
 import gov.nasa.worldwind.render.Renderable;
 import gov.nasa.worldwind.render.ShapeAttributes;
 import gov.nasa.worldwind.render.UserFacingIcon;
-import gov.nasa.worldwind.render.WWIcon;
 import gov.nasa.worldwindx.examples.PathPositionColors.ExamplePositionColors;
 import gov.nasa.worldwindx.examples.util.DirectedPath;
 import mil.navy.nrl.sdt3d.SdtSprite.Type;
@@ -751,15 +750,17 @@ public class SdtNode implements Renderable
 				break;
 				case KML:
 				{
+					// We own colladaRoot but ask the kml sprite to get it for us
+					// as we can't share between nodes
 					if (colladaRoot == null)
 					{
-						colladaRoot = ((SdtSpriteKml) this.sprite).getColladaRoot(kmlRoot);
+						colladaRoot = sprite.getColladaRoot(kmlRoot);
 					}
 
 					if (colladaRoot != null)
 					{
 						colladaRoot.setPosition(position);
-						Vec4 modelScaleVector = ((SdtSpriteKml)sprite).computeSizeScale(dc, loc);
+						Vec4 modelScaleVector = ((SdtSpriteKml)sprite).computeSizeVector(dc, loc);
 						colladaRoot.setModelScale(modelScaleVector);
 
 						// This heading code could be cleaned up now that everything is working

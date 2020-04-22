@@ -38,13 +38,13 @@ public class SdtSpriteModel extends SdtModel
 	
 	private double heading = 0.0; // a.k.a. "yaw"
 
-	private double modelPitch = 0.0;
+	protected double modelPitch = 999.0;
 
 	// if yaw is not set by controller it will be inferred
 	// from heading
-	private double modelYaw = 0.0;
+	protected double modelYaw = 999.0;
 
-	private double modelRoll = 0.0;
+	protected double modelRoll = 999.0;
 
 	// Set by node render code and added to any model p/r
 	// WE have to do this due to the 3dModelLayer old style code
@@ -377,7 +377,12 @@ public class SdtSpriteModel extends SdtModel
 			modelRadius = Math.sqrt(3*iconWidth*iconWidth) / 2.0;
 			return;
 		}
-			
+		
+		if (model == null)
+		{
+			return;
+		}
+		
 		net.java.joglutils.model.geometry.Vec4 bMin = model.getBounds().min;
 		net.java.joglutils.model.geometry.Vec4 bMax = model.getBounds().max;
 		double pHeight = Math.abs(bMax.z - bMin.z);
