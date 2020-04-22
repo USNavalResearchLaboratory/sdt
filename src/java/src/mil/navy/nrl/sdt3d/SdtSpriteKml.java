@@ -35,7 +35,7 @@ import gov.nasa.worldwind.util.WWIO;
 import gov.nasa.worldwind.util.WWUtil;
 import gov.nasa.worldwind.util.layertree.KMLLayerTreeNode;
 
-public class SdtSpriteKml extends SdtModel 
+public class SdtSpriteKml extends SdtSpriteModel 
 {
 	String fileName = null;
 
@@ -60,17 +60,18 @@ public class SdtSpriteKml extends SdtModel
 	// The model p/y/r fiels are set by any xml config file associated with
 	// the sprite. They are added to any node position orientation settings
 	// during the node rendering pass.
-	private Double modelPitch = 999.0;
+	//private Double modelPitch = 999.0;
 
-	private Double modelYaw = 999.0;
+	//private Double modelYaw = 999.0;
 
-	private Double modelRoll = 999.0;
+	//private Double modelRoll = 999.0;
 
 	boolean isRealSize = true;
 	
 	public SdtSpriteKml(SdtSprite template)
 	{
 		super(template);
+		//modelYaw = 999.0;
 	}
 
 
@@ -111,6 +112,7 @@ public class SdtSpriteKml extends SdtModel
 	/*
 	 * Kml collada roots cannot be shared as 3d model meshs can.
 	 */
+	@Override
 	public ColladaRoot getColladaRoot(KMLRoot kmlRoot)
 	{
 		ColladaRoot colladaRoot = null;
@@ -161,9 +163,9 @@ public class SdtSpriteKml extends SdtModel
 	
 	public double getPitch()
 	{
-		if (this.modelPitch != 999.0)
+		if (modelPitch != 999.0)
 		{
-			return this.modelPitch;
+			return modelPitch;
 		}
 		return 0.0;
 	}
@@ -183,29 +185,11 @@ public class SdtSpriteKml extends SdtModel
 
 	public double getRoll()
 	{
-		if (this.modelRoll != 999.0)
+		if (modelRoll != 999.0)
 		{
-			return this.modelRoll;
+			return modelRoll;
 		}
 		return 0.0;
-	}
-
-
-	public void setModelPitch(Double pitch)
-	{
-		this.modelPitch = pitch;
-	}
-
-
-	public void setModelYaw(Double yaw)
-	{
-		this.modelYaw = yaw;
-	}
-
-
-	public void setModelRoll(Double roll)
-	{
-		this.modelRoll = roll;
 	}
 
 
@@ -241,8 +225,13 @@ public class SdtSpriteKml extends SdtModel
 	{
 		this.isRealSize = isRealSize;
 	}
-	
-	
+
+	@Override
+	public void setFixedLength(double length)
+	{
+		fixedLength = length;
+	}
+
 	@Override
 	public void setPosition(Position position)
 	{
@@ -254,7 +243,7 @@ public class SdtSpriteKml extends SdtModel
 	/*
 	 * Called by node rendering function
 	 */	
-	public Vec4 computeSizeScale(DrawContext dc, Vec4 loc)
+	public Vec4 computeSizeVector(DrawContext dc, Vec4 loc)
 	{		
 		Vec4 modelScaleVec;
 		if (getFixedLength() > 0.0 && isRealSize)
@@ -454,24 +443,4 @@ public class SdtSpriteKml extends SdtModel
 		
 	}
 
-
-	@Override
-	public void setModelPitch(double degrees) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void setModelYaw(double degrees) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void setModelRoll(double degrees) {
-		// TODO Auto-generated method stub
-		
-	}
 }

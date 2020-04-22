@@ -3077,7 +3077,6 @@ public class sdt3d extends SdtApplication
 							imageFilePath = fc.getCurrentDirectory() + "\\" + imageFilePath;
 
 						f1 = new File(imageFilePath);
-						System.out.println("Path> " + imageFilePath);
 						if (!f1.exists())
 							continue;
 					}

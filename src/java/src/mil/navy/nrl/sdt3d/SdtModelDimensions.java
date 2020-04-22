@@ -8,7 +8,13 @@ interface SdtModelDimensions extends SdtSpriteDimensions
 	
 	void setModelYaw(double degrees);
 
-	public void setModelRoll(double degrees);
+	void setModelRoll(double degrees);
+	
+	double getModelPitch();
+	
+	double getModelYaw();
+	
+	double getModelRoll();
 	
 
 }

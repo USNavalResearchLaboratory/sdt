@@ -22,6 +22,7 @@ import builder.mil.nrl.atest.worldwind.openflight.LoaderFactory;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.ogc.collada.ColladaRoot;
+import gov.nasa.worldwind.ogc.kml.KMLRoot;
 import gov.nasa.worldwind.render.UserFacingIcon;
 import net.java.joglutils.model.ModelLoadException;
 import net.java.joglutils.model.geometry.Model;
@@ -817,14 +818,21 @@ public class SdtSprite implements SdtSpriteDimensions
 
 	public void setRealSize(boolean isRealSize) 
 	{
-		// Models only
+		// Models only, noop
 	}
 
 
 	protected void setPosition(Position pos) 
 	{
-		// Models only
+		// Models only, noop
 		
 	}
+	
+	public ColladaRoot getColladaRoot(KMLRoot kmlRoot)
+	{
+		// Kml models only, noop
+		return null;
+	}
+
 
 } // end class SdtSprite
