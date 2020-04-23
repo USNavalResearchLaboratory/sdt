@@ -1198,8 +1198,8 @@ public class sdt3d extends SdtApplication
 			// Create renderable layer for node models
 			setNodeModelLayer(new Model3DLayer());
 			getNodeModelLayer().setName("Node Models");
-			getNodeModelLayer().setMaintainConstantSize(true);
-			getNodeModelLayer().setSize(1);
+			//getNodeModelLayer().setMaintainConstantSize(true);
+			//getNodeModelLayer().setSize(1);
 			insertBeforeCompass(wwd, getNodeModelLayer());
 
 			// Create renderable layer for node kml models

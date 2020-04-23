@@ -90,7 +90,7 @@ public class SdtNode implements Renderable
 	private KMLController kmlController = null;
 
 	ColladaRoot colladaRoot = null;
-
+	
 	private boolean feedbackEnabled = sdt3d.AppFrame.followAll();
 
 	private SdtSymbol symbol = null;
@@ -626,7 +626,7 @@ public class SdtNode implements Renderable
 	{
 		// Each node needs to have a copy of its kmlController, colladaRoot, and kmlRoot
 		if (this.kmlRoot == null)
-			this.kmlRoot = ((SdtSpriteKml) sprite).initializeKmlRoot();
+			this.kmlRoot = sprite.initializeKmlRoot();
 
 		if (this.kmlRoot != null && this.kmlController == null)
 			this.kmlController = new KMLController(this.kmlRoot);
@@ -1267,17 +1267,25 @@ public class SdtNode implements Renderable
 		this.kmlController = null;
 		this.icon = null;
 
+		
+		this.sprite = theSprite;
 		// The node needs to have a unique Model to render so
 		// copy the one the sprite has loaded. We get a little savings by loading the
 		// model just once when we loaded the sprite initially.
-		if (theSprite instanceof SdtSpriteModel)
+		if (theSprite.getType() == SdtSprite.Type.MODEL)
+		{
+			this.sprite = new SdtSpriteModel((SdtSpriteModel) theSprite);
+
+			//this.model = theSprite.getModel();
+		}
+		/*if (theSprite instanceof SdtSpriteModel)
 		{
 			this.sprite = new SdtSpriteModel((SdtSpriteModel) theSprite);
 		}
 		else
 		{
 			this.sprite = theSprite;
-		}
+		}*/
 
 		if (hasSymbol())
 		{

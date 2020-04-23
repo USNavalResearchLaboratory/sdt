@@ -834,5 +834,28 @@ public class SdtSprite implements SdtSpriteDimensions
 		return null;
 	}
 
+	public KMLRoot initializeKmlRoot()
+	{
+		// Kml models only, noop
+		return null;
+	}
+
+	public Model getModel()
+	{
+		// models only, noop
+		return null;
+	}
+
+
+	public ColladaRoot getColladaRoot() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	public void setColladaRoot(ColladaRoot colladaRoot) {
+		// TODO Auto-generated method stub
+		
+	}
 
 } // end class SdtSprite
