@@ -9,11 +9,18 @@
 
 package mil.navy.nrl.sdt3d;
 
+import java.awt.Rectangle;
+
+import javax.media.opengl.GL2;
+
+import builder.mil.nrl.atest.worldwind.jogl.DisplayListRenderer;
+import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.avlist.AVList;
 import gov.nasa.worldwind.avlist.AVListImpl;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.ogc.collada.ColladaRoot;
+import gov.nasa.worldwind.ogc.kml.KMLRoot;
 import gov.nasa.worldwind.render.DrawContext;
 import net.java.joglutils.model.geometry.Model;
 
@@ -23,7 +30,7 @@ import net.java.joglutils.model.geometry.Model;
  * @author RodgersGB
  */
 
-public class SdtSpriteModel extends SdtModel 
+public class SdtSpriteModel extends SdtModel
 {	
 	private AVList avlist = new AVListImpl();
 
@@ -107,7 +114,7 @@ public class SdtSpriteModel extends SdtModel
 		this.model.setUseLighting(useLighting);
 	}
 
-
+	@Override
 	public Model getModel()
 	{
 		return this.model;
@@ -493,5 +500,171 @@ public class SdtSpriteModel extends SdtModel
 		}
 			
 	} // end SdtObjModel.computeSizeScale()
+	
+	@Override
+	public ColladaRoot getColladaRoot(KMLRoot kmlRoot)
+	{
+		// Kml models only, noop
+		return null;
+	}
+
+	@Override
+	public KMLRoot initializeKmlRoot()
+	{
+		// Kml models only, noop
+		return null;
+	}
+
+
+	@Override
+	public void render(DrawContext dc) {
+		// TODO Auto-generated method stub
+		draw(dc, this);
+		SdtSpriteModel theModel = this;
+		if (theModel != null)
+		{
+			// Determine Cartesian position from the surface geometry if the icon is near the surface,
+			// otherwise draw it from the globe.
+			Position pos = theModel.getPosition();
+			if (pos == null)
+				return;
+				//continue;
+			Vec4 modelPoint = null;
+			if (pos.getElevation() < dc.getGlobe().getMaxElevation())
+				modelPoint = dc.getSurfaceGeometry().getSurfacePoint(theModel.getPosition());
+			if (modelPoint == null)
+				modelPoint = dc.getGlobe().computePointFromPosition(theModel.getPosition());
+
+			Vec4 screenPoint = dc.getView().project(modelPoint);
+			GL2 gl = dc.getGL().getGL2();
+			gl.glMatrixMode(GL2.GL_MODELVIEW);
+
+			Vec4 loc = dc.getGlobe().computePointFromPosition(pos);
+			double localSize = this.computeSize(dc, loc);
+			localSize *= theModel.computeSizeScale(dc, loc);
+
+			double width = theModel.getWidth();
+			double height = theModel.getHeight();
+			gl.glLoadIdentity();
+			gl.glTranslated((int) (screenPoint.x - width / 2), screenPoint.y + height, 0d);
+			Rectangle rect = new Rectangle((int) (screenPoint.x),
+				(int) (screenPoint.y), (int) (width * localSize),
+				(int) (height * localSize));
+			
+			// TODO??
+			this.recordFeedback(dc, theModel, modelPoint, rect);
+			
+		}
+	}
+
+	// draw this layer
+	protected void draw(DrawContext dc, SdtSpriteModel model)
+	{
+		// we use dc.getGLU() to access the current glu rather than gl2
+		GL2 gl = dc.getGL().getGL2(); // GL initialization checks for GL2 compatibility.
+
+		Position pos = model.getPosition();
+
+		if (pos == null)
+			return;
+		Vec4 loc = dc.getGlobe().computePointFromPosition(pos);
+		double localSize = this.computeSize(dc, loc);
+		localSize *= model.computeSizeScale(dc, loc);
+		if (dc.getView().getFrustumInModelCoordinates().contains(loc))
+		{
+			dc.getView().pushReferenceCenter(dc, loc);
+			gl.glRotated(pos.getLongitude().degrees, 0, 1, 0);
+			gl.glRotated(-pos.getLatitude().degrees, 1, 0, 0);
+			gl.glScaled(localSize, localSize, localSize);
+
+			gl.glRotated(model.getHeading(), 0, 0, 1);
+			gl.glRotated(model.getPitch(), 1, 0, 0);
+			gl.glRotated(model.getRoll(), 0, 1, 0);
+
+			// Get an instance of the display list renderer
+			DisplayListRenderer.getInstance().render(dc,model.getModel());
+
+			dc.getView().popReferenceCenter(dc);
+		}
+
+	}
+
+	private double computeSize(DrawContext dc, Vec4 loc)
+	{
+		// TODO: Why are we alwasy setting maintainContstantSize to true?
+		// are we even using this?
+		
+		// LJT DELETE THIS function entirely
+		boolean maintainConstantSize = true;
+		double size = 1;
+		// We always set maintainConstantSize to true
+		if (maintainConstantSize)
+			return size;
+
+		if (loc == null)
+		{
+			System.err.println("Null location when computing size of model");
+			return 1;
+		}
+		double d = loc.distanceTo3(dc.getView().getEyePoint());
+		double currentSize = 60 * dc.getView().computePixelSizeAtDistance(d);
+		if (currentSize < 2)
+			currentSize = 2;
+
+		return currentSize;
+	}
+	
+	// Eventually we should extend WWIcon for WWModel3D... These are duplicate functions from the renderer
+	/**
+	 * Returns true if the ModelRenderer should record feedback about how the specified WWModel3D has been processed.
+	 *
+	 * @param dc the current DrawContext.
+	 * @param model the WWModel3D to record feedback information for.
+	 *
+	 * @return true to record feedback; false otherwise.
+	 */
+	protected boolean isFeedbackEnabled(DrawContext dc, SdtSpriteModel model)
+	{
+		if (dc.isPickingMode())
+			return false;
+
+		Boolean b = (Boolean) model.getValue(AVKey.FEEDBACK_ENABLED);
+		return (b != null && b);
+	}
+
+
+	/**
+	 * If feedback is enabled for the specified WWModel3D, this method records feedback about how the specified
+	 * WWModel3D has
+	 * been processed.
+	 *
+	 * @param dc the current DrawContext.
+	 * @param model the model which the feedback information refers to.
+	 * @param modelPoint the model's reference point in model coordinates.
+	 * @param screenRect the models's bounding rectangle in screen coordinates.
+	 */
+	protected void recordFeedback(DrawContext dc, SdtSpriteModel model, Vec4 modelPoint, Rectangle screenRect)
+	{
+		if (!this.isFeedbackEnabled(dc, model))
+			return;
+
+		this.doRecordFeedback(dc, model, modelPoint, screenRect);
+	}
+
+
+	/**
+	 * Records feedback about how the specified WWIcon has been processed.
+	 *
+	 * @param dc the current DrawContext.
+	 * @param icon the icon which the feedback information refers to.
+	 * @param modelPoint the icon's reference point in model coordinates.
+	 * @param screenRect the icon's bounding rectangle in screen coordinates.
+	 */
+	@SuppressWarnings({ "UnusedDeclaration" })
+	protected void doRecordFeedback(DrawContext dc, SdtSpriteModel model, Vec4 modelPoint, Rectangle screenRect)
+	{
+		model.setValue(AVKey.FEEDBACK_REFERENCE_POINT, modelPoint);
+		model.setValue(AVKey.FEEDBACK_SCREEN_BOUNDS, screenRect);
+	}
 
 } // end class SdtObjModel
