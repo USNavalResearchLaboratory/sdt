@@ -76,9 +76,19 @@ public class Model3DLayer extends RenderableLayer //AbstractLayer
 
 			while (it.hasNext())
 			{
-				//SdtSpriteModel theModel = it.next();
-				//theModel.render(dc);	
-				it.next().render(dc);
+				SdtSpriteModel theModel = it.next();
+				// Our collada model is not available until the first
+				// prerender pass so explicitly call that here
+				if (theModel.getColladaRoot() == null)
+				{
+					if (theModel.getKmlController() != null)
+					{
+						theModel.getKmlController().preRender(dc);
+					}
+				}
+				
+				
+				theModel.render(dc);	
 			}
 		}
 		// handle any exceptions
@@ -95,35 +105,6 @@ public class Model3DLayer extends RenderableLayer //AbstractLayer
 		}
 	}
 
-	//@Override
-	protected void doRenderOrig(DrawContext dc)
-	{
-		/*
-		try
-		{
-			beginDraw(dc);
-			Iterator<SdtSpriteModel> it = list.iterator();
-
-			while (it.hasNext())
-			{
-				//SdtSpriteModel theModel = it.next();
-				//theModel.render(dc);	
-				it.next().render(dc);
-			}
-		}
-		// handle any exceptions
-		catch (Exception e)
-		{
-			// handle
-			e.printStackTrace();
-		}
-		// we must end drawing so that opengl
-		// states do not leak through.
-		finally
-		{
-			endDraw(dc);
-		}*/
-	}
 
 	// puts opengl in the correct state for this layer
 	protected void beginDraw(DrawContext dc)

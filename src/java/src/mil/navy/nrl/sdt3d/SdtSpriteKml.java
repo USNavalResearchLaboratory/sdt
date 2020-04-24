@@ -1,5 +1,6 @@
 package mil.navy.nrl.sdt3d;
 
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -10,7 +11,7 @@ import javax.xml.stream.XMLStreamException;
 
 import gov.nasa.worldwind.WorldWind;
 /*!
- * Known KML limitiations:
+ * Known KML limitations:
  * 
  *  1. Images (icons) can not be associated with placemarks
  *  2. Have been having trouble getting hrefs to work correctly...
@@ -34,6 +35,7 @@ import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.util.WWIO;
 import gov.nasa.worldwind.util.WWUtil;
 import gov.nasa.worldwind.util.layertree.KMLLayerTreeNode;
+import net.java.joglutils.model.geometry.Model;
 
 public class SdtSpriteKml extends SdtSpriteModel 
 {
@@ -68,16 +70,23 @@ public class SdtSpriteKml extends SdtSpriteModel
 
 	boolean isRealSize = true;
 	
-	public SdtSpriteKml(SdtSprite template)
+	public SdtSpriteKml(SdtSpriteKml template)
 	{
 		super(template);
-		//modelYaw = 999.0;
+		this.fileName = template.fileName;
+		this.kmlFile = template.kmlFile;
 	}
 
 
 	public SdtSpriteKml(String name)
 	{
 		super(name);
+	}
+
+	// TODO: LJT review these constructors
+	public SdtSpriteKml(SdtSprite template) 
+	{
+		super(template);
 	}
 
 
@@ -109,14 +118,76 @@ public class SdtSpriteKml extends SdtSpriteModel
 	}
 
 	
+	@Override
+	public ColladaRoot getColladaRoot()
+	{
+		return colladaRoot;
+	}
+	
+	// TODO: ljt create a common one for models and controlelrs
+	//@Override
+	public KMLController getKmlModel()
+	{
+		return kmlController;
+	}
+	
+	
+	ColladaRoot getColladaRootFromPlacemark(KMLPlacemark feature)
+	{
+		List<KMLRenderable> rs = ((KMLPlacemark) feature).getRenderables();
+		if (rs != null)
+		{
+			for (KMLRenderable r : rs)
+			{
+				if (r instanceof KMLModelPlacemarkImpl)
+				{
+					if (((KMLModelPlacemarkImpl) r).getColladaRoot() != null)
+					{
+						colladaRoot = ((KMLModelPlacemarkImpl) r).getColladaRoot();
+						if (colladaRoot != null)
+						{
+							colladaRoot.setModelScale(this.getModelScale());
+							// The kml renderer does it's own terrain position computations
+							// so set the root to absolute and use our calcs from
+							// the node render pass
+							colladaRoot.setAltitudeMode(WorldWind.ABSOLUTE);
+
+						}
+					}
+				}
+			}
+		}
+		return colladaRoot;
+	}
+	
+	
 	/*
 	 * Kml collada roots cannot be shared as 3d model meshs can.
 	 */
 	@Override
 	public ColladaRoot getColladaRoot(KMLRoot kmlRoot)
 	{
-		ColladaRoot colladaRoot = null;
+		if (colladaRoot != null)
+			return colladaRoot;
 		
+		KMLAbstractFeature feature = kmlRoot.getFeature();
+		
+		if (feature instanceof KMLPlacemark)
+		{
+			colladaRoot = getColladaRootFromPlacemark((KMLPlacemark)feature);
+		}
+		else if (feature instanceof KMLAbstractContainer)
+		{
+			for (KMLAbstractFeature abstractFeature : ((KMLAbstractContainer) feature).getFeatures())
+			{
+				if (abstractFeature instanceof KMLPlacemark)
+				{
+					colladaRoot = getColladaRootFromPlacemark((KMLPlacemark) abstractFeature);
+				}
+			}
+		}
+		
+		/*
 		if (kmlRoot != null && kmlRoot.getFeature() != null)
 		{
 			KMLAbstractFeature kmlAbstractFeature = kmlRoot.getFeature();
@@ -150,6 +221,7 @@ public class SdtSpriteKml extends SdtSpriteModel
 				}
 			}
 		} // end if feature != null
+		*/
 		return colladaRoot;
 	}
 
@@ -291,22 +363,6 @@ public class SdtSpriteKml extends SdtSpriteModel
 	}
 
 
-	// Called by node rendering function
-	@Override
-	public void setHeading(double nodeYaw, double newHeading, ColladaRoot nodeColladaRoot)
-	{
-		if (useAbsoluteYaw())
-		{
-			nodeColladaRoot.setHeading(Angle.fromDegrees((getYaw() + nodeYaw)));
-		}
-		else
-		{
-			nodeColladaRoot.setHeading(Angle.fromDegrees((getYaw() + nodeYaw + SdtNode.normalize(newHeading))));
-
-		}
-	} // setHeading()
-
-
 	public void setLayerNode(KMLLayerTreeNode theLayerNode)
 	{
 		layerNode = theLayerNode;
@@ -412,10 +468,11 @@ public class SdtSpriteKml extends SdtSpriteModel
 
 
 	// Used by "fixed" kml objects
+	@Override
 	public KMLController getKmlController()
 	{
 		if (kmlRoot == null)
-			initializeKmlRoot();
+			kmlRoot = initializeKmlRoot();
 
 		if (kmlRoot != null && kmlController == null)
 			this.kmlController = new KMLController(kmlRoot);
@@ -430,17 +487,110 @@ public class SdtSpriteKml extends SdtSpriteModel
 		return kmlRoot;
 	}
 
-
+	@Override
 	public boolean isValid()
 	{
-		return kmlRoot != null;
+		return colladaRoot != null;
+	}
+
+	
+	@Override
+	public void render(DrawContext dc) 
+	{
+		
+		if (kmlController == null)
+		{
+			getKmlController();
+		}
+		
+		if (colladaRoot == null)
+			colladaRoot = getColladaRoot(kmlController.getKmlRoot());
+
+		if (colladaRoot == null)
+		{
+			// don't recreate collada root each render pass! fix!
+			return;
+		}
+		
+		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
+
+		// Set model position & size
+		colladaRoot.setPosition(position);
+		Vec4 modelScaleVector = this.computeSizeVector(dc, loc);
+		colladaRoot.setModelScale(modelScaleVector);
+
+		// Set model orientation
+		colladaRoot.setHeading(Angle.fromDegrees(heading));;
+		// kml roll is the reverse of models (and our default)
+		colladaRoot.setRoll(Angle.fromDegrees(-(roll + getModelRoll())));
+		colladaRoot.setPitch(Angle.fromDegrees(pitch + getModelPitch()));
+		
+		Vec4 modelPoint = null;
+		if (position.getElevation() < dc.getGlobe().getMaxElevation())
+			modelPoint = dc.getSurfaceGeometry().getSurfacePoint(position);
+		if (modelPoint == null)
+			modelPoint = dc.getGlobe().computePointFromPosition(position);
+
+		Vec4 screenPoint = dc.getView().project(modelPoint);
+		Vec4 modelScale = colladaRoot.getModelScale();
+		Rectangle rect = new Rectangle((int) (screenPoint.x), (int) (screenPoint.y),
+			(int) (modelScale.x), (int) (modelScale.y));
+
+		this.recordFeedback(dc, kmlController, modelPoint, rect);
+		kmlController.render(dc);
+
+
+	}
+	// These are duplicate functions from the icon renderer
+	/**
+	 * Returns true if the ModelRenderer should record feedback about how the specified kmlModel has been processed.
+	 *
+	 * @param dc the current DrawContext.
+	 * @param model the KMLModel to record feedback information for.
+	 *
+	 * @return true to record feedback; false otherwise.
+	 */
+	protected boolean isFeedbackEnabled(DrawContext dc, KMLController kml)
+	{
+		if (dc.isPickingMode())
+			return false;
+
+		Boolean b = (Boolean) kml.getValue(AVKey.FEEDBACK_ENABLED);
+		return (b != null && b);
 	}
 
 
-	@Override
-	public void setUseLighting(boolean useLighting) {
-		// TODO Auto-generated method stub
-		
+	/**
+	 * If feedback is enabled for the specified model, this method records feedback about how the specified model has
+	 * been processed.
+	 *
+	 * @param dc the current DrawContext.
+	 * @param model the model which the feedback information refers to.
+	 * @param modelPoint the model's reference point in model coordinates.
+	 * @param screenRect the models's bounding rectangle in screen coordinates.
+	 */
+	protected void recordFeedback(DrawContext dc, KMLController model, Vec4 modelPoint, Rectangle screenRect)
+	{
+		if (!this.isFeedbackEnabled(dc, model))
+			return;
+
+		this.doRecordFeedback(dc, model, modelPoint, screenRect);
+	}
+
+
+	/**
+	 * Records feedback about how the specified WWIcon has been processed.
+	 *
+	 * @param dc the current DrawContext.
+	 * @param icon the icon which the feedback information refers to.
+	 * @param modelPoint the icon's reference point in model coordinates.
+	 * @param screenRect the icon's bounding rectangle in screen coordinates.
+	 */
+	@SuppressWarnings({ "UnusedDeclaration" })
+	protected void doRecordFeedback(DrawContext dc, KMLController model, Vec4 modelPoint, Rectangle screenRect)
+	{
+		model.setValue(AVKey.FEEDBACK_REFERENCE_POINT, modelPoint);
+		model.setValue(AVKey.FEEDBACK_SCREEN_BOUNDS, screenRect);
 	}
 
 }
