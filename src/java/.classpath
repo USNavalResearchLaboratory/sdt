@@ -22,5 +22,9 @@
 	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/worldwind/gdal.jar"/>
 	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/worldwind/jogl-all.jar"/>
 	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/worldwind/worldwindx.jar"/>
+	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/apache/commons-text-1.8/commons-text-1.8.jar"/>
+	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/apache/commons-lang3-3.10/commons-lang3-3.10.jar"/>
+	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/apache/commons-io-2.6/commons-io-2.6.jar"/>
+	<classpathentry kind="lib" path="/Users/ljt/workspace-sdt3d/mozilla/juniversalchardet-mod-1.0.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -43,7 +43,7 @@ public class SdtSpriteModel extends SdtModel
 
 	private double modelRadius = -1.0;
 	
-	private double heading = 0.0; // a.k.a. "yaw"
+	protected double heading = 0.0; // a.k.a. "yaw"
 
 	protected double modelPitch = 999.0;
 
@@ -55,9 +55,9 @@ public class SdtSpriteModel extends SdtModel
 
 	// Set by node render code and added to any model p/r
 	// WE have to do this due to the 3dModelLayer old style code
-	private double pitch = 0.0;
+	protected double pitch = 0.0;
 
-	private double roll = 0.0;
+	protected double roll = 0.0;
 
 	private double sizeScale = 1.0;
 
@@ -69,11 +69,6 @@ public class SdtSpriteModel extends SdtModel
 
 	boolean isRealSize = true;
 	
-	public SdtSpriteModel(SdtSprite template)
-	{
-		super(template);
-	}
-
 
 	public SdtSpriteModel(SdtSpriteModel template)
 	{
@@ -106,6 +101,18 @@ public class SdtSpriteModel extends SdtModel
 	}
 
 
+	// TODO: ljt review all htese constructors??
+	public SdtSpriteModel(SdtSprite template) 
+	{
+		super(template);
+	}
+
+	@Override
+	public boolean isValid()
+	{
+		return model != null;
+	}
+	
 	public void setModel(Model model)
 	{
 		this.model = model;
@@ -214,7 +221,7 @@ public class SdtSpriteModel extends SdtModel
 
 	// "heading" wr2 North (0.0)
 	@Override
-	public void setHeading(double newHeading, double nodeYaw, ColladaRoot notUsed)
+	public void setHeading(double newHeading, double nodeYaw)
 	{
 		// Called by node rendering function
 
