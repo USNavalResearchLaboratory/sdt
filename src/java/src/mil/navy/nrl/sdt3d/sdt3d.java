@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -99,7 +98,6 @@ import gov.nasa.worldwind.globes.ElevationModel;
 import gov.nasa.worldwind.globes.FlatGlobe;
 import gov.nasa.worldwind.globes.Globe;
 import gov.nasa.worldwind.layers.AnnotationLayer;
-import gov.nasa.worldwind.layers.CompassLayer;
 import gov.nasa.worldwind.layers.IconLayer;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
@@ -115,7 +113,6 @@ import gov.nasa.worldwind.pick.PickedObjectList;
 import gov.nasa.worldwind.render.AbstractBrowserBalloon;
 import gov.nasa.worldwind.render.BalloonAttributes;
 import gov.nasa.worldwind.render.BasicBalloonAttributes;
-import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.GlobeAnnotation;
 import gov.nasa.worldwind.render.GlobeBrowserBalloon;
 import gov.nasa.worldwind.render.PointPlacemark;
@@ -486,8 +483,6 @@ public class sdt3d extends SdtApplication
 
 		private Model3DLayer nodeModelLayer = null;
 
-		private SdtKmlLayer nodeKmlModelLayer = null;
-
 		private IconLayer nodeIconLayer = null;
 
 		// These could be common but we want to be able to turn them on/off separately
@@ -653,7 +648,8 @@ public class sdt3d extends SdtApplication
 			this.viewController = new ViewController(getWwd());
 			this.viewController.setIcons(getNodeIconLayer().getIcons());
 			this.viewController.setModels(getNodeModelLayer().getModels());
-			this.viewController.setKmlModels(getNodeKmlModelLayer().getRenderables());
+			// TODO: ljt Get working for kmlControllers
+			//this.viewController.setKmlModels(getNodeKmlModelLayer().getRenderables());
 
 			// We disable view clipping, as view tracking works best when
 			// an icon's screen rectangle is known even when the icon is outside
@@ -1198,14 +1194,10 @@ public class sdt3d extends SdtApplication
 			// Create renderable layer for node models
 			setNodeModelLayer(new Model3DLayer());
 			getNodeModelLayer().setName("Node Models");
+			// TODO: ljt are we using this?
 			//getNodeModelLayer().setMaintainConstantSize(true);
 			//getNodeModelLayer().setSize(1);
 			insertBeforeCompass(wwd, getNodeModelLayer());
-
-			// Create renderable layer for node kml models
-			setNodeKmlModelLayer(new SdtKmlLayer());
-			getNodeKmlModelLayer().setName("Node Kml Models");
-			insertBeforeCompass(wwd, getNodeKmlModelLayer());
 
 			// Create renderable layer for symbols.
 			setSymbolLayer(new SdtSymbolLayer());
@@ -1878,7 +1870,8 @@ public class sdt3d extends SdtApplication
 			this.viewController = new ViewController(getWwd());
 			this.viewController.setIcons(getNodeIconLayer().getIcons());
 			this.viewController.setModels(getNodeModelLayer().getModels());
-			this.viewController.setKmlModels(getNodeKmlModelLayer().getRenderables());
+			// TODO: ljt get controller working with kmlControllers
+			//this.viewController.setKmlModels(getNodeKmlModelLayer().getRenderables());
 
 			// Reset system modes
 			this.setOfflineMode("off");
@@ -1951,7 +1944,8 @@ public class sdt3d extends SdtApplication
 				this.viewController = new ViewController(getWwd());
 				this.viewController.setIcons(getNodeIconLayer().getIcons());
 				this.viewController.setModels(getNodeModelLayer().getModels());
-				this.viewController.setKmlModels(getNodeKmlModelLayer().getRenderables());
+				// Get controller working for kml models - needs to be kmlcontroller IIRC
+				//this.viewController.setKmlModels(getNodeKmlModelLayer().getRenderables());
 
 				getWwd().setView(new BasicOrbitView());
 
@@ -3232,9 +3226,8 @@ public class sdt3d extends SdtApplication
 			
 			try
 			{
-				// We don't know the sprite type until we try load it.
 				// The load function will return either an icon sprite (SdtSprite)
-				// or a model subclass (WWModel3D or SdtKml)
+				// or a model subclass (SdtSpriteKml or SdtSpriteModel)
 				SdtSprite newSprite = currentSprite.load(fileName);
 				
 				
@@ -3354,16 +3347,13 @@ public class sdt3d extends SdtApplication
 						switch (currentNode.getSprite().getType())
 						{
 							case MODEL:
+							case KML:
 								if (currentNode.getModel() != null)
 									getNodeModelLayer().removeModel(currentNode.getModel());
 								break;
 							case ICON:
 								if (currentNode.getIcon() != null)
 									getNodeIconLayer().removeIcon(currentNode.getIcon());
-								break;
-							case KML:
-								if (currentNode.getKmlController() != null)
-									getNodeKmlModelLayer().removeRenderable(currentNode.getKmlController());
 								break;
 							case NONE:
 								break;
@@ -3392,16 +3382,13 @@ public class sdt3d extends SdtApplication
 					switch (theSprite.getType())
 					{
 						case MODEL:
+						case KML:
 							if (currentNode.getModel() != null)
 								getNodeModelLayer().addModel(currentNode.getModel());
 							break;
 						case ICON:
 							if (currentNode.getIcon() != null)
 								getNodeIconLayer().addIcon(currentNode.getIcon());
-							break;
-						case KML:
-							if (currentNode.getKmlController() != null)
-								getNodeKmlModelLayer().addRenderable(currentNode.getKmlController());
 							break;
 						case NONE:
 							break;
@@ -3988,16 +3975,13 @@ public class sdt3d extends SdtApplication
 					switch (currentNode.getSprite().getType())
 					{
 						case MODEL:
+						case KML:
 							if (currentNode.getModel() != null)
 								getNodeModelLayer().addModel(currentNode.getModel());
 							break;
 						case ICON:
 							if (currentNode.getIcon() != null)
 								getNodeIconLayer().addIcon(currentNode.getIcon());
-							break;
-						case KML:
-							if (currentNode.getKmlController() != null)
-								getNodeKmlModelLayer().addRenderable(currentNode.getKmlController());
 							break;
 						case NONE:
 							break;
@@ -4399,17 +4383,13 @@ public class sdt3d extends SdtApplication
 					switch (current_node.getSprite().getType())
 					{
 						case MODEL:
+						case KML:
 							if (current_node.getModel() != null)
 								getNodeModelLayer().removeModel(current_node.getModel());
 							break;
 						case ICON:
 							if (current_node.getIcon() != null) // ljt rework
 								getNodeIconLayer().removeIcon(current_node.getIcon());
-							break;
-						case KML:
-							if (current_node.getSprite() instanceof SdtSpriteKml &&
-								((SdtSpriteKml) current_node.getSprite()).getKmlController() != null)
-								getNodeKmlModelLayer().removeRenderable(((SdtSpriteKml) current_node.getSprite()).getKmlController());
 							break;
 						case NONE:
 							break;
@@ -7342,7 +7322,7 @@ public class sdt3d extends SdtApplication
 			else if (pendingCmd.equalsIgnoreCase("bgimage"))
 				return false;
 			else if (pendingCmd.equalsIgnoreCase("sprite"))
-				return setSprite(val);
+ 				return setSprite(val);
 			else if (pendingCmd.equalsIgnoreCase("scale"))
 				return setScale(val);
 			else if (pendingCmd.equalsIgnoreCase("image"))
@@ -7763,18 +7743,6 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		public void setNodeKmlModelLayer(SdtKmlLayer nodeKmlModelLayer)
-		{
-			this.nodeKmlModelLayer = nodeKmlModelLayer;
-		}
-
-
-		public SdtKmlLayer getNodeKmlModelLayer()
-		{
-			return this.nodeKmlModelLayer;
-		}
-
-
 		public void setNodeIconLayer(IconLayer nodeIconLayer)
 		{
 			this.nodeIconLayer = nodeIconLayer;
@@ -8102,6 +8070,7 @@ public class sdt3d extends SdtApplication
 
 				}
 			}
+			// TODO: LJT get working for kml models?  sprites?
 			Iterable<? extends Renderable> kmlModels = this.getKmlModels();
 			if (kmlModels != null)
 			{

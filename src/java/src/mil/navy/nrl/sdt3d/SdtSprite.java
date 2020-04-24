@@ -23,6 +23,7 @@ import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.ogc.collada.ColladaRoot;
 import gov.nasa.worldwind.ogc.kml.KMLRoot;
+import gov.nasa.worldwind.ogc.kml.impl.KMLController;
 import gov.nasa.worldwind.render.UserFacingIcon;
 import net.java.joglutils.model.ModelLoadException;
 import net.java.joglutils.model.geometry.Model;
@@ -176,7 +177,7 @@ public class SdtSprite implements SdtSpriteDimensions
 	}
 
 
-	public void setHeading(double newHeading, double nodeYaw, ColladaRoot theParam)
+	public void setHeading(double newHeading, double nodeYaw)
 	{
 		System.out.println("setHeading() not implemented for non 3d sprites\n");
 	}
@@ -852,10 +853,23 @@ public class SdtSprite implements SdtSpriteDimensions
 		return null;
 	}
 
-
 	public void setColladaRoot(ColladaRoot colladaRoot) {
 		// TODO Auto-generated method stub
 		
+	}
+
+
+	public KMLController getKmlController() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	boolean isValid() 
+	{
+		System.out.println("Fix me");
+		return false;
+		//return null != this.icon;
 	}
 
 } // end class SdtSprite

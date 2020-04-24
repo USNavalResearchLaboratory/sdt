@@ -15,12 +15,8 @@ import java.util.TreeMap;
 
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.avlist.AVKey;
-import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Vec4;
-import gov.nasa.worldwind.ogc.collada.ColladaRoot;
-import gov.nasa.worldwind.ogc.kml.KMLRoot;
-import gov.nasa.worldwind.ogc.kml.impl.KMLController;
 import gov.nasa.worldwind.render.BasicShapeAttributes;
 import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.GlobeAnnotation;
@@ -81,15 +77,8 @@ public class SdtNode implements Renderable
 
 	private SdtSprite sprite = null;
 
-	// We need unique renderables for each node so we
-	// store the sprite icon, model, collada root here
+	// LJT TODO: makd sdtSpriteIcon renderable
 	private UserFacingIcon icon = null;
-
-	private KMLRoot kmlRoot = null;
-
-	private KMLController kmlController = null;
-
-	ColladaRoot colladaRoot = null;
 	
 	private boolean feedbackEnabled = sdt3d.AppFrame.followAll();
 
@@ -355,8 +344,11 @@ public class SdtNode implements Renderable
 		if (this.sprite != null && this.sprite instanceof SdtSpriteModel)
 			((SdtSpriteModel) this.sprite).setValue(AVKey.FEEDBACK_ENABLED, feedbackEnabled);
 
-		if (this.kmlController != null)
-			this.kmlController.setValue(AVKey.FEEDBACK_ENABLED, feedbackEnabled);
+		// LJT This is for node following - set kml feedback enabled correctly
+		// at the controller level
+		
+		//if (this.kmlController != null)
+		//	this.kmlController.setValue(AVKey.FEEDBACK_ENABLED, feedbackEnabled);
 
 	}
 
@@ -622,19 +614,6 @@ public class SdtNode implements Renderable
 	}
 
 
-	public KMLController getKmlController()
-	{
-		// Each node needs to have a copy of its kmlController, colladaRoot, and kmlRoot
-		if (this.kmlRoot == null)
-			this.kmlRoot = sprite.initializeKmlRoot();
-
-		if (this.kmlRoot != null && this.kmlController == null)
-			this.kmlController = new KMLController(this.kmlRoot);
-
-		return kmlController;
-	}
-
-
 	/*
 	 * Called by node's render function to override elevation
 	 * based on node's agl,msl,terrain positioning
@@ -743,32 +722,18 @@ public class SdtNode implements Renderable
 						getSymbol().setPosition(modelPosition);
 					}
 					sprite.setPosition(modelPosition);
-					sprite.setHeading(heading, yaw, null);
+					sprite.setHeading(heading, yaw);
 					sprite.setRoll(roll);
 					sprite.setPitch(pitch);
 				}
 				break;
 				case KML:
 				{
-					// We own colladaRoot but ask the kml sprite to get it for us
-					// as we can't share between nodes
-					if (colladaRoot == null)
-					{
-						colladaRoot = sprite.getColladaRoot(kmlRoot);
-					}
-
-					if (colladaRoot != null)
-					{
-						colladaRoot.setPosition(position);
-						Vec4 modelScaleVector = ((SdtSpriteKml)sprite).computeSizeVector(dc, loc);
-						colladaRoot.setModelScale(modelScaleVector);
-
-						// This heading code could be cleaned up now that everything is working
-						sprite.setHeading(yaw, heading, colladaRoot);
-						// kml roll is the reverse of models (and our default)
-						colladaRoot.setRoll(Angle.fromDegrees(-(roll + sprite.getModelRoll())));
-						colladaRoot.setPitch(Angle.fromDegrees(pitch + sprite.getModelPitch()));
-					}
+					// TODO: ljt do follow terrain overrides for kml & symbol repositioning?
+					sprite.setPosition(position);
+					sprite.setHeading(heading, yaw);
+					sprite.setRoll(roll);
+					sprite.setPitch(pitch);
 				}
 				break;
 				case NONE:
@@ -889,22 +854,10 @@ public class SdtNode implements Renderable
 
 		if (hasSprite())
 		{
-			switch (sprite.getType())
-			{
-				case MODEL:
-					return (this.sprite instanceof SdtSpriteModel);
-				case ICON:
-					return (null != this.icon);
-				case KML:
-					return (null != this.colladaRoot);
-				case NONE:
-					return false;
-				default:
-					return false;
-			}
+			return sprite.isValid();
+
 		}
 		return false;
-
 	}
 
 
@@ -1266,31 +1219,24 @@ public class SdtNode implements Renderable
 	public void setSprite(SdtSprite theSprite)
 	{
 		// In case we are changing the model type
-		this.colladaRoot = null;
-		this.kmlRoot = null;
-		this.kmlController = null;
 		this.icon = null;
 
-		
-		this.sprite = theSprite;
-		// The node needs to have a unique Model to render so
-		// copy the one the sprite has loaded. We get a little savings by loading the
-		// model just once when we loaded the sprite initially.
-		if (theSprite.getType() == SdtSprite.Type.MODEL)
+		switch (theSprite.getType())
 		{
-			this.sprite = new SdtSpriteModel((SdtSpriteModel) theSprite);
-
-			//this.model = theSprite.getModel();
-		}
-		/*if (theSprite instanceof SdtSpriteModel)
-		{
-			this.sprite = new SdtSpriteModel((SdtSpriteModel) theSprite);
-		}
-		else
-		{
+		case ICON:
 			this.sprite = theSprite;
-		}*/
-
+			break;
+		case MODEL:
+			this.sprite = new SdtSpriteModel((SdtSpriteModel) theSprite);
+			break;
+		case KML:
+			this.sprite = new SdtSpriteKml((SdtSpriteKml) theSprite);
+			break;
+		default:
+			System.out.println("setSprite() invalid type.");
+			return;
+		}
+		
 		if (hasSymbol())
 		{
 			getSymbol().setInitialized(false);
@@ -1644,16 +1590,13 @@ public class SdtNode implements Renderable
 			switch (getSprite().getType())
 			{
 				case MODEL:
+				case KML:
 					if (this.sprite instanceof SdtSpriteModel)
 						theApp.getNodeModelLayer().removeModel((SdtSpriteModel) this.sprite);
 					break;
 				case ICON:
 					if (this.icon != null)
 						theApp.getNodeIconLayer().removeIcon(this.icon);
-					break;
-				case KML:
-					if (this.kmlController != null)
-						theApp.getNodeKmlModelLayer().removeRenderable(this.kmlController);
 					break;
 				case NONE:
 					break;
@@ -1694,6 +1637,7 @@ public class SdtNode implements Renderable
 			switch (getSprite().getType())
 			{
 				case MODEL:
+				case KML:
 					if (this.sprite instanceof SdtSpriteModel)
 						theApp.getNodeModelLayer().addModel((SdtSpriteModel) this.sprite);
 					break;
@@ -1701,12 +1645,6 @@ public class SdtNode implements Renderable
 				{
 					if (this.icon != null)
 						theApp.getNodeIconLayer().addIcon(this.icon);
-					break;
-				}
-				case KML:
-				{
-					if (this.kmlController != null)
-						theApp.getNodeKmlModelLayer().addRenderable(this.kmlController);
 					break;
 				}
 				case NONE:
@@ -1769,6 +1707,7 @@ public class SdtNode implements Renderable
 				switch (getSprite().getType())
 				{
 					case MODEL:
+					case KML:
 						if (this.sprite instanceof SdtSpriteModel)
 							theApp.getNodeModelLayer().addModel((SdtSpriteModel) this.sprite);
 						break;
@@ -1776,12 +1715,6 @@ public class SdtNode implements Renderable
 					{
 						if (this.icon != null)
 							theApp.getNodeIconLayer().addIcon(this.icon);
-						break;
-					}
-					case KML:
-					{
-						if (this.kmlController != null)
-							theApp.getNodeKmlModelLayer().addRenderable(this.kmlController);
 						break;
 					}
 					case NONE:
