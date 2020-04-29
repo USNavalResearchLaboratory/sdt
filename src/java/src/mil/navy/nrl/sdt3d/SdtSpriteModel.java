@@ -19,8 +19,7 @@ import gov.nasa.worldwind.avlist.AVList;
 import gov.nasa.worldwind.avlist.AVListImpl;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Vec4;
-import gov.nasa.worldwind.ogc.collada.ColladaRoot;
-import gov.nasa.worldwind.ogc.kml.KMLRoot;
+import gov.nasa.worldwind.ogc.kml.impl.KMLController;
 import gov.nasa.worldwind.render.DrawContext;
 import net.java.joglutils.model.geometry.Model;
 
@@ -67,8 +66,9 @@ public class SdtSpriteModel extends SdtModel
 	// is at "real-world" length
 	boolean viewAtRealSize = false;
 
-	boolean isRealSize = true;
+	boolean isRealSize = false;
 	
+	protected Position position;
 
 	public SdtSpriteModel(SdtSpriteModel template)
 	{
@@ -102,16 +102,24 @@ public class SdtSpriteModel extends SdtModel
 
 
 	// TODO: ljt review all htese constructors??
+	public SdtSpriteModel(SdtSpriteIcon template) 
+	{
+		super(template);
+	}
+
+	
 	public SdtSpriteModel(SdtSprite template) 
 	{
 		super(template);
 	}
 
-	@Override
-	public boolean isValid()
+
+	@Override 
+	boolean isValid()
 	{
 		return model != null;
 	}
+	
 	
 	public void setModel(Model model)
 	{
@@ -119,12 +127,6 @@ public class SdtSpriteModel extends SdtModel
 		this.model.setUnitizeSize(false);
 		this.model.centerModelOnPosition(true);
 		this.model.setUseLighting(useLighting);
-	}
-
-	@Override
-	public Model getModel()
-	{
-		return this.model;
 	}
 
 
@@ -137,16 +139,9 @@ public class SdtSpriteModel extends SdtModel
 	}
 
 
-	public Position getPosition()
+	protected Position getPosition()
 	{
 		return this.position;
-	}
-
-
-	@Override
-	public void whoAmI()
-	{
-		System.out.println("I am a model sprite");
 	}
 
 
@@ -168,7 +163,6 @@ public class SdtSpriteModel extends SdtModel
 	}
 
 
-	@Override
 	public double getModelPitch()
 	{
 		if (this.modelPitch != 999.0)
@@ -193,7 +187,7 @@ public class SdtSpriteModel extends SdtModel
 	}
 
 
-	@Override
+	//@Override
 	public void setRoll(double degrees)
 	{
 		this.roll = degrees;
@@ -206,7 +200,7 @@ public class SdtSpriteModel extends SdtModel
 	}
 
 
-	@Override
+	//@Override
 	public void setPitch(double degrees)
 	{
 		this.pitch = degrees;
@@ -220,7 +214,7 @@ public class SdtSpriteModel extends SdtModel
 
 
 	// "heading" wr2 North (0.0)
-	@Override
+	//@Override
 	public void setHeading(double newHeading, double nodeYaw)
 	{
 		// Called by node rendering function
@@ -269,7 +263,7 @@ public class SdtSpriteModel extends SdtModel
 	}
 
 
-	@Override
+	//@Override
 	public double getYaw()
 	{
 		if (this.modelYaw != 999.0)
@@ -306,18 +300,20 @@ public class SdtSpriteModel extends SdtModel
 		setModelRadius();
 
 	}
-
 	
 	@Override
-	public void setRealSize(boolean inRealSize)
+	public void setRealSize(boolean isRealSizeIn) 
 	{
-		isRealSize = inRealSize;
+		isRealSize = isRealSizeIn;
+		
 	}
-	
-	
+
+
+
 	@Override
 	public boolean isRealSize()
 	{
+		// TODO: ljt is viewAtRealSize used by symbols still?
 		return (isRealSize || viewAtRealSize);
 	}
 
@@ -508,75 +504,59 @@ public class SdtSpriteModel extends SdtModel
 			
 	} // end SdtObjModel.computeSizeScale()
 	
-	@Override
-	public ColladaRoot getColladaRoot(KMLRoot kmlRoot)
-	{
-		// Kml models only, noop
-		return null;
-	}
 
-	@Override
-	public KMLRoot initializeKmlRoot()
-	{
-		// Kml models only, noop
-		return null;
-	}
+	//@Override
+	public void render(DrawContext dc) 
+	{		
+		if (position == null)
+			return;
 
+		draw(dc);
+		
+		// Determine Cartesian position from the surface geometry if the
+		// icon is near the surface, otherwise draw it from the globe.
+		
+		Vec4 modelPoint = null;
+		if (position.getElevation() < dc.getGlobe().getMaxElevation())
+			modelPoint = dc.getSurfaceGeometry().getSurfacePoint(position);
+		if (modelPoint == null)
+			modelPoint = dc.getGlobe().computePointFromPosition(position);
 
-	@Override
-	public void render(DrawContext dc) {
-		// TODO Auto-generated method stub
-		draw(dc, this);
-		SdtSpriteModel theModel = this;
-		if (theModel != null)
-		{
-			// Determine Cartesian position from the surface geometry if the icon is near the surface,
-			// otherwise draw it from the globe.
-			Position pos = theModel.getPosition();
-			if (pos == null)
-				return;
-				//continue;
-			Vec4 modelPoint = null;
-			if (pos.getElevation() < dc.getGlobe().getMaxElevation())
-				modelPoint = dc.getSurfaceGeometry().getSurfacePoint(theModel.getPosition());
-			if (modelPoint == null)
-				modelPoint = dc.getGlobe().computePointFromPosition(theModel.getPosition());
+		Vec4 screenPoint = dc.getView().project(modelPoint);
+		GL2 gl = dc.getGL().getGL2();
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
 
-			Vec4 screenPoint = dc.getView().project(modelPoint);
-			GL2 gl = dc.getGL().getGL2();
-			gl.glMatrixMode(GL2.GL_MODELVIEW);
+		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
+		double localSize = this.computeSize(dc, loc);
+		localSize *= computeSizeScale(dc, loc);
 
-			Vec4 loc = dc.getGlobe().computePointFromPosition(pos);
-			double localSize = this.computeSize(dc, loc);
-			localSize *= theModel.computeSizeScale(dc, loc);
-
-			double width = theModel.getWidth();
-			double height = theModel.getHeight();
-			gl.glLoadIdentity();
-			gl.glTranslated((int) (screenPoint.x - width / 2), screenPoint.y + height, 0d);
-			Rectangle rect = new Rectangle((int) (screenPoint.x),
+		double width = getWidth();
+		double height = getHeight();
+		gl.glLoadIdentity();
+		gl.glTranslated((int) (screenPoint.x - width / 2), screenPoint.y + height, 0d);
+		Rectangle rect = new Rectangle((int) (screenPoint.x),
 				(int) (screenPoint.y), (int) (width * localSize),
 				(int) (height * localSize));
+				
+		// TODO??
+		this.recordFeedback(dc, this, modelPoint, rect);
 			
-			// TODO??
-			this.recordFeedback(dc, theModel, modelPoint, rect);
-			
-		}
+		
 	}
 
 	// draw this layer
-	protected void draw(DrawContext dc, SdtSpriteModel model)
+	protected void draw(DrawContext dc)
 	{
 		// we use dc.getGLU() to access the current glu rather than gl2
 		GL2 gl = dc.getGL().getGL2(); // GL initialization checks for GL2 compatibility.
 
-		Position pos = model.getPosition();
+		Position pos = getPosition();
 
 		if (pos == null)
 			return;
 		Vec4 loc = dc.getGlobe().computePointFromPosition(pos);
 		double localSize = this.computeSize(dc, loc);
-		localSize *= model.computeSizeScale(dc, loc);
+		localSize *= computeSizeScale(dc, loc);
 		if (dc.getView().getFrustumInModelCoordinates().contains(loc))
 		{
 			dc.getView().pushReferenceCenter(dc, loc);
@@ -584,12 +564,12 @@ public class SdtSpriteModel extends SdtModel
 			gl.glRotated(-pos.getLatitude().degrees, 1, 0, 0);
 			gl.glScaled(localSize, localSize, localSize);
 
-			gl.glRotated(model.getHeading(), 0, 0, 1);
-			gl.glRotated(model.getPitch(), 1, 0, 0);
-			gl.glRotated(model.getRoll(), 0, 1, 0);
+			gl.glRotated(getHeading(), 0, 0, 1);
+			gl.glRotated(getPitch(), 1, 0, 0);
+			gl.glRotated(getRoll(), 0, 1, 0);
 
 			// Get an instance of the display list renderer
-			DisplayListRenderer.getInstance().render(dc,model.getModel());
+			DisplayListRenderer.getInstance().render(dc,model);
 
 			dc.getView().popReferenceCenter(dc);
 		}
@@ -672,6 +652,18 @@ public class SdtSpriteModel extends SdtModel
 	{
 		model.setValue(AVKey.FEEDBACK_REFERENCE_POINT, modelPoint);
 		model.setValue(AVKey.FEEDBACK_SCREEN_BOUNDS, screenRect);
+	}
+
+
+	public Object getColladaRoot() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	public KMLController getKmlController() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 } // end class SdtObjModel

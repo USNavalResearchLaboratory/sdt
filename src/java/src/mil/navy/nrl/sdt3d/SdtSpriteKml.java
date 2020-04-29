@@ -35,23 +35,21 @@ import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.util.WWIO;
 import gov.nasa.worldwind.util.WWUtil;
 import gov.nasa.worldwind.util.layertree.KMLLayerTreeNode;
-import net.java.joglutils.model.geometry.Model;
 
 public class SdtSpriteKml extends SdtSpriteModel 
 {
-	String fileName = null;
 
-	File kmlFile = null;
-
-	String userDir = System.getProperty("user.dir");
-
-	// The node stores its own copies of kmlController, kmlRoot, and colladaRoot
-	// These references are used by the "stand-alone" kml renderables.
 	KMLController kmlController = null;
 
 	KMLRoot kmlRoot = null;
 
 	ColladaRoot colladaRoot = null;
+	
+	String fileName = null;
+	
+	// For kml not associated with a node
+
+	File kmlFile = null;
 
 	KMLLookAt lookAt = null;
 
@@ -59,17 +57,6 @@ public class SdtSpriteKml extends SdtSpriteModel
 
 	KMLLayerTreeNode layerNode = null;
 
-	// The model p/y/r fiels are set by any xml config file associated with
-	// the sprite. They are added to any node position orientation settings
-	// during the node rendering pass.
-	//private Double modelPitch = 999.0;
-
-	//private Double modelYaw = 999.0;
-
-	//private Double modelRoll = 999.0;
-
-	boolean isRealSize = true;
-	
 	public SdtSpriteKml(SdtSpriteKml template)
 	{
 		super(template);
@@ -83,7 +70,12 @@ public class SdtSpriteKml extends SdtSpriteModel
 		super(name);
 	}
 
-	// TODO: LJT review these constructors
+	public SdtSpriteKml(SdtSpriteIcon template) 
+	{
+		super(template);
+	}
+
+	
 	public SdtSpriteKml(SdtSprite template) 
 	{
 		super(template);
@@ -91,11 +83,10 @@ public class SdtSpriteKml extends SdtSpriteModel
 
 
 	@Override
-	public void whoAmI()
+	boolean isValid()
 	{
-		System.out.println("I am a kml sprite");
+		return colladaRoot != null;
 	}
-
 
 	public KMLRoot initializeKmlRoot()
 	{
@@ -124,12 +115,6 @@ public class SdtSpriteKml extends SdtSpriteModel
 		return colladaRoot;
 	}
 	
-	// TODO: ljt create a common one for models and controlelrs
-	//@Override
-	public KMLController getKmlModel()
-	{
-		return kmlController;
-	}
 	
 	
 	ColladaRoot getColladaRootFromPlacemark(KMLPlacemark feature)
@@ -164,8 +149,7 @@ public class SdtSpriteKml extends SdtSpriteModel
 	/*
 	 * Kml collada roots cannot be shared as 3d model meshs can.
 	 */
-	@Override
-	public ColladaRoot getColladaRoot(KMLRoot kmlRoot)
+	public ColladaRoot getColladaRootFromKmlRoot(KMLRoot kmlRoot)
 	{
 		if (colladaRoot != null)
 			return colladaRoot;
@@ -226,13 +210,6 @@ public class SdtSpriteKml extends SdtSpriteModel
 	}
 
 
-	public double getSymbolSize()
-	{
-		double size = iconWidth > iconHeight ? iconWidth : iconHeight;
-		size = getFixedLength() > size ? getFixedLength() : size;
-		return size;
-	}
-	
 	public double getPitch()
 	{
 		if (modelPitch != 999.0)
@@ -292,11 +269,6 @@ public class SdtSpriteKml extends SdtSpriteModel
 		this.fileName = fileName;
 	}
 	
-	@Override
-	public void setRealSize(boolean isRealSize)
-	{
-		this.isRealSize = isRealSize;
-	}
 
 	@Override
 	public void setFixedLength(double length)
@@ -304,16 +276,9 @@ public class SdtSpriteKml extends SdtSpriteModel
 		fixedLength = length;
 	}
 
-	@Override
-	public void setPosition(Position position)
-	{
-		// The model3DLayer needs model position.
-		// this is called by node render function
-		this.position = position;
-	}
 	
 	/*
-	 * Called by node rendering function
+	 * Called by rendering function
 	 */	
 	public Vec4 computeSizeVector(DrawContext dc, Vec4 loc)
 	{		
@@ -392,7 +357,7 @@ public class SdtSpriteKml extends SdtSpriteModel
 		return getName();
 	}
 
-
+	
 	public File getKmlFile()
 	{
 		return kmlFile;
@@ -487,12 +452,6 @@ public class SdtSpriteKml extends SdtSpriteModel
 		return kmlRoot;
 	}
 
-	@Override
-	public boolean isValid()
-	{
-		return colladaRoot != null;
-	}
-
 	
 	@Override
 	public void render(DrawContext dc) 
@@ -504,7 +463,7 @@ public class SdtSpriteKml extends SdtSpriteModel
 		}
 		
 		if (colladaRoot == null)
-			colladaRoot = getColladaRoot(kmlController.getKmlRoot());
+			colladaRoot = getColladaRootFromKmlRoot(kmlController.getKmlRoot());
 
 		if (colladaRoot == null)
 		{
@@ -512,10 +471,10 @@ public class SdtSpriteKml extends SdtSpriteModel
 			return;
 		}
 		
-		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
+		Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
 
 		// Set model position & size
-		colladaRoot.setPosition(position);
+		colladaRoot.setPosition(getPosition());
 		Vec4 modelScaleVector = this.computeSizeVector(dc, loc);
 		colladaRoot.setModelScale(modelScaleVector);
 
@@ -526,10 +485,10 @@ public class SdtSpriteKml extends SdtSpriteModel
 		colladaRoot.setPitch(Angle.fromDegrees(pitch + getModelPitch()));
 		
 		Vec4 modelPoint = null;
-		if (position.getElevation() < dc.getGlobe().getMaxElevation())
-			modelPoint = dc.getSurfaceGeometry().getSurfacePoint(position);
+		if (getPosition().getElevation() < dc.getGlobe().getMaxElevation())
+			modelPoint = dc.getSurfaceGeometry().getSurfacePoint(getPosition());
 		if (modelPoint == null)
-			modelPoint = dc.getGlobe().computePointFromPosition(position);
+			modelPoint = dc.getGlobe().computePointFromPosition(getPosition());
 
 		Vec4 screenPoint = dc.getView().project(modelPoint);
 		Vec4 modelScale = colladaRoot.getModelScale();
