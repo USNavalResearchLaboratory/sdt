@@ -273,7 +273,7 @@ public class SdtSymbol
 				size = spriteWidth > spriteHeight ? spriteWidth : spriteHeight;
 			}
 			
-			if (sdtNode.getSprite().getType() != SdtSprite.Type.ICON)
+			if (sdtNode.getSprite().getType() != SdtSpriteIcon.Type.ICON)
 			{
 				if (width > 0 || height > 0)
 				{
@@ -516,11 +516,11 @@ public class SdtSymbol
 		terrainElev = terrainElev + iconCurrentSize / 2 + getSdtNode().getAltitude();
 
 		// Remove icon offset for models above terrain
-		if (sdtNode.hasSprite() && sdtNode.getSprite().getType() == SdtSprite.Type.MODEL && sdtNode.getAltitude() != 0)
+		if (sdtNode.hasSprite() && sdtNode.getSprite().getType() == SdtSpriteIcon.Type.MODEL && sdtNode.getAltitude() != 0)
 			terrainElev = terrainElev - iconCurrentSize / 2;
 
 		// Remove icon offset for icons when symbol offset is disabled
-		if (sdtNode.hasSprite() && sdtNode.getSprite().getType() == SdtSprite.Type.ICON && !sdt3d.AppFrame.symbolOffset)
+		if (sdtNode.hasSprite() && sdtNode.getSprite().getType() == SdtSpriteIcon.Type.ICON && !sdt3d.AppFrame.symbolOffset)
 			terrainElev = terrainElev - iconCurrentSize / 2;
 
 		// subtract terrain elevation if at msl
@@ -531,7 +531,7 @@ public class SdtSymbol
 		{
 			case SPHERE:
 			case ELLIPSE:
-				if (sdtNode.hasSprite() && sdtNode.getSprite().getType() == SdtSprite.Type.MODEL && sdtNode.getAltitude() == 0)
+				if (sdtNode.hasSprite() && sdtNode.getSprite().getType() == SdtSpriteIcon.Type.MODEL && sdtNode.getAltitude() == 0)
 				{
 					// Use the elevation we calculated in the node render pass for models
 					airspaceShape.setAltitude(sdtNode.getPosition().getElevation());
@@ -587,7 +587,7 @@ public class SdtSymbol
 			{
 				// Just use scale here as iconHugging scale factor
 				// doesn't apply for realSize sprites
-				if (sdtNode.getSprite().getType() != SdtSprite.Type.ICON)
+				if (sdtNode.getSprite().getType() != SdtSpriteIcon.Type.ICON)
 					currentSize = (getMaxDimension() * getScale()) / 2; 
 				else
 					currentSize = getMaxDimension() * getScale();

@@ -3277,7 +3277,7 @@ public class sdt3d extends SdtApplication
 				{
 					SdtSprite theSprite = spriteTable.get(defaultSprite);
 
-					if (theSprite != null && theSprite.getType() != SdtSprite.Type.INVALID)
+					if (theSprite != null && theSprite.getType() != SdtSpriteIcon.Type.INVALID)
 					{
 						currentNode.setSprite(theSprite);
 					}
@@ -3316,7 +3316,7 @@ public class sdt3d extends SdtApplication
 			if ((type.equalsIgnoreCase("NONE") && theSprite == null))
 			{
 				theSprite = new SdtSprite(type);
-				theSprite.setType(SdtSprite.Type.NONE);
+				theSprite.setType(SdtSpriteIcon.Type.NONE);
 			}
 			if (theSprite == null)
 			{
@@ -3340,7 +3340,7 @@ public class sdt3d extends SdtApplication
 			{
 				// a) remove old model or icon from its layer if we are
 				// changing it
-				if (currentNode.hasSprite() && currentNode.getSprite().getType() != SdtSprite.Type.INVALID)
+				if (currentNode.hasSprite() && currentNode.getSprite().getType() != SdtSpriteIcon.Type.INVALID)
 				{ // are we changing it?
 					if (!currentNode.getSprite().getName().equalsIgnoreCase(theSprite.getName()))
 					{
@@ -4752,7 +4752,7 @@ public class sdt3d extends SdtApplication
 				return false;
 			}
 			Float length = new Float(val);
-			if (currentSprite.getType() == SdtSprite.Type.ICON)
+			if (currentSprite.getType() == SdtSpriteIcon.Type.ICON)
 			{
 				System.out.println("sdt3d.setLength() Length not applicable for icons, use the size attribute.");
 				return false;

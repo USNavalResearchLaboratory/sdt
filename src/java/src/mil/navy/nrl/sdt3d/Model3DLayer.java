@@ -77,8 +77,12 @@ public class Model3DLayer extends RenderableLayer //AbstractLayer
 			while (it.hasNext())
 			{
 				SdtSpriteModel theModel = it.next();
-				// Our collada model is not available until the first
+				// The kml collada model is not available until the first
 				// prerender pass so explicitly call that here
+				
+				// TODO: ljt maybe do this in kml code so we don't ahve to
+				// expose these methods
+				
 				if (theModel.getColladaRoot() == null)
 				{
 					if (theModel.getKmlController() != null)

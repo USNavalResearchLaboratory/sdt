@@ -215,7 +215,7 @@ public class SdtNode implements Renderable
 		return colorName;
 	} //
 
-
+/*
 	public String print()
 	{
 		String cmd;
@@ -309,7 +309,7 @@ public class SdtNode implements Renderable
 
 		return cmd;
 	}
-
+*/
 
 	public void setDrawn(boolean theValue)
 	{
@@ -598,7 +598,7 @@ public class SdtNode implements Renderable
 	public UserFacingIcon getIcon()
 	{
 		if (this.icon == null)
-			this.icon = sprite.getIcon(this.position, this.nodeName, feedbackEnabled);
+			this.icon = sprite.getIcon(position, nodeName, feedbackEnabled);
 
 		return this.icon;
 	}
@@ -1247,7 +1247,7 @@ public class SdtNode implements Renderable
 
 	public boolean hasSprite()
 	{
-		if (sprite == null || (sprite.getType() == SdtSprite.Type.NONE))
+		if (sprite == null || (sprite.getType() == SdtSpriteIcon.Type.NONE))
 			return false;
 		else
 			return (null != sprite);
