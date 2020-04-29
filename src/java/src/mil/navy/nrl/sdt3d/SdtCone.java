@@ -134,7 +134,7 @@ public class SdtCone extends SdtSymbol implements Renderable
 		currentWidth = currentWidth * this.getScale();
 		currentHeight = currentHeight * this.getScale();
 				
-		if (sdtNode.getSprite().getType() == SdtSprite.Type.MODEL)
+		if (sdtNode.getSprite().getType() == SdtSpriteIcon.Type.MODEL)
 		{	
 			if (currentWidth < (getWidth() * this.getScale()))
 			{
