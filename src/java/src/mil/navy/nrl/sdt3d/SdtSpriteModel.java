@@ -85,12 +85,14 @@ public class SdtSpriteModel extends SdtModel
 		this.modelRoll = template.modelRoll;
 		this.sizeScale = template.sizeScale;
 		this.useLighting = template.useLighting;
+		this.spriteType = Type.MODEL;
 	}
 
 
 	public SdtSpriteModel(String name)
 	{
 		super(name);
+		this.spriteType = Type.MODEL;
 	}
 
 
@@ -98,19 +100,21 @@ public class SdtSpriteModel extends SdtModel
 	{
 		super(name);
 		this.model = model;
+		this.spriteType = Type.MODEL;
 	}
 
 
 	// TODO: ljt review all htese constructors??
-	public SdtSpriteModel(SdtSpriteIcon template) 
-	{
-		super(template);
-	}
+	//public SdtSpriteModel(SdtSpriteIcon template) 
+	//{
+	//	super(template);
+	//}
 
 	
 	public SdtSpriteModel(SdtSprite template) 
 	{
 		super(template);
+		this.spriteType = Type.MODEL;
 	}
 
 
@@ -165,8 +169,10 @@ public class SdtSpriteModel extends SdtModel
 
 	public double getModelPitch()
 	{
-		if (this.modelPitch != 999.0)
+		if (modelPitch != 999.0)
+		{
 			return this.modelPitch;
+		}
 
 		return 0.0;
 	}
@@ -508,6 +514,7 @@ public class SdtSpriteModel extends SdtModel
 	//@Override
 	public void render(DrawContext dc) 
 	{		
+			
 		if (position == null)
 			return;
 

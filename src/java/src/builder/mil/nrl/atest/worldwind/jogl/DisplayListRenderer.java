@@ -151,20 +151,12 @@ public class DisplayListRenderer
 		int displayList = listCache.get(model);
 
 		if (displayList < 0 )
-		//		|| (model instanceof mil.nrl.atest.worldwind.jogl.ATESTModel && //
-		//	((mil.nrl.atest.worldwind.jogl.ATESTModel) model).isTerrainConforming() && //
-		//	System.currentTimeMillis() - 
-		//	((mil.nrl.atest.worldwind.jogl.ATESTModel) model).getLastRefresh() > 5000))
 		{
 			displayList = initialize(context, gl, context.getGlobe(), model);
 			if (this.isDebugging)
 			{
 				log.info("Initialized the display list for model: " + model.getSource());
 			}
-			//if (model instanceof mil.nrl.atest.worldwind.jogl.ATESTModel)
-			//{
-			//	((mil.nrl.atest.worldwind.jogl.ATESTModel) model).setLastRefresh(System.currentTimeMillis());
-			//}
 		}
 
 		// save some current state variables
