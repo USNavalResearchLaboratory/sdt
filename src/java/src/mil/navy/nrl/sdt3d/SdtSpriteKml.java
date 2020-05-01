@@ -20,7 +20,6 @@ import gov.nasa.worldwind.WorldWind;
  */
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Angle;
-import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.ogc.collada.ColladaRoot;
 import gov.nasa.worldwind.ogc.kml.KMLAbstractContainer;
@@ -38,17 +37,14 @@ import gov.nasa.worldwind.util.layertree.KMLLayerTreeNode;
 
 public class SdtSpriteKml extends SdtSpriteModel 
 {
-
+	// KMLController manages rendering of the collada root
 	KMLController kmlController = null;
 
 	KMLRoot kmlRoot = null;
 
 	ColladaRoot colladaRoot = null;
-	
-	String fileName = null;
-	
+		
 	// For kml not associated with a node
-
 	File kmlFile = null;
 
 	KMLLookAt lookAt = null;
@@ -60,40 +56,30 @@ public class SdtSpriteKml extends SdtSpriteModel
 	public SdtSpriteKml(SdtSpriteKml template)
 	{
 		super(template);
-		this.fileName = template.fileName;
-		this.kmlFile = template.kmlFile;
+		this.spriteType = Type.KML;
 	}
 
 
 	public SdtSpriteKml(String name)
 	{
 		super(name);
-	}
-
-	public SdtSpriteKml(SdtSpriteIcon template) 
-	{
-		super(template);
+		this.spriteType = Type.KML;
 	}
 
 	
 	public SdtSpriteKml(SdtSprite template) 
 	{
 		super(template);
+		this.spriteType = Type.KML;
 	}
 
-
-	@Override
-	boolean isValid()
-	{
-		return colladaRoot != null;
-	}
 
 	public KMLRoot initializeKmlRoot()
 	{
 		KMLRoot kmlRoot = null;
 		try
 		{
-			kmlRoot = KMLRoot.createAndParse(fileName);
+			kmlRoot = KMLRoot.createAndParse(spritePath);
 		}
 		catch (IOException e)
 		{
@@ -114,7 +100,6 @@ public class SdtSpriteKml extends SdtSpriteModel
 	{
 		return colladaRoot;
 	}
-	
 	
 	
 	ColladaRoot getColladaRootFromPlacemark(KMLPlacemark feature)
@@ -171,41 +156,6 @@ public class SdtSpriteKml extends SdtSpriteModel
 			}
 		}
 		
-		/*
-		if (kmlRoot != null && kmlRoot.getFeature() != null)
-		{
-			KMLAbstractFeature kmlAbstractFeature = kmlRoot.getFeature();
-			for (KMLAbstractFeature feature : ((KMLAbstractContainer) kmlAbstractFeature).getFeatures())
-			{
-				if (feature instanceof KMLPlacemark)
-				{
-					List<KMLRenderable> rs = ((KMLPlacemark) feature).getRenderables();
-					if (rs != null)
-					{
-						for (KMLRenderable r : rs)
-						{
-							if (r instanceof KMLModelPlacemarkImpl)
-							{
-								if (((KMLModelPlacemarkImpl) r).getColladaRoot() != null)
-								{
-									colladaRoot = ((KMLModelPlacemarkImpl) r).getColladaRoot();
-									if (colladaRoot != null)
-									{
-										colladaRoot.setModelScale(this.getModelScale());
-										// The kml renderer does it's own terrain position computations
-										// so set the root to absolute and use our calcs from
-										// the node render pass
-										colladaRoot.setAltitudeMode(WorldWind.ABSOLUTE);
-
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		} // end if feature != null
-		*/
 		return colladaRoot;
 	}
 
@@ -242,7 +192,10 @@ public class SdtSpriteKml extends SdtSpriteModel
 	}
 
 
-	// Collada root requires model scale in Vec4
+	/**
+	 *  Collada root requires model scale in Vec4
+	 * @return Vec4 modelScale
+	 */
 	public Vec4 getModelScale()
 	{
 		Double x = (double) scale;
@@ -254,19 +207,6 @@ public class SdtSpriteKml extends SdtSpriteModel
 			z != null ? z : 1.0);
 
 		return modelScale;
-
-	}
-
-
-	public String getFileName()
-	{
-		return fileName;
-	}
-
-
-	public void setKmlFilename(String fileName)
-	{
-		this.fileName = fileName;
 	}
 	
 
@@ -432,7 +372,10 @@ public class SdtSpriteKml extends SdtSpriteModel
 	}
 
 
-	// Used by "fixed" kml objects
+	/**
+	 * Note: Each kmlController that managesits own collada root.  
+	 * The collada root is be created in the first prerender rendering pass.
+	 */
 	@Override
 	public KMLController getKmlController()
 	{
@@ -446,7 +389,10 @@ public class SdtSpriteKml extends SdtSpriteModel
 	}
 
 
-	// Used by "fixed" kml objects
+	/**
+	 *  Used by "fixed" kml objects
+	 * @return
+	 */
 	public KMLRoot getKmlRoot()
 	{
 		return kmlRoot;
@@ -456,18 +402,25 @@ public class SdtSpriteKml extends SdtSpriteModel
 	@Override
 	public void render(DrawContext dc) 
 	{
-		
-		if (kmlController == null)
+		if (getColladaRoot() == null)
 		{
-			getKmlController();
+			if (getKmlController() != null)
+			{
+				getKmlController().preRender(dc);
+			}
+		}
+		
+		/*
+		 * Now that we've prerendered the KML try get the
+		 * colladaRoot.
+		 */
+		if (colladaRoot == null)
+		{
+			colladaRoot = getColladaRootFromKmlRoot(kmlController.getKmlRoot());
 		}
 		
 		if (colladaRoot == null)
-			colladaRoot = getColladaRootFromKmlRoot(kmlController.getKmlRoot());
-
-		if (colladaRoot == null)
 		{
-			// don't recreate collada root each render pass! fix!
 			return;
 		}
 		
@@ -497,9 +450,17 @@ public class SdtSpriteKml extends SdtSpriteModel
 
 		this.recordFeedback(dc, kmlController, modelPoint, rect);
 		kmlController.render(dc);
-
-
 	}
+
+	
+	@Override
+	boolean isValid()
+	{
+		return colladaRoot != null;
+	}
+
+
+	
 	// These are duplicate functions from the icon renderer
 	/**
 	 * Returns true if the ModelRenderer should record feedback about how the specified kmlModel has been processed.

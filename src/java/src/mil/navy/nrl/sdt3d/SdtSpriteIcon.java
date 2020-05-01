@@ -7,6 +7,7 @@ import javax.imageio.ImageIO;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.render.UserFacingIcon;
+import mil.navy.nrl.sdt3d.SdtSprite.Type;
 
 /**
  * SdtSprites objects are initially created when the sprite type is defined.
@@ -62,22 +63,44 @@ import gov.nasa.worldwind.render.UserFacingIcon;
 
 public class SdtSpriteIcon extends SdtSprite implements SdtSpriteDimensions
 {
-	
-	
+	private UserFacingIcon icon = null;
+		
 	public SdtSpriteIcon(SdtSpriteIcon template)
 	{
 		super(template);
+		this.spriteType = Type.ICON;
 	}
 
 	public SdtSpriteIcon(SdtSprite template) 
 	{
 		super(template);
+		this.spriteType = Type.ICON;
+
 	}
 
-	@Override
-	public UserFacingIcon getIcon(Position pos, String nodeName, boolean feedbackEnabled)
+	
+	public SdtSpriteIcon(String spriteName) 
 	{
-		UserFacingIcon icon = null;
+		super(spriteName);
+		this.spriteType = Type.ICON;
+	}
+
+	public UserFacingIcon getIcon()
+	{
+		//if (this.icon == null)
+		//	this.icon = loadIcon(position, nodeName, feedbackEnabled);
+
+		return this.icon;
+	}
+
+
+	
+	@Override
+	public void loadIcon(Position pos, String nodeName, boolean feedbackEnabled)
+	{
+		// We create the icon when we assign it to a node as
+		// we need to set pos, name, and feedback
+		
 		if (getIconURL() != null)
 		{
 			try
@@ -103,7 +126,6 @@ public class SdtSpriteIcon extends SdtSprite implements SdtSpriteDimensions
 			icon.setValue(AVKey.FEEDBACK_ENABLED, feedbackEnabled);
 		}
 
-		return icon;
 	}
 
 	
@@ -116,7 +138,7 @@ public class SdtSpriteIcon extends SdtSprite implements SdtSpriteDimensions
 	
 	protected void setPosition(Position pos) 
 	{
-		// Models only, noop
+		icon.setPosition(pos);
 		
 	}
 

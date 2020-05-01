@@ -77,9 +77,6 @@ public class SdtNode implements Renderable
 
 	private SdtSprite sprite = null;
 
-	// LJT TODO: makd sdtSpriteIcon renderable
-	private UserFacingIcon icon = null;
-	
 	private boolean feedbackEnabled = sdt3d.AppFrame.followAll();
 
 	private SdtSymbol symbol = null;
@@ -338,8 +335,8 @@ public class SdtNode implements Renderable
 	public void setFeedbackEnabled(boolean feedbackEnabled)
 	{
 		this.feedbackEnabled = feedbackEnabled;
-		if (this.icon != null)
-			this.icon.setValue(AVKey.FEEDBACK_ENABLED, feedbackEnabled);
+		if (this.sprite.getIcon() != null)
+			this.sprite.getIcon().setValue(AVKey.FEEDBACK_ENABLED, feedbackEnabled);
 
 		if (this.sprite != null && this.sprite instanceof SdtSpriteModel)
 			((SdtSpriteModel) this.sprite).setValue(AVKey.FEEDBACK_ENABLED, feedbackEnabled);
@@ -594,16 +591,17 @@ public class SdtNode implements Renderable
 		return true;
 	}
 
-
 	public UserFacingIcon getIcon()
 	{
-		if (this.icon == null)
-			this.icon = sprite.getIcon(position, nodeName, feedbackEnabled);
-
-		return this.icon;
+		if (sprite.getIcon() == null)
+		{
+			sprite.loadIcon(position, nodeName, feedbackEnabled);
+		}
+		
+		return sprite.getIcon();
 	}
-
-
+	
+	
 	public SdtSpriteModel getModel()
 	{
 		// Each node needs to have a copy of its model
@@ -685,10 +683,17 @@ public class SdtNode implements Renderable
 			{
 				case ICON:
 				{
-					if (icon != null) 
-					{
-						icon.setPosition(position);
-					}
+					// TODO LJT FIX THIS!!
+					if (this.sprite.getIcon() == null)
+						
+						if (this.sprite instanceof SdtSpriteIcon)
+							((SdtSpriteIcon) this.sprite).loadIcon(position, nodeName, feedbackEnabled);
+					if (sprite.getIcon() != null)
+						sprite.setPosition(position);
+					//if (icon != null) 
+					//{
+					//	icon.setPosition(position);
+					//}
 				}
 				break;
 				case MODEL:
@@ -1219,8 +1224,6 @@ public class SdtNode implements Renderable
 	public void setSprite(SdtSprite theSprite)
 	{
 		// In case we are changing the model type
-		this.icon = null;
-
 		switch (theSprite.getType())
 		{
 		case ICON:
@@ -1595,8 +1598,10 @@ public class SdtNode implements Renderable
 						theApp.getNodeModelLayer().removeModel((SdtSpriteModel) this.sprite);
 					break;
 				case ICON:
-					if (this.icon != null)
-						theApp.getNodeIconLayer().removeIcon(this.icon);
+					// LJT TODO FIX!
+					if (this.sprite instanceof SdtSpriteModel)
+						if (this.sprite.getIcon() != null)
+							theApp.getNodeIconLayer().removeIcon(this.sprite.getIcon());
 					break;
 				case NONE:
 					break;
@@ -1643,8 +1648,8 @@ public class SdtNode implements Renderable
 					break;
 				case ICON:
 				{
-					if (this.icon != null)
-						theApp.getNodeIconLayer().addIcon(this.icon);
+					if (this.sprite.getIcon() != null)
+						theApp.getNodeIconLayer().addIcon(this.sprite.getIcon());
 					break;
 				}
 				case NONE:
@@ -1713,8 +1718,8 @@ public class SdtNode implements Renderable
 						break;
 					case ICON:
 					{
-						if (this.icon != null)
-							theApp.getNodeIconLayer().addIcon(this.icon);
+						if (this.sprite.getIcon() != null)
+							theApp.getNodeIconLayer().addIcon(this.sprite.getIcon());
 						break;
 					}
 					case NONE:

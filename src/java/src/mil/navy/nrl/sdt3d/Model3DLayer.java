@@ -9,18 +9,15 @@
 
 package mil.navy.nrl.sdt3d;
 
-import java.awt.Rectangle;
 import java.util.Iterator;
 import java.util.Vector;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
-import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.render.DrawContext;
-import gov.nasa.worldwind.render.Renderable;
 
 /**
  *
@@ -55,16 +52,6 @@ public class Model3DLayer extends RenderableLayer //AbstractLayer
 	}
 
 	
-	/*@Override
-	public void render(DrawContext dc)
-	{
-		if (kmlController().getKmlRoot() != null)
-		{
-			kmlController().render(dc);
-		}
-		doRender(dc);
-	}*/
-	
 
 	@Override
 	protected void doRender(DrawContext dc)
@@ -77,20 +64,6 @@ public class Model3DLayer extends RenderableLayer //AbstractLayer
 			while (it.hasNext())
 			{
 				SdtSpriteModel theModel = it.next();
-				// The kml collada model is not available until the first
-				// prerender pass so explicitly call that here
-				
-				// TODO: ljt maybe do this in kml code so we don't ahve to
-				// expose these methods
-				
-				if (theModel.getColladaRoot() == null)
-				{
-					if (theModel.getKmlController() != null)
-					{
-						theModel.getKmlController().preRender(dc);
-					}
-				}
-				
 				
 				theModel.render(dc);	
 			}

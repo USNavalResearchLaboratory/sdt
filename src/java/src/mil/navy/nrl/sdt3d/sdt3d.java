@@ -3007,7 +3007,7 @@ public class sdt3d extends SdtApplication
 			if (null == currentSprite)
 			{
 				// It's a new one
-				currentSprite = new SdtSprite(spriteName);
+				currentSprite = new SdtSpriteIcon(spriteName);
 				// If first entry to our table, squirrel away
 				// default sprite.
 				if (spriteTable.size() == 1 && !spriteName.equalsIgnoreCase("default"))
@@ -3341,7 +3341,7 @@ public class sdt3d extends SdtApplication
 				// a) remove old model or icon from its layer if we are
 				// changing it
 				if (currentNode.hasSprite() && currentNode.getSprite().getType() != SdtSpriteIcon.Type.INVALID)
-				{ // are we changing it?
+				{ 	// are we changing it?
 					if (!currentNode.getSprite().getName().equalsIgnoreCase(theSprite.getName()))
 					{
 						switch (currentNode.getSprite().getType())
@@ -4388,7 +4388,7 @@ public class sdt3d extends SdtApplication
 								getNodeModelLayer().removeModel(current_node.getModel());
 							break;
 						case ICON:
-							if (current_node.getIcon() != null) // ljt rework
+							if (current_node.getIcon() != null) 
 								getNodeIconLayer().removeIcon(current_node.getIcon());
 							break;
 						case NONE:
@@ -7906,12 +7906,6 @@ public class sdt3d extends SdtApplication
 		private Iterable<? extends Renderable> getKmlModels()
 		{
 			return this.kmlModelIterable;
-		}
-
-
-		private void setKmlModels(Iterable<Renderable> iterable)
-		{
-			this.kmlModelIterable = iterable;
 		}
 
 
