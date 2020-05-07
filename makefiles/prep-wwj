@@ -1,4 +1,4 @@
-#! /bin/sh
+./sdt3#! /bin/sh
 # prep-wwj - modify wwj 2.1 to open access on getColladaRoot
 
 wget -O worldwind-v2.1.0.zip https://github.com/NASAWorldWind/WorldWindJava/releases/download/v2.1.0/worldwind-v2.1.0.zip
@@ -31,5 +31,7 @@ diff -ru worldwind-fix/src/gov/nasa/worldwind/ogc/kml/impl/KMLModelPlacemarkImpl
 +}
 ===ENDPATCH===
 # Pack up:
+sed -i'.bak' 's/assemble, test/assemble/' worldwind/build.xml 
+sed -i'.bak' 's/assembleRelease, assembleJavadoc/assembleRelease/' worldwind/build.xml 
 sed -i'.bak' s/worldwind.jdk=1.8/worldwind.jdk=$1/ worldwind/build.properties
 zip -q -r worldwind.zip worldwind

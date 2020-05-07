@@ -158,16 +158,15 @@ $(PROTOLIB_OBJS): $(BLD_DIR)/protolib
 	cp -L $(BLD_DIR)/protolib/build/$(notdir $@) $@
 
 $(BLD_DIR)/protolib: $(DL_DIR)/protolib
-#	mkdir $(BLD_DIR)/protolib
-	rm -rf $(BLD_DIR)/protolib
-	mv $(DL_DIR)/protolib $(BLD_DIR)/protolib
+#	rm -rf $(BLD_DIR)/protolib
+	cp -R $(DL_DIR)/protolib $(BLD_DIR)/protolib
 	cd $(BLD_DIR)/protolib && ./waf configure --build-java
 	cd $(BLD_DIR)/protolib && ./waf build
 
 $(DL_DIR)/protolib:
 	mkdir $(DL_DIR)/protolib
 	git clone https://github.com/USNavalResearchLaboratory/protolib.git $(DL_DIR)/protolib
-	cd $(DL_DIR)/protolib git checkout 463bea6378efd11fb94d027fecc5f2537cc19138
+	cd $(DL_DIR)/protolib && git checkout 463bea6378efd11fb94d027fecc5f2537cc19138
 	rm -rf $(DL_DIR)/protolib/.git
     
 ## / Protolib ##
@@ -219,8 +218,8 @@ clean:
 
 distclean:   clean
 	-rm -rf $(WORK_DIR) joglutils worldwind
-#	rm -rf joglutils.zip 
-#	rm -rf worldwind.zip 
+	rm -rf joglutils.zip 
+	rm -rf worldwind.zip 
 	rm -rf worldwind-v2.1.0.zip
 
 install:
