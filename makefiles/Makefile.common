@@ -33,7 +33,6 @@ UNIX = ../makefiles
 LIBPROTO = $(PROTOLIB)/lib/libprotokit.a
     
 INCLUDES =  $(SYSTEM_INCLUDES) $(WX_INCLUDES) -I$(PROTOLIB)/include -I$(INCLUDE) 
-
 WX_CFLAGS = -g -DUNIX -DPROTO_DEBUG -Wall -O -fPIC $(SYSTEM_FLAGS) $(WX_FLAGS) $(INCLUDES) $(SYSTEM_HAVES)
 CFLAGS = -g -DUNIX -DPROTO_DEBUG -Wall -O -fPIC $(SYSTEM_FLAGS) $(INCLUDES) $(SYSTEM_HAVES)
 
@@ -43,16 +42,16 @@ TARGETS = sdt
 
 # Rule for C++ .cpp extension
 .cpp.o:
-	$(CC) -c $(WX_CFLAGS) -o $*.o $*.cpp
+	$(CC) -c $(CFLAGS) -o $*.o $*.cpp
          
 SRC = $(COMMON)/sdt.cpp $(PROTOLIB)/src/wx/wxProtoApp.cpp
           
 OBJ = $(SRC:.cpp=.o)
 
-all:	sdt3d sdtcmd sdt 
+all:	sdt3d sdtcmd 
 
-$(LIBPROTO): 
-	$(MAKE) -C $(PROTOLIB)/makefiles -f Makefile.$(SYSTEM)    
+$(LIBPROTO): $(DL_DIR) $(BLD_DIR) $(DL_DIR)/protolib $(PROTOLIB)
+	$(MAKE) -C $(PROTOLIB)/makefiles -f Makefile.$(SYSTEM) libprotokit.a
 
 sdt:        $(DL_DIR) $(BLD_DIR) $(PROTOLIB) $(OBJ) $(LIBPROTO) 
 	$(CC) $(WX_CFLAGS) -o $@ $(OBJ) $(LIBPROTO) $(WX_LIBS) $(LIBS)	
@@ -84,13 +83,13 @@ PLAYER_SRC = $(COMMON)/sdtPlayer.cpp
 PLAYER_OBJ = $(PLAYER_SRC:.cpp=.o)
 
 
-sdtplay:	$(PLAYER_OBJ) $(LIBPROTO)
+sdtplay: $(LIBPROTO)	$(PLAYER_OBJ) 
 	$(CC) $(CFLAGS) -o $@ $(PLAYER_OBJ) $(LIBPROTO) $(LIBS)
 
 CMD_SRC   =  $(COMMON)/sdtCmd.cpp
 CMD_OBJ   =  $(CMD_SRC:.cpp=.o)
 
-sdtcmd:   $(CMD_OBJ) $(LIBPROTO)
+sdtcmd: $(LIBPROTO) $(CMD_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(CMD_OBJ) $(LIBPROTO) $(LIBS)
 
 APP_NAME = sdt3d
@@ -158,16 +157,14 @@ $(PROTOLIB_OBJS): $(BLD_DIR)/protolib
 	cp -L $(BLD_DIR)/protolib/build/$(notdir $@) $@
 
 $(BLD_DIR)/protolib: $(DL_DIR)/protolib
-#	mkdir $(BLD_DIR)/protolib
-	rm -rf $(BLD_DIR)/protolib
-	mv $(DL_DIR)/protolib $(BLD_DIR)/protolib
+	cp -R $(DL_DIR)/protolib $(BLD_DIR)/protolib
 	cd $(BLD_DIR)/protolib && ./waf configure --build-java
 	cd $(BLD_DIR)/protolib && ./waf build
 
 $(DL_DIR)/protolib:
 	mkdir $(DL_DIR)/protolib
 	git clone https://github.com/USNavalResearchLaboratory/protolib.git $(DL_DIR)/protolib
-	cd $(DL_DIR)/protolib git checkout 463bea6378efd11fb94d027fecc5f2537cc19138
+	cd $(DL_DIR)/protolib && git checkout 463bea6378efd11fb94d027fecc5f2537cc19138
 	rm -rf $(DL_DIR)/protolib/.git
     
 ## / Protolib ##
@@ -219,8 +216,8 @@ clean:
 
 distclean:   clean
 	-rm -rf $(WORK_DIR) joglutils worldwind
-#	rm -rf joglutils.zip 
-#	rm -rf worldwind.zip 
+	rm -rf joglutils.zip 
+	rm -rf worldwind.zip 
 	rm -rf worldwind-v2.1.0.zip
 
 install:
