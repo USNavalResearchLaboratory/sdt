@@ -14,14 +14,17 @@ import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.globes.Globe;
 import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.Material;
+import gov.nasa.worldwind.render.Renderable;
 import gov.nasa.worldwind.render.airspaces.Airspace;
 import gov.nasa.worldwind.render.airspaces.AirspaceAttributes;
 import gov.nasa.worldwind.render.airspaces.BasicAirspaceAttributes;
+import gov.nasa.worldwind.render.airspaces.CappedCylinder;
 import gov.nasa.worldwind.render.airspaces.PartialCappedCylinder;
 import gov.nasa.worldwind.render.airspaces.Polygon;
 import gov.nasa.worldwind.render.airspaces.SphereAirspace;
+import gov.nasa.worldwind.util.Logging;
 
-public class SdtSymbol
+public class SdtSymbol implements Renderable
 {
 
 	public enum Type {
@@ -48,33 +51,25 @@ public class SdtSymbol
 			X, Y, Z
 	};
 
-	// For now we assume our models' are oriented along x or y axis
 	protected boolean isInitialized = false;
 
 	private Color symbolColor = Color.RED; // default
 
-	double scale = 1;
+	private double scale = 1;
 
-	// lAzimuth,rAzimtuh each correspond to clockwise locations from due north (0 thru 180, -180 thru 0)
-	// e.g. half circle from north to south
-	// -180,0
-	// 20 degree circle from due north
-	// 0,20
-	// 30 degree circle facing west
-	// -90,-70
-	double lAzimuth = 0;
+	protected double lAzimuth = 0;
 
-	double rAzimuth = 0;
+	protected double rAzimuth = 0;
 
-	double width = -32;
+	private double width = -32;
 
-	double height = -32;
+	private double height = -32;
 
-	double opacity = 0.3;
+	protected double opacity = 0.3;
 
-	int outlineWidth = 1;
+	protected int outlineWidth = 1;
 
-	List<LatLon> latLonList = null;
+	private List<LatLon> latLonList = null;
 
 	protected Hashtable<String, SdtCheckboxNode> layerList = new Hashtable<String, SdtCheckboxNode>();
 
@@ -85,58 +80,90 @@ public class SdtSymbol
 	}
 
 
-	public SdtSymbol(String type, SdtNode theNode)
+	SdtSymbol(String type, SdtNode sdtNode)
 	{
-		if (theNode == null)
-			System.out.println("NULL NODE!! symbol init");
+		if (sdtNode == null)
+		{
+			String message = Logging.getMessage("SdtSymbol::SdtSymbol() theNode nullValue.StringIsNull");
+			Logging.logger().severe(message);
+			throw new IllegalArgumentException(message);
+		}
 		this.symbolType = type;
-		this.sdtNode = theNode;
+		this.sdtNode = sdtNode;
 	}
 
 
-	public Hashtable<String, SdtCheckboxNode> getLayerList()
+	Hashtable<String, SdtCheckboxNode> getLayerList()
 	{
 		return layerList;
 	}
 
-
-	public Airspace getAirspace()
+	
+	static Type getType(String text)
 	{
-		return airspaceShape;
+		if (text.equalsIgnoreCase("SPHERE") || text.equalsIgnoreCase("CIRCLE"))
+		{
+			return Type.SPHERE;
+		}
+		if (text.equalsIgnoreCase("ELLIPSE"))
+		{
+			return Type.ELLIPSE;
+		}
+		if (text.equalsIgnoreCase("CONE"))
+		{
+			return Type.CONE;
+		}
+		if (text.equalsIgnoreCase("BOX"))
+		{
+			return Type.BOX;
+		}
+		if (text.equalsIgnoreCase("CUBE") || text.equalsIgnoreCase("SQUARE"))
+		{
+			return Type.CUBE;
+		}
+		if (text.equalsIgnoreCase("CYLINDER"))
+		{
+			return Type.CYLINDER;
+		}
+		if (text.equalsIgnoreCase("NONE"))
+		{
+			return Type.NONE;
+		}
+		return Type.INVALID;
 	}
 
 
-	public void setType(String type)
+	void setType(String type)
 	{
 		this.symbolType = type;
 	}
 
 	
-	public Type getSymbolType()
+	Type getSymbolType()
 	{
 		return SdtSymbol.getType(symbolType);
 	}
 
 
-	public void setIconHugging(boolean iconHugging)
+	void setIconHugging(boolean iconHugging)
 	{
 		isIconHugging = iconHugging;
 	}
 
 
-	public boolean isIconHugging()
+	boolean isIconHugging()
 	{
 		return isIconHugging;
 	}
 
 
-	public void setScalable(boolean scalable)
+	void setScalable(boolean scalable)
 	{
 		isScalable = scalable;
 	}
 
 
-	public boolean isScalable()
+	boolean isScalable()
 	{
 		// if a real world length has been set for the sprite (kml & 3ds), don't scale the symbol
 		if (sdtNode != null && sdtNode.hasSprite()) 
@@ -150,31 +177,66 @@ public class SdtSymbol
 	}
 
 
-	public void setAbsolutePositioning(boolean absolutePositioning)
+	void setAbsolutePositioning(boolean absolutePositioning)
 	{
 		isAbsolutePositioning = absolutePositioning;
 	}
 
 
-	public boolean getAbsolutePositioning()
+	boolean getAbsolutePositioning()
 	{
 		return isAbsolutePositioning;
 	}
 
 
-	public void setWidth(double theWidth)
+	void setWidth(double theWidth)
 	{
 		width = theWidth;
 	}
 
+	
+	double getWidth()
+	{
+		
+		if (sdtNode != null && sdtNode.getSprite() != null)
+		{
+			// Get the width from the sprite.  If the sprite is a model getSymbolSize
+			// checks to see if we are rendering in real-world size or not.
+			if (isIconHugging())
+			{
+				return sdtNode.getSprite().getSymbolSize();
+			}
+		}
+		// else return the default width or any scaleable symbol size set
+		return width;
 
-	public void setHeight(double theHeight)
+	}
+
+	void setHeight(double theHeight)
 	{
 		height = theHeight;
 	}
 
 
-	public void setOpacity(double theOpacity)
+	double getHeight()
+	{
+		// if we're an icon hugging symbol use the sprite's height
+		if (sdtNode != null && sdtNode.getSprite() != null && sdtNode.getSprite().getHeight() > 0)
+		{
+			if (isIconHugging)
+			{
+				return sdtNode.getSprite().getHeight();
+			}
+		}
+
+		if (height == 0)
+			return getWidth();
+		else
+			return height;
+
+	}
+	
+	void setOpacity(double theOpacity)
 	{
 		if (theOpacity < 0.0 || theOpacity > 1.0)
 		{
@@ -185,43 +247,43 @@ public class SdtSymbol
 	}
 
 
-	public void setOutlineWidth(int theWidth)
+	void setOutlineWidth(int theWidth)
 	{
 		outlineWidth = theWidth;
 	}
 
 
-	public int getOutlineWidth()
+	int getOutlineWidth()
 	{
 		return outlineWidth;
 	}
 
 
-	public Double getOpacity()
+	Double getOpacity()
 	{
 		return opacity;
 	}
 
 
-	public void setLatLon(List<LatLon> latLon)
+	void setLatLon(List<LatLon> latLon)
 	{
 		latLonList = latLon;
 	}
 
 
-	public List<LatLon> getLatLon()
+	List<LatLon> getLatLon()
 	{
 		return latLonList;
 	}
 
 
-	public void setScale(double d)
+	void setScale(double d)
 	{
 		this.scale = d;
 	}
 
 
-	public double getScale()
+	double getScale()
 	{
 		if (isIconHugging())
 			return this.scale * 1.5;
@@ -229,37 +291,37 @@ public class SdtSymbol
 			return this.scale;
 	}
 
-
-	public void setLAzimuth(double d)
+	// Overridden by SdtCone
+	void setLAzimuth(double d)
 	{
 		this.lAzimuth = d;
-		// ljt we reference orientation in 0-360
+		// We reference orientation in 0-360
 		orientation = Angle.fromDegrees(this.lAzimuth);
 		// Convert from 0-360 what the cylinder airspace wants for azimuth -180 180
 		while (this.lAzimuth > 180)
 			this.lAzimuth -= 360;
 	}
 
-
-	public void setRAzimuth(double d)
-	{
-		this.rAzimuth = d;
-	}
-
-
-	public double getLAzimuth()
+	
+	protected double getLAzimuth()
 	{
 		return this.lAzimuth;
 	}
 
+	
+	void setRAzimuth(double d)
+	{
+		this.rAzimuth = d;
+	}
+	
 
-	public double getRAzimuth()
+	double getRAzimuth()
 	{
 		return this.rAzimuth;
 	}
 
 
-	public double getMaxDimension()
+	double getMaxDimension()
 	{
 		// Fist set to symbol size
 		double size = width > height ? width : height;
@@ -295,81 +357,44 @@ public class SdtSymbol
 	}
 
 
-	public double getMinDimension()
+	double getMinDimension()
 	{
 		double min = (getWidth() > getHeight()) ? getHeight() : getWidth();
 		return min;
 	}
 
 
-	public double getWidth()
-	{
-		
-		if (sdtNode != null && sdtNode.getSprite() != null)
-		{
-			// Get the width from the sprite.  If the sprite is a model getSymbolSize
-			// checks to see if we are rendering in real-world size or not.
-			if (isIconHugging())
-			{
-				return sdtNode.getSprite().getSymbolSize();
-			}
-		}
-		// else return the default width or any scaleable symbol size set
-		return width;
-
-	}
-
-
-	public double getHeight()
-	{
-		// if we're an icon hugging symbol use the sprite's height
-		if (sdtNode != null && sdtNode.getSprite() != null && sdtNode.getSprite().getHeight() > 0)
-		{
-			if (isIconHugging)
-			{
-				return sdtNode.getSprite().getHeight();
-			}
-		}
-
-		if (height == 0)
-			return getWidth();
-		else
-			return height;
-
-	}
-
-
-	public SdtNode getSdtNode()
+	protected SdtNode getSdtNode()
 	{
 		return sdtNode;
 	}
 
 
-	public void setColor(Color color)
+	void setColor(Color color)
 	{
 		symbolColor = color;
 	}
 
 
-	public Color getColor()
+	Color getColor()
 	{
 		return symbolColor;
 	}
 
 
-	public boolean isInitialized()
+	boolean isInitialized()
 	{
 		return isInitialized;
 	}
 
 
-	public void setInitialized(boolean value)
+	void setInitialized(boolean value)
 	{
 		isInitialized = value;
 	}
 
 
-	public void addLayer(String val, SdtCheckboxNode theNode)
+	void addLayer(String val, SdtCheckboxNode theNode)
 	{
 
 		if (!layerList.containsKey(val))
@@ -379,13 +404,13 @@ public class SdtSymbol
 	}
 
 
-	public void removeLayer()
+	void removeLayer()
 	{
 		layerList.clear();
 	}
 
 
-	public void removeSymbolFromLayer()
+	void removeSymbolFromLayer()
 	{
 		removeFromCheckbox();
 		// only in one layer right now
@@ -394,7 +419,7 @@ public class SdtSymbol
 
 
 	// Overridden in SdtRegion
-	public void removeFromCheckbox()
+	void removeFromCheckbox()
 	{
 		// We now only have one layer per link... Could probably clean this up
 		if (!layerList.isEmpty())
@@ -409,7 +434,7 @@ public class SdtSymbol
 	}
 
 
-	public boolean symbolInVisibleLayer()
+	boolean symbolInVisibleLayer()
 	{
 		// As we only have one layer, maybe remove layer list?
 		if (!layerList.isEmpty())
@@ -427,6 +452,7 @@ public class SdtSymbol
 		return true;
 	}
 
+	
 	/* 
 	 * Called by sdtNode render pass to update symbol position
 	 */
@@ -462,7 +488,7 @@ public class SdtSymbol
 		transform = transform.multiply(globe.computeModelCoordinateOriginTransform(getPosition()));
 		// If no node attached we must be a region. We don't want to change the heading
 		// we want all the cube regions to face the same direction for now
-		if (this.getSdtNode() != null)
+		if (sdtNode != null)
 			transform = transform.multiply(Matrix.fromRotationZ(heading.multiply(-1)));
 
 		double widthOver2 = (this.getWidth() * this.getScale()) / 2;
@@ -498,6 +524,7 @@ public class SdtSymbol
 	{
 		if (sdtNode == null || !sdtNode.hasPosition())
 			return 0;
+		
 		double terrainElev = dc.getGlobe().getElevation(sdtNode.getPosition().getLatitude(), sdtNode.getPosition().getLongitude());
 
 		Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
@@ -513,7 +540,7 @@ public class SdtSymbol
 
 		// Offset the symbol elevation by 1/2 the
 		// icon height at the distance and add any altitude
-		terrainElev = terrainElev + iconCurrentSize / 2 + getSdtNode().getAltitude();
+		terrainElev = terrainElev + iconCurrentSize / 2 + sdtNode.getAltitude();
 
 		// Remove icon offset for models above terrain
 		if (sdtNode.hasSprite() && sdtNode.getSprite().getType() == SdtSpriteIcon.Type.MODEL && sdtNode.getAltitude() != 0)
@@ -542,6 +569,7 @@ public class SdtSymbol
 					airspaceShape.setAltitude(terrainElev);
 				}
 				break;
+			case CONE:
 			case CYLINDER:
 			case CUBE:
 			case BOX:
@@ -565,12 +593,11 @@ public class SdtSymbol
 			default:
 				break;
 		}
-		// TODO: LJT Until we decide how to handle non airspace symbols, renderCone will use this terrainElev
 		return terrainElev;
 	} // end getAltitude()
 
 
-	public double getRadius(DrawContext dc)
+	double getRadius(DrawContext dc)
 	{
 		double currentSize = 2;
 		if (dc.getView() == null)
@@ -610,8 +637,24 @@ public class SdtSymbol
 		return currentSize;
 	} // getRadius
 
+	
+	
+	double reverseAzimuth(double heading)
+	{		
+		if (heading < 180)
+		{
+			heading = heading + 180;
+		}
+		else
+		{
+			heading = heading - 180;
+		}
+		
+		return heading;
+	}
 
-	public double reverseRotation(double orientation, double rotation)
+	
+	double reverseRotation(double orientation, double rotation)
 	{
 		// convert to +0 to +360 range
 		orientation = normalize(orientation);
@@ -632,7 +675,7 @@ public class SdtSymbol
 	} // reverseRotation
 
 
-	private static double normalize(double i)
+	double normalize(double i)
 	{
 		// find effective angle
 		double d = Math.abs(i) % 360;
@@ -646,122 +689,90 @@ public class SdtSymbol
 	} // normalize
 
 
-	public void updateSymbolCoordinates(DrawContext dc)
+	void updateSymbolCoordinates(DrawContext dc)
 	{
 		Position pos = getPosition();
+		
 		// If we've changed attributes we might not have reinitialized yet...
 		if (!isInitialized())
+		{
 			initialize(dc);
-
-		if (airspaceShape != null)
-		{
-			// Although airspaces can support agl/msl we need to toggle
-			// the terrain confirming attribute to take advantage of this
-			// this is a performance hog however, so we'll manage setting
-			// elevation ourselves in the node render pass
-			airspaceShape.setTerrainConforming(false);
-			getAltitude(dc);
-
-			switch (getType(symbolType))
-			{
-				case SPHERE:
-					((SphereAirspace) airspaceShape).setRadius(getRadius(dc));
-					((SphereAirspace) airspaceShape).setLocation(pos);
-
-					break;
-				case ELLIPSE:
-					((SphereAirspace) airspaceShape).setRadius(getRadius(dc));
-					((SphereAirspace) airspaceShape).setLocation(pos);
-
-					if (this.getWidth() > this.getHeight())
-						((SdtEllipseAirspace) airspaceShape).setXYRatio(this.getWidth() / this.getHeight(), 1, 1);
-					else
-						((SdtEllipseAirspace) airspaceShape).setXYRatio(1, this.getHeight() / this.getWidth(), this.getHeight() / this.getWidth());
-
-					break;
-				case CYLINDER:
-					((PartialCappedCylinder) airspaceShape).setRadius(getRadius(dc));
-
-					// When facing n, 0/360 due east, 90 is N, 270 is S, 180 is W
-					// double leftAzimuth = getLAzimuth();
-
-					Angle symbolOrientation = Angle.fromDegrees(getLAzimuth());
-					Angle heading = Angle.fromDegrees(sdtNode.getSymbolHeading());
-					// We don't want to change last heading if node heading == 0; e.g.
-					// node heading has not changed
-					if (isAbsolutePositioning)
-						orientation = symbolOrientation;
-					else if (sdtNode.getSymbolHeading() != 0)
-						orientation = symbolOrientation.add(heading);
-
-					// Reverse the rotation of the cylinder so it trues up with
-					// cone rotation
-					double leftAzimuth = reverseRotation(orientation.degrees, 90);
-					double tmpLeftAzimuth = leftAzimuth;
-					double rightAzimuth = getRAzimuth();
-
-					// Calculate cylinder base on converted orientation & width of cylinder wedge
-					leftAzimuth = leftAzimuth + rightAzimuth / 2;
-					rightAzimuth = tmpLeftAzimuth - rightAzimuth / 2;
-
-					while (leftAzimuth > 180)
-						leftAzimuth -= 360;
-					while (rightAzimuth > 180)
-						rightAzimuth -= 360;
-
-					((PartialCappedCylinder) airspaceShape).setAzimuths(Angle.fromDegrees(rightAzimuth), Angle.fromDegrees(leftAzimuth));
-					((PartialCappedCylinder) airspaceShape).setCenter(pos);
-
-					break;
-				case CUBE:
-				case BOX:
-					((Polygon) airspaceShape).setLocations(transformLocations(dc));
-					break;
-				//case CUBE:
-				case NONE:
-					break;
-				default:
-					break;
-			}
 		}
+		
+		if (airspaceShape == null)
+		{
+			String message = "SdtSymbol::updateSymbolCoordinates() theNode nullValue.StringIsNull";
+			Logging.logger().severe(message);
+			throw new IllegalArgumentException(message);
+		}
+		
+		getAltitude(dc);
+
+		switch (getType(symbolType))
+		{
+		case SPHERE:
+			((SphereAirspace) airspaceShape).setRadius(getRadius(dc));
+			((SphereAirspace) airspaceShape).setLocation(pos);
+			
+			break;
+		case ELLIPSE:
+			((SphereAirspace) airspaceShape).setRadius(getRadius(dc));
+			((SphereAirspace) airspaceShape).setLocation(pos);
+
+			if (this.getWidth() > this.getHeight())
+				((SdtEllipseAirspace) airspaceShape).setXYRatio(this.getWidth() / this.getHeight(), 1, 1);
+			else
+				((SdtEllipseAirspace) airspaceShape).setXYRatio(1, this.getHeight() / this.getWidth(), this.getHeight() / this.getWidth());
+
+			break;
+		case CYLINDER:
+			((PartialCappedCylinder) airspaceShape).setRadius(getRadius(dc));
+
+			// When facing n, 0/360 due east, 90 is N, 270 is S, 180 is W
+			// double leftAzimuth = getLAzimuth();
+			Angle symbolOrientation = Angle.fromDegrees(getLAzimuth());
+			Angle heading = Angle.fromDegrees(sdtNode.getSymbolHeading());
+			
+			// We don't want to change last heading if node heading == 0; e.g.
+			// node heading has not changed
+			if (isAbsolutePositioning)
+				orientation = symbolOrientation;
+			else if (sdtNode.getSymbolHeading() != 0)
+				orientation = symbolOrientation.add(heading);
+
+			// Reverse the rotation of the cylinder so it trues up with
+			// cone rotation
+			double leftAzimuth = orientation.degrees; //reverseRotation(orientation.degrees, 90);
+			double tmpLeftAzimuth = leftAzimuth;
+			double rightAzimuth = getRAzimuth();
+
+			// Calculate cylinder base on converted orientation & width of cylinder wedge
+			leftAzimuth = leftAzimuth + rightAzimuth / 2;
+			rightAzimuth = tmpLeftAzimuth - rightAzimuth / 2;
+
+			while (leftAzimuth > 180)
+				leftAzimuth -= 360;
+			while (rightAzimuth > 180)
+				rightAzimuth -= 360;
+
+			((PartialCappedCylinder) airspaceShape).setAzimuths(Angle.fromDegrees(rightAzimuth), Angle.fromDegrees(leftAzimuth));
+			((PartialCappedCylinder) airspaceShape).setCenter(pos);
+
+			break;
+		case CUBE:
+		case BOX:
+			((Polygon) airspaceShape).setLocations(transformLocations(dc));
+			break;
+		case NONE:
+			break;
+		default:
+			break;
+		}
+		
 	}
 
 
-	public static Type getType(String text)
-	{
-		if (text.equalsIgnoreCase("SPHERE") || text.equalsIgnoreCase("CIRCLE"))
-		{
-			return Type.SPHERE;
-		}
-		if (text.equalsIgnoreCase("ELLIPSE"))
-		{
-			return Type.ELLIPSE;
-		}
-		if (text.equalsIgnoreCase("CONE"))
-		{
-			return Type.CONE;
-		}
-		if (text.equalsIgnoreCase("BOX"))
-		{
-			return Type.BOX;
-		}
-		if (text.equalsIgnoreCase("CUBE") || text.equalsIgnoreCase("SQUARE"))
-		{
-			return Type.CUBE;
-		}
-		if (text.equalsIgnoreCase("CYLINDER"))
-		{
-			return Type.CYLINDER;
-		}
-		if (text.equalsIgnoreCase("NONE"))
-		{
-			return Type.NONE;
-		}
-		return Type.INVALID;
-	}
-
-
-	public void initialize(DrawContext dc)
+	void initialize(DrawContext dc)
 	{
 		Position pos = getPosition();
 		// We might be assigning symbols before we've given the node a position.
@@ -798,7 +809,7 @@ public class SdtSymbol
 				break;
 			case CONE:
 				airspaceShape = null;
-				isInitialized = true; // ljt???
+				isInitialized = true; 
 				break;
 			case NONE:
 				isInitialized = false; // so we don't keep trying to init
@@ -811,25 +822,34 @@ public class SdtSymbol
 			default:
 				break;
 		}
+		
 		if (airspaceShape != null)
 		{
 			airspaceShape.setAttributes(getDefaultAirspaceAttributes());
 			isInitialized = true;
+			
+			/** 
+			 * Although airspaces can support agl/msl this is (was? tbd)
+			 * a performance hog however, so we'll manage setting
+			 * elevation ourselves in the render pass so disable
+			 * the terrain confirming attribute 
+			 */
+			airspaceShape.setTerrainConforming(false);
+
 		}
 	} // initialize
 
 
-	public Color getInteriorColor()
+	Color getInteriorColor()
 	{
 
 		return new Color(Integer.valueOf(symbolColor.getRed()),
 			Integer.valueOf(symbolColor.getGreen()),
 			Integer.valueOf(symbolColor.getBlue()), Integer.valueOf((int) (0.3 * 255)));
-		// return new Color(symbolColor.getRed()/255,symbolColor.getGreen()/255, symbolColor.getBlue()/255, 0.3f);
 	}
 
 
-	public Color getBorderColor()
+	Color getBorderColor()
 	{
 		return new Color(Integer.valueOf(symbolColor.getRed()),
 			Integer.valueOf(symbolColor.getGreen()),
@@ -840,13 +860,22 @@ public class SdtSymbol
 	protected AirspaceAttributes getDefaultAirspaceAttributes()
 	{
 		AirspaceAttributes attributes = new BasicAirspaceAttributes();
-		attributes.setMaterial(new Material(getInteriorColor()));
+		attributes.setInteriorMaterial(new Material(getInteriorColor()));
 		attributes.setOutlineMaterial(new Material(getBorderColor()));
 		attributes.setDrawOutline(true);
-		attributes.setOpacity(opacity);
+		attributes.setInteriorOpacity(opacity);
 		attributes.setOutlineOpacity(0.35);
 		attributes.setOutlineWidth(getOutlineWidth());
 		return attributes;
+	}
+
+
+	@Override
+	public
+	void render(DrawContext dc) 
+	{
+		airspaceShape.render(dc);
+		
 	}
 
 }

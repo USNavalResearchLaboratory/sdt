@@ -428,7 +428,7 @@ public class SdtNode implements Renderable
 	public boolean attributeAlreadyAssigned()
 	{
 		// symbol or label in layer
-		return ((this.getSymbol() != null && !this.getSymbol().getLayerList().isEmpty())
+		return ((this.symbol != null && !this.symbol.getLayerList().isEmpty())
 			|| !labelLayerList.isEmpty());
 
 	}
@@ -442,20 +442,13 @@ public class SdtNode implements Renderable
 
 	public boolean symbolAlreadyAssigned()
 	{
-		return (this.getSymbol() != null && !this.getSymbol().getLayerList().isEmpty());
+		return (symbol != null && !symbol.getLayerList().isEmpty());
 	}
 
 
 	public boolean nodeAlreadyAssigned()
 	{
-
 		return (!layerList.isEmpty());
-		// Has the node or any of it's components been assigned to a layer?
-		/*
-		 * return (!layerList.isEmpty() ||
-		 * !labelLayerList.isEmpty() ||
-		 * (this.getSymbol() != null && !this.getSymbol().getLayerList().isEmpty()));
-		 */
 	}
 
 
@@ -721,9 +714,9 @@ public class SdtNode implements Renderable
 					}
 
 					// Reset model and symbol position
-					if (getSymbol() != null)
+					if (symbol != null)
 					{
-						getSymbol().setPosition(modelPosition);
+						symbol.setPosition(modelPosition);
 					}
 					sprite.setPosition(modelPosition);
 					sprite.setHeading(heading, yaw);
@@ -795,8 +788,9 @@ public class SdtNode implements Renderable
 		
 		if (hasSymbol())
 		{
+			// TODO: LJT We don't want to do this each time!
 			// Update symbol coordinates
-			getSymbol().updateSymbolCoordinates(dc);
+			symbol.updateSymbolCoordinates(dc);
 		}
 
 		if (!oldPos.equals(position) || getLinkUpdate())
@@ -1223,13 +1217,15 @@ public class SdtNode implements Renderable
 		switch (theSprite.getType())
 		{
 		case ICON:
-			this.sprite = theSprite;
+			this.sprite = new SdtSpriteIcon((SdtSpriteIcon) theSprite);
 			break;
 		case MODEL:
 			this.sprite = new SdtSpriteModel((SdtSpriteModel) theSprite);
 			break;
 		case KML:
 			this.sprite = new SdtSpriteKml((SdtSpriteKml) theSprite);
+			break;
+		case NONE:
 			break;
 		default:
 			System.out.println("setSprite() invalid type.");
@@ -1238,7 +1234,7 @@ public class SdtNode implements Renderable
 		
 		if (hasSymbol())
 		{
-			getSymbol().setInitialized(false);
+			symbol.setInitialized(false);
 		}
 
 	}
@@ -1344,7 +1340,7 @@ public class SdtNode implements Renderable
 	}
 
 
-	public SdtSymbol getSymbol()
+	SdtSymbol getSymbol()
 	{
 		return this.symbol;
 	}
@@ -1610,7 +1606,7 @@ public class SdtNode implements Renderable
 		}
 
 		if (hasSymbol())
-			theApp.getSymbolLayer().removeSymbol(getSymbol());
+			theApp.getSymbolLayer().removeRenderable(symbol);
 
 		if (hasTrail())
 			theApp.getTrailLayer().removeRenderable(getPath());
@@ -1660,7 +1656,7 @@ public class SdtNode implements Renderable
 		// trigger symbol recreation
 		if (hasSymbol())
 		{
-			theApp.getSymbolLayer().addSymbol(getSymbol());
+			theApp.getSymbolLayer().addRenderable(symbol);
 		}
 		GlobeAnnotation label = getLabel();
 		if (null != label)
@@ -1750,7 +1746,7 @@ public class SdtNode implements Renderable
 			if (hasSymbol() && (!nodeInVisibleLayer() || !symbol.symbolInVisibleLayer()))
 			{
 				getSymbol().setInitialized(false);
-				theApp.getSymbolLayer().addSymbol(getSymbol());
+				theApp.getSymbolLayer().addRenderable(symbol);
 			}
 			GlobeAnnotation label = getLabel();
 			if (null != label && (!nodeInVisibleLayer() || !labelInVisibleLayer()))

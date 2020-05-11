@@ -385,6 +385,7 @@ public class SdtSpriteModel extends SdtModel
 	 */
 	void setModelRadius()
 	{
+		
 		double lengthInMeters = getLength();
 		
 		if (lengthInMeters < 0.0)
@@ -496,6 +497,15 @@ public class SdtSpriteModel extends SdtModel
 			// actual size model
 			double d = loc.distanceTo3(dc.getView().getEyePoint());
 			double pSize = dc.getView().computePixelSizeAtDistance(d);
+			
+			
+			// If no dimensions were set for the model (e.g. modelRadius == -1
+			// calculate modelRadius now
+			if (modelRadius == -1)
+			{
+				setModelRadius();
+			}
+			
 			double s = (pSize * modelRadius) / this.model.getBounds().getRadius();
 			
 			// Don't let model get smaller than our requested size

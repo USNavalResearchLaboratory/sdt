@@ -498,7 +498,7 @@ public class sdt3d extends SdtApplication
 
 		private SdtRegionLayer regionLayer = null;
 
-		private SdtSymbolLayer symbolLayer = null;
+		private RenderableLayer symbolLayer = null;
 
 		private RenderableLayer tileLayer = null;
 
@@ -1200,7 +1200,7 @@ public class sdt3d extends SdtApplication
 			insertBeforeCompass(wwd, getNodeModelLayer());
 
 			// Create renderable layer for symbols.
-			setSymbolLayer(new SdtSymbolLayer());
+			setSymbolLayer(new RenderableLayer());
 			getSymbolLayer().setName("Node Symbols");
 			insertBeforeCompass(wwd, getSymbolLayer());
 
@@ -3834,6 +3834,10 @@ public class sdt3d extends SdtApplication
 					coord[1] = coord[1].replace("r", "");
 					currentNode.getSprite().setAbsoluteYaw(false);
 					currentNode.setYaw(new Double(coord[1]));
+				} else
+				{
+					// Use default absolute yaw mode
+					currentNode.setYaw(new Double(coord[1]));
 				}
 
 			}
@@ -4228,7 +4232,7 @@ public class sdt3d extends SdtApplication
 			if (current_node.hasSymbol())
 			{
 				// ljt test but we do this above in remove renderables...
-				getSymbolLayer().removeSymbol(current_node.getSymbol());
+				getSymbolLayer().removeRenderable(current_node.getSymbol());
 				current_node.deleteSymbol();
 			}
 			if (current_node.hasTrail())
@@ -4347,8 +4351,7 @@ public class sdt3d extends SdtApplication
 				SdtNode current_node = i.next().getValue();
 				if (current_node.hasSymbol())
 				{
-					// ljt use clear all?
-					getSymbolLayer().removeSymbol(current_node.getSymbol());
+					getSymbolLayer().removeAllRenderables();
 					current_node.deleteSymbol();
 				}
 			}
@@ -4727,7 +4730,7 @@ public class sdt3d extends SdtApplication
 			// <dimensions> is in format "width,height"
 			if (dim.length < 2)
 			{
-				// TODO warn about bad width,height
+				System.out.println("sdt3d::setSize() Invalid sprite size dimension setting default size 32,32.");
 				return false;
 			}
 			Integer width = new Integer(dim[0]);
@@ -5057,7 +5060,7 @@ public class sdt3d extends SdtApplication
 
 			if (currentNode.hasSymbol() && currentNode.getSymbol() != null)
 			{
-				getSymbolLayer().removeSymbol(currentNode.getSymbol());
+				getSymbolLayer().removeRenderable(currentNode.getSymbol());
 
 				if (symbolType.equalsIgnoreCase("none"))
 				{
@@ -5071,8 +5074,6 @@ public class sdt3d extends SdtApplication
 				{
 					currentNode.getSymbol().removeSymbolFromLayer();
 					currentNode.setSymbol(null);
-
-					// Remove airspace symbol and create cone
 					currentSymbol = new SdtCone(symbolType, currentNode);
 				}
 				else
@@ -5082,7 +5083,6 @@ public class sdt3d extends SdtApplication
 					{
 						currentNode.getSymbol().removeSymbolFromLayer();
 						currentNode.setSymbol(null);
-
 						currentSymbol = new SdtSymbol(symbolType, currentNode);
 					}
 					else
@@ -5173,10 +5173,11 @@ public class sdt3d extends SdtApplication
 							absolutePositioning = absolutePositioning.replace("r", "");
 						}
 
+						// Orientation or "yaw"
 						double lAzimuth = Double.valueOf(absolutePositioning);
 						if (lAzimuth < 0 || lAzimuth > 360)
 						{
-							System.out.println("Error: Symbol lAzimuth out of range (0-360)" + lAzimuth);
+							// ljt return System.out.println("Error: Symbol lAzimuth out of range (0-360)" + lAzimuth);
 							lAzimuth = 0;
 						}
 						currentSymbol.setLAzimuth(lAzimuth);
@@ -5184,8 +5185,16 @@ public class sdt3d extends SdtApplication
 					}
 					case 8:
 					{
-						// LJT ADD Error checking 0-360
-						currentSymbol.setRAzimuth(Double.valueOf(attrs[ind]));
+						// Elevation or "pitch"
+						double rAzimuth = Double.valueOf(attrs[ind]);
+						if (rAzimuth < 0 || rAzimuth > 360)
+						{
+							// ljt return System.out.println("Error: Symbol rAzimuth out of range (0-360)" + rAzimuth);
+							rAzimuth = 0;
+						}
+
+						currentSymbol.setRAzimuth(rAzimuth);
+						
 						break;
 					}
 				}
@@ -5201,13 +5210,13 @@ public class sdt3d extends SdtApplication
 				&&
 				currentNode.getLayerList().isEmpty())
 			{
-				getSymbolLayer().addSymbol(currentSymbol);
+				getSymbolLayer().addRenderable(currentSymbol);
 
 			}
 			else if (!currentNode.getSymbol().getLayerList().isEmpty() && currentNode.getSymbol().symbolInVisibleLayer() ||
 				!currentNode.getLayerList().isEmpty() && currentNode.nodeInVisibleLayer())
 			{
-				getSymbolLayer().addSymbol(currentSymbol);
+				getSymbolLayer().addRenderable(currentSymbol);
 			}
 
 			return true;
@@ -6555,10 +6564,10 @@ public class sdt3d extends SdtApplication
 			{
 				// Remove the airspace if it existed we don't have
 				// an easy way to figure this out as yet.
-				getSymbolLayer().removeSymbol(currentSymbol);
+				getSymbolLayer().removeRenderable(currentSymbol);
 				currentSymbol.removeSymbolFromLayer();
 				currentSymbol.setInitialized(false);
-				getSymbolLayer().addSymbol(currentSymbol);
+				getSymbolLayer().addRenderable(currentSymbol);
 				return true;
 			}
 
@@ -6763,10 +6772,10 @@ public class sdt3d extends SdtApplication
 			{
 				currentSymbol.removeSymbolFromLayer();
 				currentSymbol.setInitialized(false);
-				getSymbolLayer().removeSymbol(currentSymbol);
+				getSymbolLayer().removeRenderable(currentSymbol);
 			}
 			// ljt testing - did the symbol exist before we added it to a layer?
-			getSymbolLayer().removeSymbol(currentSymbol);
+			getSymbolLayer().removeRenderable(currentSymbol);
 			currentSymbol.addLayer(val, theCheckbox);
 			theCheckbox.addSymbol(currentSymbol, this);
 			return true;
@@ -7755,13 +7764,13 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		public void setSymbolLayer(SdtSymbolLayer symbolLayer)
+		public void setSymbolLayer(RenderableLayer symbolLayer)
 		{
 			this.symbolLayer = symbolLayer;
 		}
 
 
-		public SdtSymbolLayer getSymbolLayer()
+		public RenderableLayer getSymbolLayer()
 		{
 			return this.symbolLayer;
 		}
