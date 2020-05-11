@@ -244,10 +244,10 @@ class SdtCheckboxNode extends DefaultMutableTreeNode
 		{
 			SdtSymbol theSymbol = symbolItr.next();
 			if (!selected)
-				ourApp.getSymbolLayer().removeSymbol(theSymbol);
+				ourApp.getSymbolLayer().removeRenderable(theSymbol);
 			else
 			{
-				ourApp.getSymbolLayer().addSymbol(theSymbol);
+				ourApp.getSymbolLayer().addRenderable(theSymbol);
 				theSymbol.setInitialized(false);
 			}
 		}
@@ -346,11 +346,11 @@ class SdtCheckboxNode extends DefaultMutableTreeNode
 		if (!isSelected())
 		{
 			theSymbol.setInitialized(true);
-			theApp.getSymbolLayer().removeSymbol(theSymbol);
+			theApp.getSymbolLayer().removeRenderable(theSymbol);
 		}
 		else
 		{
-			theApp.getSymbolLayer().addSymbol(theSymbol);
+			theApp.getSymbolLayer().addRenderable(theSymbol);
 			theSymbol.setInitialized(false);
 		}
 	}
