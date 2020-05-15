@@ -19,10 +19,11 @@ import gov.nasa.worldwind.avlist.AVList;
 import gov.nasa.worldwind.avlist.AVListImpl;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Vec4;
+import gov.nasa.worldwind.globes.Globe;
 import gov.nasa.worldwind.ogc.kml.impl.KMLController;
 import gov.nasa.worldwind.render.DrawContext;
+import net.java.joglutils.model.geometry.Mesh;
 import net.java.joglutils.model.geometry.Model;
-
 //
 /**
  *
@@ -102,13 +103,6 @@ public class SdtSpriteModel extends SdtModel
 		this.model = model;
 		this.spriteType = Type.MODEL;
 	}
-
-
-	// TODO: ljt review all htese constructors??
-	//public SdtSpriteModel(SdtSpriteIcon template) 
-	//{
-	//	super(template);
-	//}
 
 	
 	public SdtSpriteModel(SdtSprite template) 
@@ -478,6 +472,7 @@ public class SdtSpriteModel extends SdtModel
 	 * for models following terrain and by the model3d layer to
 	 * scale and calculate feedback rectangle
 	 */
+	@Override
 	public double computeSizeScale(DrawContext dc, Vec4 loc)
 	{
 		// Needed for valid symbol size
@@ -527,7 +522,7 @@ public class SdtSpriteModel extends SdtModel
 			
 		if (position == null)
 			return;
-
+		
 		draw(dc);
 		
 		// Determine Cartesian position from the surface geometry if the

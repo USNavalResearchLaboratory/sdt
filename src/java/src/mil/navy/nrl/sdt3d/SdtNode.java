@@ -76,7 +76,7 @@ public class SdtNode implements Renderable
 	private double altitude = 0;
 
 	private SdtSprite sprite = null;
-
+	
 	private boolean feedbackEnabled = sdt3d.AppFrame.followAll();
 
 	private SdtSymbol symbol = null;
@@ -662,57 +662,58 @@ public class SdtNode implements Renderable
 		double globeElevation = dc.getGlobe().getElevation(position.getLatitude(), position.getLongitude());
 		setPositionElevation(globeElevation);
 		
-		// We can get our loc vector before doing any overrides
-		// for sprite types
-		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
-
-		double modelHeightOffset = 0.0;
+		double modelHeightOffset = 0.0;		
 		
 		if (hasSprite())
 		{
 			modelHeightOffset = sprite.getHeight() / 2.0;
-
+			
 			switch (sprite.getType())
 			{
 				case ICON:
 				{
-					// TODO LJT FIX THIS!!
-					if (this.sprite.getIcon() == null)
-						
-						if (this.sprite instanceof SdtSpriteIcon)
-							((SdtSpriteIcon) this.sprite).loadIcon(position, nodeName, feedbackEnabled);
-					if (sprite.getIcon() != null)
-						sprite.setPosition(position);
-					//if (icon != null) 
-					//{
-					//	icon.setPosition(position);
-					//}
+					if (sprite.getIcon() == null)
+					{	
+						sprite.loadIcon(sprite.getOffsetPosition(position), nodeName, feedbackEnabled);
+					}
+					sprite.setPosition(sprite.getOffsetPosition(position));
+					
 				}
 				break;
 				case MODEL:
-				{	
+				{			
 					Position modelPosition = null;
+					double elevation = dc.getGlobe().getElevation(
+							position.getLatitude(),position.getLongitude());
+					
 					if (!getFollowTerrain())
 					{
-						modelPosition = new Position(position.getLatitude(), position.getLongitude(), 
-							position.getElevation() + modelHeightOffset);
+						elevation = position.getElevation() + modelHeightOffset;
 					}
 					else
 					{
-						double elevation = dc.getGlobe().getElevation(position.getLatitude(), position.getLongitude());
-						
+
 						if (sprite.isRealSize())
 						{
 							elevation += modelHeightOffset;
 						}
 						else
 						{
-							double localSize = ((SdtSpriteModel)sprite).computeSizeScale(dc, loc);
+							Vec4 loc = dc.getGlobe().computePointFromPosition(position);
+							double localSize = sprite.computeSizeScale(dc, loc);
 							elevation += localSize * 4;
 						}
-						modelPosition = new Position(position.getLatitude(), 
-								position.getLongitude(), elevation);						
 					}
+					
+					// If we have an offset we want to use the node's 
+					// _position_ elevation that accounts for node's agl,msl setting 
+					// but models with no offset need the overrides above.
+					if (sprite.hasOffset())
+						modelPosition = sprite.getOffsetPosition(position);
+					else
+						modelPosition = new Position(position.getLatitude(),
+								position.getLongitude(),
+								elevation);
 
 					// Reset model and symbol position
 					if (symbol != null)
@@ -728,7 +729,7 @@ public class SdtNode implements Renderable
 				case KML:
 				{
 					// TODO: ljt do follow terrain overrides for kml & symbol repositioning?
-					sprite.setPosition(position);
+					sprite.setPosition(sprite.getOffsetPosition(position));
 					sprite.setHeading(heading, yaw);
 					sprite.setRoll(roll);
 					sprite.setPitch(pitch);
@@ -797,6 +798,10 @@ public class SdtNode implements Renderable
 			symbol.updateSymbolCoordinates(dc);
 		}
 
+		updateLinkPositions(dc);
+		setLinkUpdate(false);
+
+		
 		if (!oldPos.equals(position) || getLinkUpdate())
 		{
 			updateLinkPositions(dc);
@@ -1265,6 +1270,8 @@ public class SdtNode implements Renderable
 	}
 
 
+
+	
 	public void setSymbol(SdtSymbol theSymbol)
 	{
 		// TODO: Should we go ahead "getModel()"/ "getIcon()" here?
@@ -1312,7 +1319,7 @@ public class SdtNode implements Renderable
 	{
 		if (showLabel && (null == label) && position != null)
 		{
-			label = new GlobeAnnotation(getLabelText(), position); // ljt ??? getLabelPosition());
+			label = new GlobeAnnotation(getLabelText(), position); 
 			label.getAttributes().setFont(Font.decode("Ariel"));
 			label.getAttributes().setTextColor(Color.BLACK);
 			label.getAttributes().setBackgroundColor(labelColor);

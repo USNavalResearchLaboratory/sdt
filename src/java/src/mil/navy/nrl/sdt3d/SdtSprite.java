@@ -18,6 +18,7 @@ import org.xml.sax.SAXException;
 import builder.mil.nrl.atest.icon.Orientation;
 import builder.mil.nrl.atest.worldwind.openflight.LoaderFactory;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.Renderable;
 import gov.nasa.worldwind.render.UserFacingIcon;
@@ -51,6 +52,14 @@ public class SdtSprite implements Renderable
 	
 	protected float scale = 1;	
 	
+	boolean applyOffset = false;
+	
+	private Float offsetX = 0.0f;
+	
+	private Float offsetY = 0.0f;
+	
+	private Float offsetZ = 0.0f;
+	
 	protected String spritePath = null; // path to validate sprite source
 
 	private java.net.URL iconURL = null; // path to images retrieved from jar files
@@ -79,6 +88,10 @@ public class SdtSprite implements Renderable
 		this.scale = template.scale;
 		this.spritePath = template.spritePath;
 		this.iconURL = template.iconURL;
+		this.offsetX = template.offsetX;
+		this.offsetY = template.offsetY;
+		this.offsetZ = template.offsetZ;
+		this.applyOffset = template.applyOffset;
 	}
 	
 	
@@ -412,8 +425,87 @@ public class SdtSprite implements Renderable
 		return Integer.parseInt(getTextValue(ele, tagName));
 	}
 
+	/*
+	 * Set any sprite offset to be applied
+	 * to node position
+	 */
+	void setOffset(Float x, Float y, Float z)
+	{
+		this.offsetX = x;
+		this.offsetY = y;
+		this.offsetZ = z;
+		this.applyOffset = true;
+	}
 	
+	
+	void disableOffset()
+	{
+		this.applyOffset = false;
+	}
+
+	
+	boolean hasOffset()
+	{
+		return this.applyOffset;
+	}
+	
+	Position getOffsetPosition(Position nodePosition)
+	{		
+		if (!applyOffset)
+		{
+			return nodePosition;
+		}
+		
+		String origLatStr = nodePosition.getLatitude().toDecimalDegreesString(6);
+		origLatStr = origLatStr.replaceAll("[D|d|\u00B0|'|\u2019|\"|\u201d]", "");
+		double origLat = Double.parseDouble(origLatStr);
+
+		String origLonStr = nodePosition.getLongitude().toDecimalDegreesString(6);
+		origLonStr = origLonStr.replaceAll("[D|d|\u00B0|'|\u2019|\"|\u201d]", "");
+		double origLon = Double.parseDouble(origLonStr);
+
+		// average radius of the earth from center to pole
+		double latsPerDeg = 111226.0;
+		double latsRel = offsetY / latsPerDeg;
+		double lat = origLat + latsRel;
+
+		// normalize the latitude... but dont account for pole crossings yet...
+		while (lat < -180)
+			lat += 360;
+		while (lat > 180)
+			lat -= 360;
+
+		// Radius of the earth from center to the equator...
+		double lonsPerDeg = Math.cos(Math.PI * lat / 180) * 111320;
+		double lonRel = offsetX / lonsPerDeg;
+		double lon = origLon + lonRel;
+
+		// handle pole crossings...
+		if (lat > 90)
+		{
+			lat = 180 - lat;
+			lon += 180;
+		}
+		else if (lat < -90)
+		{
+			lat = -180 - lat;
+			lon += 180;
+		}
+
+		// normalize the longitude
+		while (lon < 180)
+			lon += 360;
+		while (lon > 180)
+			lon -= 360;
+		
+		Double altOffset = nodePosition.getElevation() + offsetZ;
+
+		Position newPos = Position.fromDegrees(lat, lon, altOffset);
+		return newPos;
+	}
+
 	/**
+	 * 
 	 * Set dimensions common to all sprites
 	 */
 	private void setXMLSpriteDimensions(Element el, SdtSprite theSprite)
@@ -458,13 +550,37 @@ public class SdtSprite implements Renderable
 				}
 				else
 				{
-					System.out.println("SdtSprite::setDimension() Bad size dimensions in sprite kml.\n");
+					System.out.println("SdtSprite::setDimension() Bad size dimensions in sprite xml.\n");
+				}
+			}
+			String offset = null;
+			if (hasTag(el, "offset"))
+			{
+				offset = getTextValue(el, "offset");
+			}
+			if (offset != null)
+			{
+				String[] offsetArr = offset.split(",");
+				// "x,y,z"
+				if (offsetArr.length == 3)
+				{
+					if (!offsetArr[0].equalsIgnoreCase("x"))
+						theSprite.offsetX = new Float(offsetArr[0]);
+					if (!offsetArr[1].equalsIgnoreCase("x"))
+						theSprite.offsetY = new Float(offsetArr[1]);
+					if (!offsetArr[2].equalsIgnoreCase("x"))
+						theSprite.offsetZ = new Float(offsetArr[2]);
+					theSprite.applyOffset = true;
+				}
+				else
+				{
+					System.out.println("SdtSprite::setDimension() bad offset in sprite xml.");
 				}
 			}
 		} 
 		catch (Exception e)
 		{
-			System.out.println("SdtSprite::setSpriteDimensions() invalid kml file");
+			System.out.println("SdtSprite::setSpriteDimensions() invalid xml file");
 		}
 	}
 	
@@ -731,5 +847,11 @@ public class SdtSprite implements Renderable
 	public void loadIcon(Position position, String nodeName, boolean feedbackEnabled) {
 		// TODO Auto-generated method stub
 		
+	}
+
+
+	public double computeSizeScale(DrawContext dc, Vec4 loc) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

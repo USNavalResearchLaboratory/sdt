@@ -539,23 +539,15 @@ public class DisplayListRenderer
 	private void genList(DrawContext dc, GL2 gl, Globe globe, Model model, boolean isFullRender)
 	{
 		final Vec4[] vertices;
-		//if (model instanceof mil.nrl.atest.worldwind.jogl.ATESTModel)
-		//{
-		//	vertices = ((mil.nrl.atest.worldwind.jogl.ATESTModel) model).makeTerrainConforming(dc, globe);
-		// LJT - this gets the mesh vertices from the ATESTModel
-		//vertices = model.makeTerrainConforming(dc,globe);
-		//}
-		//else
-		//{
+		
 		vertices = model.getMesh(0).vertices;
-		//}
 
 		genList(gl, model, vertices, isFullRender);
 	}
 
 
 	/**
-	 * Generate the model display list
+	 * Generate the model display lists
 	 * 
 	 * @param gl
 	 */
