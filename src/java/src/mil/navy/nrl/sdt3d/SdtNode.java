@@ -731,7 +731,8 @@ public class SdtNode implements Renderable
 							double localSize = ((SdtSpriteModel) sprite).computeSizeScale(dc, loc);
 							elevation += localSize * 4;
 						}
-						modelPosition = new Position(position.getLatitude(), position.getLongitude(), elevation);						
+						modelPosition = new Position(position.getLatitude(), 
+								position.getLongitude(), elevation);						
 					}
 
 					// Reset model and symbol position
@@ -818,6 +819,9 @@ public class SdtNode implements Renderable
 			}
 		}
 
+		
+		// Reset position so links and symbols render correctly
+		position = new Position(position, altitude);
 		
 		if (hasSymbol())
 		{
