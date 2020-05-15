@@ -76,6 +76,8 @@ public class SdtNode implements Renderable
 	private double altitude = 0;
 
 	private SdtSprite sprite = null;
+	
+	private Position offset = null;
 
 	private boolean feedbackEnabled = sdt3d.AppFrame.followAll();
 
@@ -631,6 +633,17 @@ public class SdtNode implements Renderable
 	}
 	
 	
+	Position getModelPosition()
+	{
+		if (offset != null)
+		{
+			return this.offset;
+		}
+		
+		return this.position;
+	}
+	
+	
 	/**
 	 * Sdt nodes are put in a dummy layer called during each rendering pass to
 	 * centralize updating the positions of all the node renderables (icon,
@@ -676,30 +689,32 @@ public class SdtNode implements Renderable
 			{
 				case ICON:
 				{
-					// TODO LJT FIX THIS!!
 					if (this.sprite.getIcon() == null)
-						
+					{	
 						if (this.sprite instanceof SdtSpriteIcon)
 							((SdtSpriteIcon) this.sprite).loadIcon(position, nodeName, feedbackEnabled);
+					}
 					if (sprite.getIcon() != null)
+					{
 						sprite.setPosition(position);
-					//if (icon != null) 
-					//{
-					//	icon.setPosition(position);
-					//}
+					}
 				}
 				break;
 				case MODEL:
 				{	
 					Position modelPosition = null;
+					Position renderPosition = getModelPosition();
+					
 					if (!getFollowTerrain())
 					{
-						modelPosition = new Position(position.getLatitude(), position.getLongitude(), 
-							position.getElevation() + modelHeightOffset);
+						modelPosition = new Position(renderPosition.getLatitude(), 
+								renderPosition.getLongitude(), 
+								renderPosition.getElevation() + modelHeightOffset);
 					}
 					else
 					{
-						double elevation = dc.getGlobe().getElevation(position.getLatitude(), position.getLongitude());
+						double elevation = dc.getGlobe().getElevation(
+								renderPosition.getLatitude(), renderPosition.getLongitude());
 						
 						if (sprite.isRealSize())
 						{
@@ -710,7 +725,8 @@ public class SdtNode implements Renderable
 							double localSize = ((SdtSpriteModel)sprite).computeSizeScale(dc, loc);
 							elevation += localSize * 4;
 						}
-						modelPosition = new Position(position.getLatitude(), position.getLongitude(), elevation);						
+						modelPosition = new Position(renderPosition.getLatitude(), 
+								renderPosition.getLongitude(), elevation);						
 					}
 
 					// Reset model and symbol position
@@ -786,6 +802,10 @@ public class SdtNode implements Renderable
 		}
 
 		
+		// Reset position so links and symbols render correctly
+		position = new Position(position, altitude);
+
+		
 		if (hasSymbol())
 		{
 			// TODO: LJT We don't want to do this each time!
@@ -793,6 +813,10 @@ public class SdtNode implements Renderable
 			symbol.updateSymbolCoordinates(dc);
 		}
 
+		updateLinkPositions(dc);
+		setLinkUpdate(false);
+
+		
 		if (!oldPos.equals(position) || getLinkUpdate())
 		{
 			updateLinkPositions(dc);
@@ -1260,6 +1284,11 @@ public class SdtNode implements Renderable
 		this.sprite = null; // ljt testing fix
 	}
 
+	
+	void setOffset(Position pos)
+	{
+		this.offset = pos;
+	}
 
 	public void setSymbol(SdtSymbol theSymbol)
 	{

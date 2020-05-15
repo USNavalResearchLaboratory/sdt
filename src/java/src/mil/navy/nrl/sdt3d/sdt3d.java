@@ -334,6 +334,7 @@ public class sdt3d extends SdtApplication
 			"+userConfigFile",
 			"+symbolOffset",
 			"+orientation",
+			"+offset",
 			"+enableSdtViewControls",
 			"+showLayerPanel",
 			"+showSdtPanel",
@@ -3885,6 +3886,60 @@ public class sdt3d extends SdtApplication
 			return true;
 		}
 
+		private boolean setOffset(String val)
+		{
+			if ((0 == val.length()) || currentNode == null)
+				return false; // no <coordinates>
+
+			// Parse comma-delimited "lat,lon,alt" coordinates
+			String[] coord = val.split(",");
+			if (coord.length < 2)
+			{
+				
+				if (coord.length == 1 && coord[0].equalsIgnoreCase("off"))
+				{
+					currentNode.setOffset(null);
+					return true;
+				}
+				System.out.println("sdt3d::setOffset() invalid coordinates.");
+				return false;
+			}
+
+			currentNode.setNodeUpdate(true);
+
+			Double lon = 0.0;
+			Double lat = 0.0;
+			
+
+			
+			if (!coord[1].equalsIgnoreCase("x"))
+				lat = new Double(coord[1]);
+			else
+				lat = currentNode.getPosition().getLatitude().getDegrees();
+
+			if (!coord[0].equalsIgnoreCase("x"))
+				lon = new Double(coord[0]);
+			else
+				lon = currentNode.getPosition().getLongitude().getDegrees();
+
+			if ((lat == -9999.0 || lon == -9999.0))
+			{
+				System.out.println("sdt3d::setOffset() invalid position");
+				return false;
+			}
+
+			Double alt = currentNode.getAltitude();
+			if (coord.length > 2 && !coord[2].equalsIgnoreCase("x"))
+				// leave node at last known altitude if not set
+				alt = new Double(coord[2]);
+
+			// We save the altitude separately as we may need it depending on what
+			// we are rendering
+			Position p = Position.fromDegrees(lat, lon, alt);
+			currentNode.setOffset(p);
+
+			return true;
+		}
 
 		private boolean setPosition(String val)
 		{
@@ -7536,6 +7591,10 @@ public class sdt3d extends SdtApplication
 			else if (pendingCmd.equalsIgnoreCase("orientation"))
 			{
 				return setOrientation(val);
+			}
+			else if (pendingCmd.equalsIgnoreCase("offset"))
+			{
+				return setOffset(val);
 			}
 			else if (pendingCmd.equalsIgnoreCase("enableSdtViewControls"))
 			{
