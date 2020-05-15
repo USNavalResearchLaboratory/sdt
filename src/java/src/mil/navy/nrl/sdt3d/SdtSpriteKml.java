@@ -424,24 +424,25 @@ public class SdtSpriteKml extends SdtSpriteModel
 			return;
 		}
 		
-		Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
+		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
 
 		// Set model position & size
-		colladaRoot.setPosition(getPosition());
+		colladaRoot.setPosition(position);
 		Vec4 modelScaleVector = this.computeSizeVector(dc, loc);
 		colladaRoot.setModelScale(modelScaleVector);
 
 		// Set model orientation
-		colladaRoot.setHeading(Angle.fromDegrees(heading));;
+		// Change kml heading to clockwise like models
+		colladaRoot.setHeading(Angle.fromDegrees(-heading));;
 		// kml roll is the reverse of models (and our default)
 		colladaRoot.setRoll(Angle.fromDegrees(-(roll + getModelRoll())));
 		colladaRoot.setPitch(Angle.fromDegrees(pitch + getModelPitch()));
 		
 		Vec4 modelPoint = null;
-		if (getPosition().getElevation() < dc.getGlobe().getMaxElevation())
-			modelPoint = dc.getSurfaceGeometry().getSurfacePoint(getPosition());
+		if (position.getElevation() < dc.getGlobe().getMaxElevation())
+			modelPoint = dc.getSurfaceGeometry().getSurfacePoint(position);
 		if (modelPoint == null)
-			modelPoint = dc.getGlobe().computePointFromPosition(getPosition());
+			modelPoint = dc.getGlobe().computePointFromPosition(position);
 
 		Vec4 screenPoint = dc.getView().project(modelPoint);
 		Vec4 modelScale = colladaRoot.getModelScale();

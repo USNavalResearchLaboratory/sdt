@@ -334,6 +334,7 @@ public class sdt3d extends SdtApplication
 			"+userConfigFile",
 			"+symbolOffset",
 			"+orientation",
+			"+offset",
 			"+enableSdtViewControls",
 			"+showLayerPanel",
 			"+showSdtPanel",
@@ -3885,7 +3886,54 @@ public class sdt3d extends SdtApplication
 			return true;
 		}
 
+		
+	
+		private boolean setOffset(String val)
+		{
+			if ((0 == val.length()) || currentNode == null)
+				return false; // no <coordinates>
 
+			if (!currentNode.hasSprite()) 
+			{
+				System.out.println("sdt3d::setOffset() no sprite associated with node, offset invalid");
+				return false; // no sprite
+			}
+			
+			// Parse comma-delimited cartesian "lat,lon,alt" coordinates
+			String[] coord = val.split(",");
+			if (coord.length < 2)
+			{
+				
+				if (coord.length == 1 && coord[0].equalsIgnoreCase("off"))
+				{
+					currentNode.getSprite().disableOffset();
+					return true;
+				}
+				System.out.println("sdt3d::setOffset() invalid coordinates.");
+				return false;
+			}
+
+			currentNode.setNodeUpdate(true);
+
+			Float y = 0.0f;
+			Float x = 0.0f;
+			Float z = 0.0f;
+			
+			if (!coord[1].equalsIgnoreCase("x"))
+				x = new Float(coord[1]);
+
+			if (!coord[0].equalsIgnoreCase("x"))
+				y = new Float(coord[0]);
+
+			if (coord.length > 2 && !coord[2].equalsIgnoreCase("x"))
+				z = new Float(coord[2]);
+
+			currentNode.getSprite().setOffset(x, y, z);
+			
+			return true;
+		}
+	
+	
 		private boolean setPosition(String val)
 		{
 			if ((0 == val.length()) || currentNode == null)
@@ -4733,6 +4781,8 @@ public class sdt3d extends SdtApplication
 				System.out.println("sdt3d::setSize() Invalid sprite size dimension setting default size 32,32.");
 				return false;
 			}
+
+			
 			Integer width = new Integer(dim[0]);
 			Integer height = new Integer(dim[1]);
 
@@ -7536,6 +7586,10 @@ public class sdt3d extends SdtApplication
 			else if (pendingCmd.equalsIgnoreCase("orientation"))
 			{
 				return setOrientation(val);
+			}
+			else if (pendingCmd.equalsIgnoreCase("offset"))
+			{
+				return setOffset(val);
 			}
 			else if (pendingCmd.equalsIgnoreCase("enableSdtViewControls"))
 			{
