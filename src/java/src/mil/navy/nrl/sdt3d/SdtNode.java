@@ -629,7 +629,7 @@ public class SdtNode implements Renderable
 			}
 		}
 	}
-	
+		
 	
 	/**
 	 * Sdt nodes are put in a dummy layer called during each rendering pass to
@@ -667,7 +667,6 @@ public class SdtNode implements Renderable
 		if (hasSprite())
 		{
 			modelHeightOffset = sprite.getHeight() / 2.0;
-			
 			switch (sprite.getType())
 			{
 				case ICON:
@@ -683,6 +682,7 @@ public class SdtNode implements Renderable
 				case MODEL:
 				{			
 					Position modelPosition = null;
+
 					double elevation = dc.getGlobe().getElevation(
 							position.getLatitude(),position.getLongitude());
 					
@@ -692,7 +692,6 @@ public class SdtNode implements Renderable
 					}
 					else
 					{
-
 						if (sprite.isRealSize())
 						{
 							elevation += modelHeightOffset;
@@ -728,7 +727,6 @@ public class SdtNode implements Renderable
 				break;
 				case KML:
 				{
-					// TODO: ljt do follow terrain overrides for kml & symbol repositioning?
 					sprite.setPosition(sprite.getOffsetPosition(position));
 					sprite.setHeading(heading, yaw);
 					sprite.setRoll(roll);
@@ -800,7 +798,6 @@ public class SdtNode implements Renderable
 
 		updateLinkPositions(dc);
 		setLinkUpdate(false);
-
 		
 		if (!oldPos.equals(position) || getLinkUpdate())
 		{
@@ -1269,9 +1266,7 @@ public class SdtNode implements Renderable
 		this.sprite = null; // ljt testing fix
 	}
 
-
-
-	
+		
 	public void setSymbol(SdtSymbol theSymbol)
 	{
 		// TODO: Should we go ahead "getModel()"/ "getIcon()" here?

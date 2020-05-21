@@ -64,6 +64,7 @@ public class SdtSprite implements Renderable
 
 	private java.net.URL iconURL = null; // path to images retrieved from jar files
 
+	
 	public java.net.URL getIconURL()
 	{
 		return this.iconURL;
@@ -763,7 +764,6 @@ public class SdtSprite implements Renderable
 	}
 
 
-
 	public double getSymbolSize()
 	{
 		double size = iconWidth > iconHeight ? iconWidth : iconHeight;
@@ -810,7 +810,6 @@ public class SdtSprite implements Renderable
 
 	public void setPitch(double pitch) {
 		// TODO Auto-generated method stub
-		
 	}
 
 
@@ -849,7 +848,7 @@ public class SdtSprite implements Renderable
 		
 	}
 
-
+	
 	public double computeSizeScale(DrawContext dc, Vec4 loc) {
 		// TODO Auto-generated method stub
 		return 0;

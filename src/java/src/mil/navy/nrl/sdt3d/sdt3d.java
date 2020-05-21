@@ -3886,8 +3886,7 @@ public class sdt3d extends SdtApplication
 			return true;
 		}
 
-		
-	
+
 		private boolean setOffset(String val)
 		{
 			if ((0 == val.length()) || currentNode == null)

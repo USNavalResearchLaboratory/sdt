@@ -111,7 +111,6 @@ public class SdtSpriteModel extends SdtModel
 		this.spriteType = Type.MODEL;
 	}
 
-
 	@Override 
 	boolean isValid()
 	{
