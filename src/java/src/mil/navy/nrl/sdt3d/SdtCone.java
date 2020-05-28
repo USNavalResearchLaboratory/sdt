@@ -95,14 +95,16 @@ public class SdtCone extends SdtSymbol
 			| GL2.GL_TRANSFORM_BIT; // For matrix mode.
 		gl.glPushAttrib(attribMask);
 
+		//gl.glEnable(GL2.GL_LIGHTING); //Seems to actually disable lighting?
+		gl.glEnable(GL2.GL_LIGHT0);
+
+		
 		// We need to use materials because we are enabling
 		// lighting (e.g. glColor doesn't work)
 		gl.glMaterialfv(GL.GL_FRONT, GL2.GL_SPECULAR, mat_specular, 0);
 		gl.glMaterialf(GL.GL_FRONT, GL2.GL_SHININESS, 25.0f);
 		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, light_position, 0);
 
-		//gl.glEnable(GL2.GL_LIGHTING); Seems to actually disable lighting?
-		gl.glEnable(GL2.GL_LIGHT0);
 		gl.glDepthFunc(GL.GL_LESS);
 		gl.glEnable(GL.GL_DEPTH_TEST);
 		
@@ -120,6 +122,7 @@ public class SdtCone extends SdtSymbol
 
 	}
 	
+	
 	/**
 	 * OpenGL code to build the cone
 	 * 
@@ -128,39 +131,42 @@ public class SdtCone extends SdtSymbol
 	 */
 	private void buildCone(DrawContext dc, GL2 gl)
 	{
-		// topCenter is point at center of cylinder base
+		// topCenter is the origin of the cone
 		Vec4 topCenter = dc.getGlobe().computePointFromPosition(
 				getPosition().getLatitude(), 
 				getPosition().getLongitude(),
 				getPosition().getElevation());
 		
-		// The ususal order of operations is:
+		// The usual order of operations is:
 		// Translate (move the origin to the right location)
 		// Rotate (orient the coordinate axes right)
 		// Scale (get the object to the right size)
 		gl.glTranslated(topCenter.x, topCenter.y, topCenter.z);
 
-		// rotation about y-axis is heading/yaw
+		gl.glRotated(90 + getPosition().getLongitude().getDegrees(), 0, 1, 0);
+		
 		// rotation about x-axis is pitch/elevation
+		// rotation about y-axis is heading/yaw
 		// rotation about z-axis is roll/bank
 		// glRotated(degrees, x, y, z) 
-		Position p = dc.getGlobe().computePositionFromPoint(topCenter);
-		
-		gl.glRotated(90 + p.getLongitude().getDegrees(), 0, 1, 0);
 		
 		// Convert heading so 0/360 is due north orientation clockwise
 		double heading = convertToModelHeading(lAzimuth);
-
+		
 		// orientation/heading 
 		gl.glRotated(heading, -1, 0, 0);
-		gl.glRotated(p.getLatitude().getDegrees() * Angle.fromDegrees(heading).sin(), 0, 1, 0);
-		
+		gl.glRotated(getPosition().getLatitude().getDegrees() 
+				* Angle.fromDegrees(heading).sin(), 0, 1, 0);		
+
 		// elevation is 0-360 with 0 to the east 180 to the west 90 due north etc
 		// degrees tilted up from the earth's surface
-		gl.glRotated(rAzimuth, 0, -1, 0);
-		gl.glRotated(p.getLatitude().getDegrees() * Angle.fromDegrees(rAzimuth).sin(), -1, 0, 0);
- 		
-
+		double elevation = rAzimuth;
+		gl.glRotated(elevation, 0, -1, 0);
+		gl.glRotated(getPosition().getLatitude().getDegrees() 
+				//* Angle.fromDegrees(elevation).cos(), 1, 0, 0);
+				* Angle.fromDegrees(elevation).cos(), -1, 0, 0);
+		
+		
 		// width = radius of cone base
 		double currentWidth =  getWidth(); 
 		// height = length from cone tip to center of base
@@ -174,7 +180,10 @@ public class SdtCone extends SdtSymbol
 			// otherwise we scale based on icon size
 			currentWidth *= dc.getView().computePixelSizeAtDistance(d);
 			currentHeight *= dc.getView().computePixelSizeAtDistance(d);
-
+			
+			currentWidth = currentWidth < getWidth() ? getWidth() : currentWidth;	
+			currentHeight = currentHeight < getHeight() ? getHeight() : currentHeight;
+			
 		}
 		else
 		{
@@ -194,7 +203,6 @@ public class SdtCone extends SdtSymbol
 		{	
 			if (currentWidth < (getWidth() * this.getScale()))
 			{
-				currentWidth = (getWidth() * this.getScale());
 				currentHeight = ((getWidth() * 3.14159) * this.getScale());
 			}
 			if (currentHeight < (getHeight() * this.getScale()))
@@ -212,7 +220,7 @@ public class SdtCone extends SdtSymbol
 
 	}
 	
-		
+	
 	private void resetGLState(GL2 gl)
 	{
 		// reset our state

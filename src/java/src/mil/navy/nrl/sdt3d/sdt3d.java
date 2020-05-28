@@ -4773,18 +4773,21 @@ public class sdt3d extends SdtApplication
 				// TODO warn about no "node" specified
 				return false;
 			}
+			Integer width = -1;
+			Integer height = -1;
 			String[] dim = val.split(",");
 			// <dimensions> is in format "width,height"
-			if (dim.length < 2)
-			{
-				System.out.println("sdt3d::setSize() Invalid sprite size dimension setting default size 32,32.");
-				return false;
-			}
-
 			
-			Integer width = new Integer(dim[0]);
-			Integer height = new Integer(dim[1]);
-
+			if (dim.length == 1)
+			{
+				width = new Integer(dim[0]);
+				height = new Integer(dim[0]);
+			}
+			if (dim.length == 2)
+			{
+				width = new Integer(dim[0]);
+				height = new Integer(dim[1]);
+			}
 			currentSprite.setSize(width.intValue(), height.intValue());
 			// If we are setting a size specifically, we are not
 			// a real size model - e.g. the model will stay in sight
