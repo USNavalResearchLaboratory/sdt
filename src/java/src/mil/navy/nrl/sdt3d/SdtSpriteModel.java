@@ -359,9 +359,9 @@ public class SdtSpriteModel extends SdtModel
 
 		if (length > 0 && length < 32) 
 		{
-			System.out.println("Delete me???!!! " );
+			//System.out.println("Delete me???!!! " );
 			//iconWidth = -length; iconHeight = -length;
-			//length = 32;
+			length = 32;
 		}
 		
 		// if no length or width set use default width (32) as h,w,l
@@ -439,7 +439,6 @@ public class SdtSpriteModel extends SdtModel
 
 	public double getSymbolSize()
 	{
-		// delete me?
 		double size = iconWidth > iconHeight ? iconWidth : iconHeight;
 		
 		if (getFixedLength() > 0) 
