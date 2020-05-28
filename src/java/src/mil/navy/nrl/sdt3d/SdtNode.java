@@ -713,7 +713,7 @@ public class SdtNode implements Renderable
 						modelPosition = new Position(position.getLatitude(),
 								position.getLongitude(),
 								elevation);
-
+					
 					// Reset model and symbol position
 					if (symbol != null)
 					{

@@ -3914,15 +3914,15 @@ public class sdt3d extends SdtApplication
 
 			currentNode.setNodeUpdate(true);
 
-			Float y = 0.0f;
 			Float x = 0.0f;
+			Float y = 0.0f;
 			Float z = 0.0f;
 			
-			if (!coord[1].equalsIgnoreCase("x"))
-				x = new Float(coord[1]);
-
 			if (!coord[0].equalsIgnoreCase("x"))
-				y = new Float(coord[0]);
+				x = new Float(coord[0]);
+
+			if (!coord[1].equalsIgnoreCase("x"))
+				y = new Float(coord[1]);
 
 			if (coord.length > 2 && !coord[2].equalsIgnoreCase("x"))
 				z = new Float(coord[2]);

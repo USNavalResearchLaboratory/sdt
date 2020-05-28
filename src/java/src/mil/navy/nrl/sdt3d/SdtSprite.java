@@ -457,11 +457,11 @@ public class SdtSprite implements Renderable
 			return nodePosition;
 		}
 		
-		String origLatStr = nodePosition.getLatitude().toDecimalDegreesString(6);
+		String origLatStr = nodePosition.getLatitude().toDecimalDegreesString(14);
 		origLatStr = origLatStr.replaceAll("[D|d|\u00B0|'|\u2019|\"|\u201d]", "");
 		double origLat = Double.parseDouble(origLatStr);
 
-		String origLonStr = nodePosition.getLongitude().toDecimalDegreesString(6);
+		String origLonStr = nodePosition.getLongitude().toDecimalDegreesString(14);
 		origLonStr = origLonStr.replaceAll("[D|d|\u00B0|'|\u2019|\"|\u201d]", "");
 		double origLon = Double.parseDouble(origLonStr);
 
