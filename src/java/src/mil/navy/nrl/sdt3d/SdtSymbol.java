@@ -615,16 +615,24 @@ public class SdtSymbol implements Renderable
 				// Just use scale here as iconHugging scale factor
 				// doesn't apply for realSize sprites
 				if (sdtNode.getSprite().getType() != SdtSpriteIcon.Type.ICON)
+				{
 					currentSize = (getMaxDimension() * getScale()) / 2; 
+				}
 				else
+				{
 					currentSize = getMaxDimension() * getScale();
+				}
 			}
 			else
 			{
-				// getMaxDimension gets the symbol size if set, else the
-				// model/iconsize and considers icon hugging
-				// this should be reworked...
-				currentSize = ((getMaxDimension() * getScale()) / 2) * dc.getView().computePixelSizeAtDistance(d);
+				if (sdtNode.getSprite().getType() != SdtSpriteIcon.Type.ICON)
+				{
+					currentSize = sdtNode.getSprite().getModelRadius() * dc.getView().computePixelSizeAtDistance(d);
+				}
+				else
+				{
+					currentSize = (getMaxDimension() * getScale()) * dc.getView().computePixelSizeAtDistance(d);
+				}
 			}
 
 			if (currentSize < 2)

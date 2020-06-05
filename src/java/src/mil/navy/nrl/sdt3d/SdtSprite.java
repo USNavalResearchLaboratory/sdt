@@ -857,4 +857,10 @@ public class SdtSprite implements Renderable
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+
+	double getModelRadius() 
+	{	
+		return 0.0;
+	}
 }

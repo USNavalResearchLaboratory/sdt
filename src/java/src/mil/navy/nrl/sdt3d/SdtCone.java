@@ -6,6 +6,7 @@ import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
 import gov.nasa.worldwind.geom.Angle;
+import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.render.DrawContext;
 
@@ -233,6 +234,6 @@ public class SdtCone extends SdtSymbol
 	@Override
 	void updateSymbolCoordinates(DrawContext dc)
 	{
-		return;
+
 	}
 }
