@@ -6,6 +6,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.UserFacingIcon;
 import mil.navy.nrl.sdt3d.SdtSprite.Type;
 
@@ -148,5 +149,4 @@ public class SdtSpriteIcon extends SdtSprite implements SdtSpriteDimensions
 		return false;
 	}
 	
-
 } // end class SdtSprite

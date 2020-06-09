@@ -18,7 +18,6 @@ import gov.nasa.worldwind.render.Renderable;
 import gov.nasa.worldwind.render.airspaces.Airspace;
 import gov.nasa.worldwind.render.airspaces.AirspaceAttributes;
 import gov.nasa.worldwind.render.airspaces.BasicAirspaceAttributes;
-import gov.nasa.worldwind.render.airspaces.CappedCylinder;
 import gov.nasa.worldwind.render.airspaces.PartialCappedCylinder;
 import gov.nasa.worldwind.render.airspaces.Polygon;
 import gov.nasa.worldwind.render.airspaces.SphereAirspace;
@@ -236,6 +235,7 @@ public class SdtSymbol implements Renderable
 
 	}
 	
+	
 	void setOpacity(double theOpacity)
 	{
 		if (theOpacity < 0.0 || theOpacity > 1.0)
@@ -291,6 +291,7 @@ public class SdtSymbol implements Renderable
 			return this.scale;
 	}
 
+	
 	// Overridden by SdtCone
 	void setLAzimuth(double d)
 	{
@@ -596,7 +597,10 @@ public class SdtSymbol implements Renderable
 		return terrainElev;
 	} // end getAltitude()
 
-
+	/*
+	 * This still does not render symbol size correctly when kml models
+	 * get to real size and "scalable" symbol sizes still have some issues.
+	 */
 	double getRadius(DrawContext dc)
 	{
 		double currentSize = 2;
@@ -605,33 +609,42 @@ public class SdtSymbol implements Renderable
 			return getMaxDimension() / 2;
 		}
 
+		Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
+		double d = loc.distanceTo3(dc.getView().getEyePoint());
+
 		if (isIconHugging() || isScalable())
 		{
-			Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
-			double d = loc.distanceTo3(dc.getView().getEyePoint());
 
 			if (sdtNode != null && sdtNode.getSprite().isRealSize())
 			{
 				// Just use scale here as iconHugging scale factor
 				// doesn't apply for realSize sprites
+				currentSize = getMaxDimension() * getScale();
+				
 				if (sdtNode.getSprite().getType() != SdtSpriteIcon.Type.ICON)
 				{
-					currentSize = (getMaxDimension() * getScale()) / 2; 
+					currentSize = currentSize / 2;
 				}
-				else
-				{
-					currentSize = getMaxDimension() * getScale();
-				}
+				
 			}
 			else
 			{
-				if (sdtNode.getSprite().getType() != SdtSpriteIcon.Type.ICON)
+				if (sdtNode.getSprite().getType() == SdtSpriteIcon.Type.ICON)
 				{
-					currentSize = sdtNode.getSprite().getModelRadius() * dc.getView().computePixelSizeAtDistance(d);
+					currentSize = (getMaxDimension() * getScale()) * dc.getView().computePixelSizeAtDistance(d);
 				}
 				else
 				{
-					currentSize = (getMaxDimension() * getScale()) * dc.getView().computePixelSizeAtDistance(d);
+					// If symbol size was explicitly set, use that
+					if (width > 0 || height > 0)
+					{
+						currentSize = ((getMaxDimension() * getScale()) / 2) * dc.getView().computePixelSizeAtDistance(d);
+					}
+					else
+					{
+						currentSize = sdtNode.getSprite().getSymbolSize(dc); 
+					}
+
 				}
 			}
 
@@ -640,7 +653,7 @@ public class SdtSymbol implements Renderable
 		}
 		else
 		{
-			currentSize = getWidth() * this.getScale() / 2;
+			currentSize = (getMaxDimension() * this.getScale()); // * 1.5; // * dc.getView().computePixelSizeAtDistance(d);; 
 		}
 		return currentSize;
 	} // getRadius
@@ -882,6 +895,7 @@ public class SdtSymbol implements Renderable
 	public
 	void render(DrawContext dc) 
 	{
+		updateSymbolCoordinates(dc);
 		airspaceShape.render(dc);
 		
 	}

@@ -53,7 +53,7 @@ public class SdtSpriteKml extends SdtSpriteModel
 
 	KMLLayerTreeNode layerNode = null;
 	
-	Vec4 modelScaleVector = null;
+	Vec4 modelScaleVector = new Vec4(0.0, 0.0, 0.0, 0.0);
 
 	public SdtSpriteKml(SdtSpriteKml template)
 	{
@@ -217,13 +217,14 @@ public class SdtSpriteKml extends SdtSpriteModel
 	{
 		fixedLength = length;
 	}
-
+	
 	
 	/*
 	 * Called by rendering function
 	 */	
 	public Vec4 computeSizeVector(DrawContext dc, Vec4 loc)
-	{		
+	{	
+		viewAtRealSize = false;
 		Vec4 modelScaleVec;
 		if (getFixedLength() > 0.0 && isRealSize)
 		{
@@ -264,8 +265,20 @@ public class SdtSpriteKml extends SdtSpriteModel
 			// and scale size behaves erractically (when same kml is loaded
 			// multiple times??)
 			Double scale = (double) getScale();
-			modelScaleVec = new Vec4(pSize * scale, pSize * scale, pSize * scale);
+			modelScaleVec = new Vec4(pSize * scale, pSize * scale, pSize * scale);			
 		}
+		
+		double d = loc.distanceTo3(dc.getView().getEyePoint());
+		double pSize = dc.getView().computePixelSizeAtDistance(d);
+		
+		modelRadius = modelScaleVec.x * pSize;
+		
+		if (modelRadius < minimumSizeScale)
+		{
+			viewAtRealSize = true;
+
+		}
+		
 		return modelScaleVec;
 	}
 
@@ -375,7 +388,7 @@ public class SdtSpriteKml extends SdtSpriteModel
 
 
 	/**
-	 * Note: Each kmlController that managesits own collada root.  
+	 * Note: Each kmlController manages its own collada root.  
 	 * The collada root is be created in the first prerender rendering pass.
 	 */
 	@Override
@@ -462,12 +475,49 @@ public class SdtSpriteKml extends SdtSpriteModel
 		return colladaRoot != null;
 	}
 
-
+	
+	/*
+	 * Called when we set the size or the fixed length of the 
+	 * model.  The modelRadius is used by the SdtSpriteModel()
+	 * computeSizeScale to compute model pixel size during
+	 * rendering
+	 */
 	@Override
-	double getModelRadius()
+	void setModelRadius()
+	{		
+		
+		double lengthInMeters = getLength();
+				
+		sizeScale = lengthInMeters;
+		minimumSizeScale = sizeScale * getScale();
+		
+		// We override the minimumSizeScale to the "fixed length" if 
+		// hybrid sizing has been set.
+		if (getFixedLength() > 0 && getWidth() > 0)
+		{
+			minimumSizeScale = getFixedLength() * getScale(); 
+		}
+				
+	} // end WWModel3D.setLength()
+
+
+	/**
+	 * Model radius is used for symbol sizing
+	 */
+	@Override
+	double getSymbolSize(DrawContext d)
 	{
+		modelRadius = Math.sqrt(3 * (modelScaleVector.x * sizeScale) *
+					(modelScaleVector.x * sizeScale)) / 2.0;
+		
+		if (isRealSize())
+		{
+			return Math.sqrt(3 * (getFixedLength() * sizeScale) *
+					(getFixedLength() * sizeScale));
+		}
+		
 		// For NOW they are all the same
-		return modelScaleVector.x;
+		return modelRadius / 2.0;
 	}
 	
 	// These are duplicate functions from the icon renderer
