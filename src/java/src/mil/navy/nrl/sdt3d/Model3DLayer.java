@@ -54,29 +54,29 @@ import gov.nasa.worldwind.render.DrawContext;
  * @author Laurie J Thompson
  * @date April 22, 2020
  */
-public class Model3DLayer extends RenderableLayer //AbstractLayer
+public class Model3DLayer extends RenderableLayer 
 {
-	private Vector<SdtSpriteModel> list;
+	private Vector<SdtSprite> list;
 	
 	public Model3DLayer()
 	{
-		list = new Vector<SdtSpriteModel>();
+		list = new Vector<SdtSprite>();
 	}
 
 	
-	public void addModel(SdtSpriteModel model)
+	public void addModel(SdtSprite model)
 	{
 		list.add(model);
 	}
 
 
-	public void removeModel(SdtSpriteModel model)
+	public void removeModel(SdtSprite sdtSprite)
 	{
-		list.remove(model);
+		list.remove(sdtSprite);
 	}
 
 
-	public Iterable<SdtSpriteModel> getModels()
+	public Iterable<SdtSprite> getModels()
 	{
 		return java.util.Collections.unmodifiableCollection(this.list);
 	}
@@ -89,11 +89,11 @@ public class Model3DLayer extends RenderableLayer //AbstractLayer
 		try
 		{
 			beginDraw(dc);
-			Iterator<SdtSpriteModel> it = list.iterator();
+			Iterator<SdtSprite> it = list.iterator();
 
 			while (it.hasNext())
 			{
-				SdtSpriteModel theModel = it.next();
+				SdtSprite theModel = it.next();
 				
 				theModel.render(dc);	
 			}

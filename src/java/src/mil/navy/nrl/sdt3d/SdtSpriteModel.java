@@ -174,19 +174,6 @@ public class SdtSpriteModel extends SdtModel
 	}
 
 
-	public Object getValue(String key)
-	{
-		return avlist.getValue(key);
-	}
-
-
-	@Override
-	public void setValue(String key, Object value)
-	{
-		avlist.setValue(key, value);
-	}
-
-
 	public void setModelPitch(double degrees)
 	{
 		modelPitch = degrees;
@@ -208,8 +195,23 @@ public class SdtSpriteModel extends SdtModel
 	{
 		modelRoll = degrees;
 	}
+	
+		
+	@Override
+	public void setValue(String key, Object value)
+	{
+		avlist.setValue(key, value);
+	}
+	
+	@Override
+	public Object getValue(String key)
+	{
+		return avlist.getValue(key);
+	}
 
 
+	
+	
 	@Override
 	public double getModelRoll()
 	{
@@ -567,7 +569,6 @@ public class SdtSpriteModel extends SdtModel
 				(int) (screenPoint.y), (int) (width * localSize),
 				(int) (height * localSize));
 				
-		// TODO??
 		this.recordFeedback(dc, this, modelPoint, rect);
 			
 		

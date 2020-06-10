@@ -317,8 +317,6 @@ class SdtCheckboxNode extends DefaultMutableTreeNode
 			{
 				theRegion.setInitialized(false);
 				ourApp.getRegionLayer().addRegion(theRegion);
-				// ljt theRegion.initialize(ourApp.getWwd().getSceneController().getDrawContext());
-				// ljt old ourApp.getRegionLayer().addRenderable(theRegion);
 			}
 		}
 
@@ -415,7 +413,7 @@ class SdtCheckboxNode extends DefaultMutableTreeNode
 				theApp.getNodeLabelLayer().removeAnnotation(theNode.getLabel());
 		}
 		else
-		{ // ljt new
+		{ 
 			if (theNode.hasLabel())
 				theApp.getNodeLabelLayer().addAnnotation(theNode.getLabel());
 		}
@@ -429,15 +427,11 @@ class SdtCheckboxNode extends DefaultMutableTreeNode
 		regionSet.add(theRegion);
 		if (!isSelected())
 		{
-			// theRegion.setInitialized(true); // ljt new
 			ourApp.getRegionLayer().removeRenderables(theRegion);
 		}
 		else
-		{ // ljt next new:
-			// ourApp.getRegionLayer().addRegion(theRegion);
-			// remove in case it was already drawn... needs to be cleaned up
+		{  
 			ourApp.getRegionLayer().removeRenderables(theRegion);
-			// ourApp.getRegionLayer().addRenderable(theRegion);
 			theRegion.setInitialized(false);
 
 		}
@@ -451,8 +445,8 @@ class SdtCheckboxNode extends DefaultMutableTreeNode
 		tileSet.add(theTile);
 		if (!isSelected())
 			ourApp.getTileLayer().removeRenderable(theTile.getSurfaceImage());
-		else // ljt new:
-		{ // ljt temp fix?
+		else 
+		{ 
 			ourApp.getTileLayer().removeRenderable(theTile.getSurfaceImage());
 			ourApp.getTileLayer().addRenderable(theTile.getSurfaceImage());
 		}

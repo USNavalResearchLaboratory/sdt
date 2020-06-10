@@ -557,6 +557,7 @@ public class sdt3d extends SdtApplication
 
 		Hashtable<String, SdtTile> tileTable = new Hashtable<String, SdtTile>();
 
+		// For "non-sprite" kml models
 		Hashtable<String, SdtSpriteKml> kmlTable = new Hashtable<String, SdtSpriteKml>();
 
 		private String viewState;
@@ -935,7 +936,6 @@ public class sdt3d extends SdtApplication
 		protected void makeBrowserBalloon()
 		{
 			String BROWSER_BALLOON_CONTENT_PATH = "mil/navy/nrl/sdt3d/sdt3dDocBalloon.html";
-			// = "/Users/ljt/testBalloon.html";
 
 			String htmlString = null;
 			InputStream contentStream = null;
@@ -1217,9 +1217,6 @@ public class sdt3d extends SdtApplication
 			// Create renderable layer for node models
 			setNodeModelLayer(new Model3DLayer());
 			getNodeModelLayer().setName("Node Models");
-			// TODO: ljt are we using this?
-			//getNodeModelLayer().setMaintainConstantSize(true);
-			//getNodeModelLayer().setSize(1);
 			insertBeforeCompass(wwd, getNodeModelLayer());
 
 			// Create renderable layer for symbols.
@@ -1519,93 +1516,88 @@ public class sdt3d extends SdtApplication
 		{
 			try
 			{
-				// Create select listener - ljt make items draggable?
 				getWwd().addSelectListener(new SelectListener()
+				{
+					private WWIcon lastToolTipIcon = null;
+
+					private SdtPath lastToolTipPolyline = null;
+
+
+					@Override
+					public void selected(SelectEvent event)
 					{
-						private WWIcon lastToolTipIcon = null;
-
-						private SdtPath lastToolTipPolyline = null;
-
-
-						@Override
-						public void selected(SelectEvent event)
+						// Have hover selections show a picked icon's tool tip.
+						if (event.getEventAction().equals(SelectEvent.HOVER))
 						{
-							// Have hover selections show a picked icon's tool tip.
-							if (event.getEventAction().equals(SelectEvent.HOVER))
+							// If a tool tip is already showing, undisplay it.
+							if (lastToolTipIcon != null)
 							{
-								// If a tool tip is already showing, undisplay it.
-								if (lastToolTipIcon != null)
-								{
-									lastToolTipIcon.setShowToolTip(false);
-									this.lastToolTipIcon = null;
-									((Component) getWwd()).repaint();
-
-								}
-
-								if (lastToolTipPolyline != null)
-								{
-									lastToolTipPolyline.setShowToolTip(false);
-									this.lastToolTipPolyline = null;
-									((Component) getWwd()).repaint();
-
-								}
-								// If there's a selection, (check that we're not dragging
-								// if we implement dragging), and
-								// the selection is an icon or sdtpolyline, show tool tip.
-								if (event.hasObjects())
-								{
-									if (event.getTopObject() instanceof WWIcon)
-									{
-										this.lastToolTipIcon = (WWIcon) event
-												.getTopObject();
-										lastToolTipIcon.setShowToolTip(true);
-										((Component) getWwd()).repaint();
-
-									}
-
-									if (event.getTopObject() instanceof SdtPath)
-									{
-										this.lastToolTipPolyline = (SdtPath) event
-												.getTopObject();
-										lastToolTipPolyline.setShowToolTip(true);
-										((Component) getWwd()).repaint();
-									}
-								}
+								lastToolTipIcon.setShowToolTip(false);
+								this.lastToolTipIcon = null;
+								((Component) getWwd()).repaint();
 							}
-							// Have rollover events highlight the rolled-over
-							// object.
-							else if (event.getEventAction().equals(
-								SelectEvent.ROLLOVER))
-							{
-								AppFrame.this.highlight(event.getTopObject());
-							}
-							// Have drag events drag the selected object.
-							else if (event.getEventAction().equals(
-								SelectEvent.DRAG_END)
-								|| event.getEventAction().equals(
-									SelectEvent.DRAG))
-							{
-								// Delegate dragging computations to a dragger.
-								// this.dragger.selected(event);
 
-								// We missed any roll-over events while dragging, so
-								// highlight any under the cursor now,
-								// or de-highlight the dragged shape if it's no
-								// longer under the cursor.
-								if (event.getEventAction().equals(
-									SelectEvent.DRAG_END))
+							if (lastToolTipPolyline != null)
+							{
+								lastToolTipPolyline.setShowToolTip(false);
+								this.lastToolTipPolyline = null;
+								((Component) getWwd()).repaint();
+							}
+							// If there's a selection, (check that we're not dragging
+							// if we implement dragging), and
+							// the selection is an icon or sdtpolyline, show tool tip.
+							if (event.hasObjects())
+							{
+								if (event.getTopObject() instanceof WWIcon)
 								{
-									PickedObjectList pol = getWwd()
-											.getObjectsAtCurrentPosition();
-									if (pol != null)
-									{
-										AppFrame.this.highlight(pol.getTopObject());
+									this.lastToolTipIcon = (WWIcon) event
+										.getTopObject();
+									lastToolTipIcon.setShowToolTip(true);
 										((Component) getWwd()).repaint();
-									}
+								}
+
+								if (event.getTopObject() instanceof SdtPath)
+								{
+									this.lastToolTipPolyline = (SdtPath) event
+										.getTopObject();
+									lastToolTipPolyline.setShowToolTip(true);
+										((Component) getWwd()).repaint();
 								}
 							}
 						}
-					});
+						// Have rollover events highlight the rolled-over
+						// object.
+						else if (event.getEventAction().equals(SelectEvent.ROLLOVER))
+						{
+							AppFrame.this.highlight(event.getTopObject());
+						}
+						// Have drag events drag the selected object.
+						else if (event.getEventAction().equals(
+								SelectEvent.DRAG_END)
+								|| event.getEventAction().equals(
+								SelectEvent.DRAG))
+						{
+							// Delegate dragging computations to a dragger.
+							// this.dragger.selected(event);
+
+							// We missed any roll-over events while dragging, so
+							// highlight any under the cursor now,
+							// or de-highlight the dragged shape if it's no
+							// longer under the cursor.
+							if (event.getEventAction().equals(
+									SelectEvent.DRAG_END))
+							{
+								PickedObjectList pol = getWwd()
+										.getObjectsAtCurrentPosition();
+								if (pol != null)
+								{
+									AppFrame.this.highlight(pol.getTopObject());
+									((Component) getWwd()).repaint();
+							}
+						}
+					}
+				}
+			});
 
 			}
 			catch (Exception e)
@@ -3367,12 +3359,10 @@ public class sdt3d extends SdtApplication
 						{
 							case MODEL:
 							case KML:
-								if (currentNode.getModel() != null)
-									getNodeModelLayer().removeModel(currentNode.getModel());
+								getNodeModelLayer().removeModel(currentNode.getSprite());
 								break;
 							case ICON:
-								if (currentNode.getIcon() != null)
-									getNodeIconLayer().removeIcon(currentNode.getIcon());
+								getNodeIconLayer().removeIcon(currentNode.getIcon());
 								break;
 							case NONE:
 								break;
@@ -3402,12 +3392,10 @@ public class sdt3d extends SdtApplication
 					{
 						case MODEL:
 						case KML:
-							if (currentNode.getModel() != null)
-								getNodeModelLayer().addModel(currentNode.getModel());
+							getNodeModelLayer().addModel(currentNode.getSprite());
 							break;
 						case ICON:
-							if (currentNode.getIcon() != null)
-								getNodeIconLayer().addIcon(currentNode.getIcon());
+							getNodeIconLayer().addIcon(currentNode.getIcon());							
 							break;
 						case NONE:
 							break;
@@ -4046,12 +4034,10 @@ public class sdt3d extends SdtApplication
 					{
 						case MODEL:
 						case KML:
-							if (currentNode.getModel() != null)
-								getNodeModelLayer().addModel(currentNode.getModel());
+							getNodeModelLayer().addModel(currentNode.getSprite());
 							break;
 						case ICON:
-							if (currentNode.getIcon() != null)
-								getNodeIconLayer().addIcon(currentNode.getIcon());
+							getNodeIconLayer().addIcon(currentNode.getIcon());
 							break;
 						case NONE:
 							break;
@@ -4453,12 +4439,10 @@ public class sdt3d extends SdtApplication
 					{
 						case MODEL:
 						case KML:
-							if (current_node.getModel() != null)
-								getNodeModelLayer().removeModel(current_node.getModel());
+							getNodeModelLayer().removeModel(current_node.getSprite());
 							break;
 						case ICON:
-							if (current_node.getIcon() != null) 
-								getNodeIconLayer().removeIcon(current_node.getIcon());
+							getNodeIconLayer().removeIcon(current_node.getIcon());
 							break;
 						case NONE:
 							break;
@@ -5256,7 +5240,7 @@ public class sdt3d extends SdtApplication
 						double lAzimuth = Double.valueOf(absolutePositioning);
 						if (lAzimuth < 0 || lAzimuth > 360)
 						{
-							// ljt return System.out.println("Error: Symbol lAzimuth out of range (0-360)" + lAzimuth);
+							System.out.println("Error: Symbol lAzimuth out of range (0-360)" + lAzimuth);
 							lAzimuth = 0;
 						}
 						currentSymbol.setLAzimuth(lAzimuth);
@@ -5268,7 +5252,7 @@ public class sdt3d extends SdtApplication
 						double rAzimuth = Double.valueOf(attrs[ind]);
 						if (rAzimuth < 0 || rAzimuth > 360)
 						{
-							// ljt return System.out.println("Error: Symbol rAzimuth out of range (0-360)" + rAzimuth);
+							System.out.println("Error: Symbol rAzimuth out of range (0-360)" + rAzimuth);
 							rAzimuth = 0;
 						}
 
@@ -5279,8 +5263,6 @@ public class sdt3d extends SdtApplication
 				}
 			}
 
-			// ljt store all symbol state!! for recreating later
-			currentNode.setSymbolType(symbolType);
 			currentNode.setSymbol(currentSymbol);
 			currentSymbol.initialize(getWwd().getSceneController().getDrawContext());
 
@@ -5784,8 +5766,6 @@ public class sdt3d extends SdtApplication
 				if (attr.length > 3)
 				{
 					Double thickness = new Double(attr[3]);
-					// if (thickness < 1)
-					// ljt thickness = 1;
 					link.setWidth(thickness);
 				}
 			}
@@ -6274,7 +6254,7 @@ public class sdt3d extends SdtApplication
 			if (theView != null)
 				((OrbitView) getWwd().getView()).restoreState(theView);
 
-			currentView = val; // ljt
+			currentView = val; 
 			return true;
 		}
 
@@ -6698,8 +6678,6 @@ public class sdt3d extends SdtApplication
 				getRegionLayer().removeRenderables(currentRegion);
 
 				currentRegion.removeSymbolFromLayer();
-				// currentRegion.setInitialized(false);
-				// ljt old getRegionLayer().addRegion(currentRegion);
 				return true;
 			}
 
@@ -7193,7 +7171,6 @@ public class sdt3d extends SdtApplication
 				// "append file menu option"
 				if (pipeCmd || forceAppend)
 				{
-					// System.out.println("LJT Appending input file");
 					fileThread.addLast(fileName, true);
 				}
 				else
@@ -7940,7 +7917,7 @@ public class sdt3d extends SdtApplication
 
 		protected Iterable<? extends WWIcon> iconIterable;
 
-		protected Iterable<SdtSpriteModel> modelIterable;
+		protected Iterable<SdtSprite> modelIterable;
 
 		protected Iterable<? extends ExtentHolder> extentHolderIterable;
 
@@ -7981,13 +7958,13 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private Iterable<? extends SdtSpriteModel> getModels()
+		private Iterable<? extends SdtSprite> getModels()
 		{
 			return this.modelIterable;
 		}
 
 
-		private void setModels(Iterable<SdtSpriteModel> iterable)
+		private void setModels(Iterable<SdtSprite> iterable)
 		{
 			this.modelIterable = iterable;
 		}
@@ -8060,10 +8037,7 @@ public class sdt3d extends SdtApplication
 			if (!this.isEnabled())
 				return;
 
-			// LJT This is a hack - did something change in latest wwj that broke
-			// our view controller? isSceneContained is now throwing an exception
-			// debug this.
-
+			// TODO: was bug introduced in wwj 2.1?
 			if (view != null)
 				if (view.getViewport() != null)
 					if (view.getViewport().getWidth() <= 0d)
@@ -8118,11 +8092,11 @@ public class sdt3d extends SdtApplication
 				}
 			}
 			// Compute screen extents for WWModels which have feedback 
-			// information
-			Iterable<? extends SdtSpriteModel> models = this.getModels();
+			// information.
+			Iterable<? extends SdtSprite> models = this.getModels();
 			if (models != null)
 			{
-				for (SdtSpriteModel o : models)
+				for (SdtSprite o : models)
 				{
 					// We handle models differently as they are not AVList instances
 					// they should be...

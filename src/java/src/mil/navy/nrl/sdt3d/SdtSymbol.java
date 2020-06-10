@@ -323,26 +323,26 @@ public class SdtSymbol implements Renderable
 	double getScale()
 	{
 		if (isIconHugging())
-			return this.scale * 1.5;
+			return scale * 1.5;
 		else
-			return this.scale;
+			return scale;
 	}
 
 	// Overridden by SdtCone
 	void setLAzimuth(double d)
 	{
-		this.lAzimuth = d;
+		lAzimuth = d;
 		// We reference orientation in 0-360
-		orientation = Angle.fromDegrees(this.lAzimuth);
+		orientation = Angle.fromDegrees(lAzimuth);
 		// Convert from 0-360 what the cylinder airspace wants for azimuth -180 180
-		while (this.lAzimuth > 180)
-			this.lAzimuth -= 360;
+		while (lAzimuth > 180)
+			lAzimuth -= 360;
 	}
 
 	
 	protected double getLAzimuth()
 	{
-		return this.lAzimuth;
+		return lAzimuth;
 	}
 
 	
@@ -354,7 +354,7 @@ public class SdtSymbol implements Renderable
 
 	double getRAzimuth()
 	{
-		return this.rAzimuth;
+		return rAzimuth;
 	}
 
 
@@ -528,8 +528,8 @@ public class SdtSymbol implements Renderable
 		if (sdtNode != null)
 			transform = transform.multiply(Matrix.fromRotationZ(heading.multiply(-1)));
 
-		double widthOver2 = (this.getWidth() * this.getScale()) / 2;
-		double heightOver2 = (this.getHeight() * this.getScale()) / 2;
+		double widthOver2 = (getWidth() * getScale()) / 2;
+		double heightOver2 = (getHeight() * getScale()) / 2;
 
 		if (isIconHugging() || isScalable())
 		{
@@ -571,7 +571,7 @@ public class SdtSymbol implements Renderable
 		if (sdtNode.hasSprite())
 			iconHeight = sdtNode.getSprite().getHeight();
 
-		iconCurrentSize = (iconHeight * this.getScale()) / 2 * dc.getView().computePixelSizeAtDistance(d);
+		iconCurrentSize = (iconHeight * getScale()) / 2 * dc.getView().computePixelSizeAtDistance(d);
 		if (iconCurrentSize < 2)
 			iconCurrentSize = 2;
 
@@ -610,7 +610,7 @@ public class SdtSymbol implements Renderable
 			case CYLINDER:
 			case CUBE:
 			case BOX:
-				double symbolHeightOver2 = (this.getHeight() * this.getScale()) / 2;
+				double symbolHeightOver2 = (getHeight() * getScale()) / 2;
 
 				// If icon hugging calculate symbol height at distance
 				if (isIconHugging() || isScalable())
@@ -618,7 +618,7 @@ public class SdtSymbol implements Renderable
 
 				// TODO: make cylinder factor variable?
 				if (isIconHugging() || isScalable())
-					if (this.getSymbolType() == SdtSymbol.Type.CYLINDER)
+					if (getSymbolType() == SdtSymbol.Type.CYLINDER)
 						symbolHeightOver2 = symbolHeightOver2 * 0.10;
 
 				airspaceShape.setAltitudes(terrainElev - symbolHeightOver2,
@@ -690,7 +690,8 @@ public class SdtSymbol implements Renderable
 		}
 		else
 		{
-			currentSize = (getMaxDimension() * this.getScale()); // * 1.5; // * dc.getView().computePixelSizeAtDistance(d);; 
+			currentSize = (getMaxDimension() * getScale()); // * 1.5; 
+			// * dc.getView().computePixelSizeAtDistance(d);; 
 		}
 		return currentSize;
 	} // getRadius
@@ -777,10 +778,10 @@ public class SdtSymbol implements Renderable
 			((SphereAirspace) airspaceShape).setRadius(getRadius(dc));
 			((SphereAirspace) airspaceShape).setLocation(pos);
 
-			if (this.getWidth() > this.getHeight())
-				((SdtEllipseAirspace) airspaceShape).setXYRatio(this.getWidth() / this.getHeight(), 1, 1);
+			if (getWidth() > getHeight())
+				((SdtEllipseAirspace) airspaceShape).setXYRatio(getWidth() / getHeight(), 1, 1);
 			else
-				((SdtEllipseAirspace) airspaceShape).setXYRatio(1, this.getHeight() / this.getWidth(), this.getHeight() / this.getWidth());
+				((SdtEllipseAirspace) airspaceShape).setXYRatio(1, getHeight() / getWidth(), getHeight() / getWidth());
 
 			break;
 		case CYLINDER:

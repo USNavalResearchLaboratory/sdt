@@ -80,7 +80,6 @@ public class SdtCheckboxCellRenderer implements TreeCellRenderer
 	}
 
 
-	// ljt testing
 	Vector<TreePath> getCheckedPaths()
 	{
 		return checkedPaths;
@@ -255,7 +254,7 @@ public class SdtCheckboxCellRenderer implements TreeCellRenderer
 
 	public void repaint()
 	{
-		checkboxTree.repaint(); // ljt need me?
+		checkboxTree.repaint(); 
 	}
 
 
