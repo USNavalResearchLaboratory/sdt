@@ -588,18 +588,6 @@ public class DisplayListRenderer
 					gl.glBegin(GL2.GL_POLYGON);
 					for (int whichVertex = 0; whichVertex < mesh.faces[j].vertIndex.length; whichVertex++)
 					{
-						// LJT
-						//if (mesh.faces[j] instanceof mil.nrl.atest.worldwind.jogl.ATESTFace && mesh instanceof mil.nrl.atest.worldwind.jogl.ATESTMesh)
-						//{
-					//		if (isFullRender && ((mil.nrl.atest.worldwind.jogl.ATESTFace) mesh.faces[j]).colorIndex != null)
-					//		{
-					//			int colorIndex = ((mil.nrl.atest.worldwind.jogl.ATESTFace) mesh.faces[j]).colorIndex[whichVertex];
-					//			Color vertColor = ((mil.nrl.atest.worldwind.jogl.ATESTMesh) mesh).getColor(colorIndex);
-					//			gl.glColor4f(intToFloat(vertColor.getRed()), intToFloat(vertColor.getGreen()), intToFloat(vertColor.getBlue()),
-					//				intToFloat(vertColor.getAlpha()));
-					//		}
-					//	}
-
 						vertexIndex = mesh.faces[j].vertIndex[whichVertex];
 
 						try

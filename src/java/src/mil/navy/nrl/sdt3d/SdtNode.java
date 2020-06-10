@@ -68,10 +68,7 @@ import mil.navy.nrl.sdt3d.SdtSprite.Type;
 
 public class SdtNode implements Renderable
 {
-	// Member variables
 	private String nodeName;
-
-	private String symbolType;
 
 	private Position position = null;
 
@@ -191,37 +188,6 @@ public class SdtNode implements Renderable
 	private String getColorName(Color c)
 	{
 		String colorName = "RED";
-		// Is it a valid hex color?
-		/*
-		 * add support for hex & rgb values?
-		 *
-		 * if (c.startsWith("0x") || c.startsWith("0X"))
-		 * {
-		 * c = c.trim();
-		 * String x[] = c.split("0x");
-		 * if (x.length < 2 ) {System.out.println("sdt3d::validateColor 0x required!"); return color;}
-		 * boolean isHex = x[1].matches("[0-9A-Fa-f]+");
-		 * if (c.length() != 8 || !isHex)
-		 * {
-		 * System.out.println("sdt3d::getColor() invalid hex value");
-		 * return color;
-		 * }
-		 * color = Color.decode(c);
-		 * return color;
-		 * }
-		 * // Is it a valid rgb value?
-		 * String[] rgbVal = c.split(":");
-		 * if (rgbVal.length > 1)
-		 * {
-		 * if (!(rgbVal.length == 3)) {System.out.println("getColor() Invalid color rgb values"); return color;}
-		 * if ((Integer.valueOf(rgbVal[0]) < 0 || Integer.valueOf(rgbVal[0]) > 255
-		 * || Integer.valueOf(rgbVal[1]) < 0 || Integer.valueOf(rgbVal[1]) > 255
-		 * || Integer.valueOf(rgbVal[2]) < 0 || Integer.valueOf(rgbVal[2]) > 255))
-		 * {System.out.println("getColor() Invalid color rgb values"); return color;}
-		 * color = new Color(Integer.valueOf(rgbVal[0]),Integer.valueOf(rgbVal[1]),Integer.valueOf(rgbVal[2]));
-		 * return color;
-		 * }
-		 */
 		if (Color.WHITE.equals(c))
 			colorName = "WHITE";
 		else if (Color.YELLOW.equals(c))
@@ -248,7 +214,7 @@ public class SdtNode implements Renderable
 			colorName = "RED";
 
 		return colorName;
-	} //
+	} 
 
 /*
 	public String print()
@@ -531,18 +497,6 @@ public class SdtNode implements Renderable
 	}
 
 
-	public void setSymbolType(String val)
-	{
-		symbolType = val;
-	}
-
-
-	public String getSymbolType()
-	{
-		return symbolType;
-	}
-
-
 	public boolean isCartesian()
 	{
 		return cartesian;
@@ -768,11 +722,6 @@ public class SdtNode implements Renderable
 					// Reset model and symbol position
 					if (symbol != null)
 					{
-						if (position == null)
-						{
-							System.out.println("MODEL POSITION == NULL ljt!!\n");
-						}
-						
 						symbol.setPosition(position);
 					}
 					sprite.setPosition(sprite.getOffsetPosition(position));
@@ -1126,7 +1075,6 @@ public class SdtNode implements Renderable
 						{
 							theLink.getLabel().setText("(collapsed)");
 
-							// ljt testing for lyaering stuff.. use has position?
 							if (theLink.getSrcNode().getPosition() == null
 								|| theLink.getDstNode().getPosition() == null)
 								continue;
@@ -1307,7 +1255,7 @@ public class SdtNode implements Renderable
 
 	public void deleteSprite()
 	{
-		this.sprite = null; // ljt testing fix
+		this.sprite = null; 
 	}
 
 		
@@ -1633,14 +1581,10 @@ public class SdtNode implements Renderable
 			{
 				case MODEL:
 				case KML:
-					if (this.sprite instanceof SdtSpriteModel)
-						theApp.getNodeModelLayer().removeModel((SdtSpriteModel) this.sprite);
+					theApp.getNodeModelLayer().removeModel(sprite);
 					break;
 				case ICON:
-					// LJT TODO FIX!
-					if (this.sprite instanceof SdtSpriteModel)
-						if (this.sprite.getIcon() != null)
-							theApp.getNodeIconLayer().removeIcon(this.sprite.getIcon());
+					theApp.getNodeIconLayer().removeIcon(sprite.getIcon());
 					break;
 				case NONE:
 					break;
@@ -1677,18 +1621,15 @@ public class SdtNode implements Renderable
 		}
 		if (hasSprite() && hasPosition())
 		{
-			// LJT TEST check for instance?
 			switch (getSprite().getType())
 			{
 				case MODEL:
 				case KML:
-					if (this.sprite instanceof SdtSpriteModel)
-						theApp.getNodeModelLayer().addModel((SdtSpriteModel) this.sprite);
+					theApp.getNodeModelLayer().addModel(sprite);
 					break;
 				case ICON:
 				{
-					if (this.sprite.getIcon() != null)
-						theApp.getNodeIconLayer().addIcon(this.sprite.getIcon());
+					theApp.getNodeIconLayer().addIcon(sprite.getIcon());
 					break;
 				}
 				case NONE:
@@ -1742,7 +1683,6 @@ public class SdtNode implements Renderable
 			theApp.getNodeLayer().addRenderable(this);
 			if (hasTrail())
 			{
-				// LJT TESTING
 				theApp.getTrailLayer().removeRenderable(getPath());
 				theApp.getTrailLayer().addRenderable(getPath());
 			}
@@ -1752,13 +1692,11 @@ public class SdtNode implements Renderable
 				{
 					case MODEL:
 					case KML:
-						if (this.sprite instanceof SdtSpriteModel)
-							theApp.getNodeModelLayer().addModel((SdtSpriteModel) this.sprite);
+						theApp.getNodeModelLayer().addModel(sprite);
 						break;
 					case ICON:
 					{
-						if (this.sprite.getIcon() != null)
-							theApp.getNodeIconLayer().addIcon(this.sprite.getIcon());
+						theApp.getNodeIconLayer().addIcon(getIcon());
 						break;
 					}
 					case NONE:

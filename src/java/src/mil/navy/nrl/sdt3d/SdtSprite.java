@@ -911,4 +911,10 @@ public class SdtSprite implements Renderable
 	{
 		// noop
 	}
+
+
+	public Object getValue(String key) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

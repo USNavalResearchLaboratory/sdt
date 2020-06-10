@@ -118,9 +118,7 @@ public class SdtCone extends SdtSymbol
 	 * @param gl
 	 */
 	private void initLighting(GL2 gl)
-	{
-		// TODO: ljt improve cone rendering
-		
+	{		
 		int attribMask = GL.GL_COLOR_BUFFER_BIT
 			// For color write mask. If blending is enabled: 
 			// for blending src and func, and alpha func.

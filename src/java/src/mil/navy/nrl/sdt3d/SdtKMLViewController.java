@@ -139,7 +139,7 @@ public class SdtKMLViewController extends KMLOrbitViewController
 							duration = ((GXFlyTo) primitive).getDuration();
 						final KMLAbstractView theView = ((GXFlyTo) primitive).getView();
 						goTo(theView);
-						// ljt testing
+						
 						boolean animate = false;
 						if (!animate && duration > 0)
 						{
@@ -225,13 +225,12 @@ public class SdtKMLViewController extends KMLOrbitViewController
 		if (newDuration > 0)
 			timeToMove = newDuration;
 
-		// LJT testing
 		boolean animate = true;
 		BasicOrbitView theView = (BasicOrbitView) wwd.getView();
 
 		if (animate)
 		{
-			theView.setViewOutOfFocus(true); // ljt ??
+			theView.setViewOutOfFocus(true); 
 			Position endCenterPosition = Position.fromDegrees(latitude, longitude, altitude);
 			theView.stopMovementOnCenter();
 
@@ -280,7 +279,7 @@ public class SdtKMLViewController extends KMLOrbitViewController
 		Position cameraPosition = Position.fromDegrees(latitude, longitude, altitude);
 
 		BasicOrbitView theView = (BasicOrbitView) wwd.getView();
-		theView.setViewOutOfFocus(true); // ljt?
+		theView.setViewOutOfFocus(true); 
 		Position endCenterPosition = Position.fromDegrees(latitude, longitude, altitude);
 
 		long timeToMove = AnimationSupport.getScaledTimeMillisecs(
