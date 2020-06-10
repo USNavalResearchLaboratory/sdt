@@ -673,8 +673,6 @@ public class sdt3d extends SdtApplication
 			this.viewController = new ViewController(getWwd());
 			this.viewController.setIcons(getNodeIconLayer().getIcons());
 			this.viewController.setModels(getNodeModelLayer().getModels());
-			// TODO: ljt Get working for kmlControllers
-			//this.viewController.setKmlModels(getNodeKmlModelLayer().getRenderables());
 
 			// We disable view clipping, as view tracking works best when
 			// an icon's screen rectangle is known even when the icon is outside
@@ -1895,8 +1893,6 @@ public class sdt3d extends SdtApplication
 			this.viewController = new ViewController(getWwd());
 			this.viewController.setIcons(getNodeIconLayer().getIcons());
 			this.viewController.setModels(getNodeModelLayer().getModels());
-			// TODO: ljt get controller working with kmlControllers
-			//this.viewController.setKmlModels(getNodeKmlModelLayer().getRenderables());
 
 			// Reset system modes
 			this.setOfflineMode("off");
@@ -1969,8 +1965,6 @@ public class sdt3d extends SdtApplication
 				this.viewController = new ViewController(getWwd());
 				this.viewController.setIcons(getNodeIconLayer().getIcons());
 				this.viewController.setModels(getNodeModelLayer().getModels());
-				// Get controller working for kml models - needs to be kmlcontroller IIRC
-				//this.viewController.setKmlModels(getNodeKmlModelLayer().getRenderables());
 
 				getWwd().setView(new BasicOrbitView());
 
@@ -4132,8 +4126,8 @@ public class sdt3d extends SdtApplication
 							Angle heading = view.getHeading();
 							Double zoom = ((OrbitView) view).getZoom();
 							Position eyePosition = view.getCurrentEyePosition();
-							view.setOrientation(eyePosition, focusPosition);
 							view.setPitch(pitch);
+							view.setOrientation(eyePosition, focusPosition);
 							view.setHeading(heading);
 							view.setFieldOfView(fov);
 							((OrbitView) view).setZoom(zoom);
@@ -4857,16 +4851,15 @@ public class sdt3d extends SdtApplication
 				// TODO warn about no "node" specified
 				return false;
 			}
-			if (!(currentSprite instanceof SdtSpriteModel))
-				return false;
+			
 			String status = val;
 			if (status.equalsIgnoreCase("on"))
 			{
-				((SdtSpriteModel) currentSprite).setUseLighting(true);
+				currentSprite.setUseLighting(true);
 			}
 			else if (status.equalsIgnoreCase("off"))
 			{
-				((SdtSpriteModel) currentSprite).setUseLighting(false);
+				currentSprite.setUseLighting(false);
 			}
 			else
 			{
@@ -4946,9 +4939,14 @@ public class sdt3d extends SdtApplication
 			if (theNode == null)
 				return false;
 			if ((attrs.length + index) > 1 && attrs[1 + index].equalsIgnoreCase("off"))
+			{
 				theNode.setFeedbackEnabled(false);
+			}
 			else
+			{
 				theNode.setFeedbackEnabled(true);
+				viewController.setEnabled(true);
+			}
 			return true;
 		} // setFollow
 
@@ -7944,8 +7942,6 @@ public class sdt3d extends SdtApplication
 
 		protected Iterable<SdtSpriteModel> modelIterable;
 
-		protected Iterable<? extends Renderable> kmlModelIterable;
-
 		protected Iterable<? extends ExtentHolder> extentHolderIterable;
 
 
@@ -7994,12 +7990,6 @@ public class sdt3d extends SdtApplication
 		private void setModels(Iterable<SdtSpriteModel> iterable)
 		{
 			this.modelIterable = iterable;
-		}
-
-
-		private Iterable<? extends Renderable> getKmlModels()
-		{
-			return this.kmlModelIterable;
 		}
 
 
@@ -8100,8 +8090,6 @@ public class sdt3d extends SdtApplication
 			ArrayList<ExtentHolder> extentHolders = new ArrayList<ExtentHolder>();
 			ArrayList<ExtentVisibilitySupport.ScreenExtent> screenExtents = new ArrayList<ExtentVisibilitySupport.ScreenExtent>();
 
-			// TODO: create common handler for all objects to track
-
 			Iterable<? extends WWIcon> icons = this.getIcons();
 			if (icons != null)
 			{
@@ -8129,7 +8117,9 @@ public class sdt3d extends SdtApplication
 					}
 				}
 			}
-			// Compute screen extents for WWModels which have feedback information from their IconRenderer.
+			
+			// Compute screen extents for WWModels which have feedback 
+			// information.
 			Iterable<? extends SdtSpriteModel> models = this.getModels();
 			if (models != null)
 			{
@@ -8158,35 +8148,7 @@ public class sdt3d extends SdtApplication
 
 				}
 			}
-			// TODO: LJT get working for kml models?  sprites?
-			Iterable<? extends Renderable> kmlModels = this.getKmlModels();
-			if (kmlModels != null)
-			{
-				for (Renderable o : kmlModels)
-				{
-					if (o instanceof ExtentHolder)
-					{
-						extentHolders.add((ExtentHolder) o);
-
-					}
-					else if (o instanceof AVList)
-					{
-						AVList avl = (AVList) o;
-						Object b = avl.getValue(AVKey.FEEDBACK_ENABLED);
-						if (b == null || !Boolean.TRUE.equals(b))
-							continue;
-
-						if (avl.getValue(AVKey.FEEDBACK_REFERENCE_POINT) != null)
-						{
-							screenExtents.add(new ExtentVisibilitySupport.ScreenExtent(
-								(Vec4) avl.getValue(AVKey.FEEDBACK_REFERENCE_POINT),
-								(Rectangle) avl.getValue(AVKey.FEEDBACK_SCREEN_BOUNDS)));
-						}
-					}
-
-				}
-
-			}
+			
 			if (!extentHolders.isEmpty())
 			{
 				Globe globe = wwd.getModel().getGlobe();

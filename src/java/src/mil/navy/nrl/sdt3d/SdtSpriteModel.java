@@ -179,6 +179,7 @@ public class SdtSpriteModel extends SdtModel
 	}
 
 
+	@Override
 	public void setValue(String key, Object value)
 	{
 		avlist.setValue(key, value);
@@ -337,7 +338,7 @@ public class SdtSpriteModel extends SdtModel
 		return (isRealSize || viewAtRealSize);
 	}
 
-
+	@Override
 	public void setUseLighting(boolean useLighting)
 	{
 		this.useLighting = useLighting;

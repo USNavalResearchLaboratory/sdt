@@ -901,4 +901,14 @@ public class SdtSprite implements Renderable
 	{	
 		return 0.0;
 	}
+	
+	public void setUseLighting(boolean useLighting)
+	{
+		// nooop
+	}
+	
+	public void setValue(String key, Object value)
+	{
+		// noop
+	}
 }
