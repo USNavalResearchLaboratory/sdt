@@ -500,7 +500,7 @@ public class sdt3d extends SdtApplication
 
 		private boolean enableSdtViewControls = true;
 
-		protected ViewController viewController;
+		protected SdtViewController viewController;
 
 		private RenderableLayer nodeLayer = null;
 
@@ -664,16 +664,16 @@ public class sdt3d extends SdtApplication
 			RenderableLayer imageLayer = new RenderableLayer();
 			imageLayer.setName("Elevation");
 			imageLayer.setPickEnabled(false);
-			this.elevationBuilder = new SdtModelBuilder(compElev, imageLayer);
+			elevationBuilder = new SdtModelBuilder(compElev, imageLayer);
 			insertBeforeCompass(getWwd(), imageLayer);
 
 			// We extended KMLViewController to provide gx:tour support
 			sdtKmlViewController = new SdtKMLViewController(this.getWwd());
 
 			// Set up a view controller to keep the nodes in view.
-			this.viewController = new ViewController(getWwd());
-			this.viewController.setIcons(getNodeIconLayer().getIcons());
-			this.viewController.setModels(getNodeModelLayer().getModels());
+			viewController = new SdtViewController(getWwd());
+			viewController.setIcons(getNodeIconLayer().getIcons());
+			viewController.setModels(getNodeModelLayer().getModels());
 
 			// We disable view clipping, as view tracking works best when
 			// an icon's screen rectangle is known even when the icon is outside
@@ -1882,7 +1882,7 @@ public class sdt3d extends SdtApplication
 			// turn off the focus on any nodes
 			setFocus("off");
 			// Set up a view controller to keep the nodes in view.
-			this.viewController = new ViewController(getWwd());
+			this.viewController = new SdtViewController(getWwd());
 			this.viewController.setIcons(getNodeIconLayer().getIcons());
 			this.viewController.setModels(getNodeModelLayer().getModels());
 
@@ -1954,7 +1954,7 @@ public class sdt3d extends SdtApplication
 				setFocus("off");
 
 				// Set up a view controller to keep the nodes in view.
-				this.viewController = new ViewController(getWwd());
+				this.viewController = new SdtViewController(getWwd());
 				this.viewController.setIcons(getNodeIconLayer().getIcons());
 				this.viewController.setModels(getNodeModelLayer().getModels());
 
@@ -7901,345 +7901,6 @@ public class sdt3d extends SdtApplication
 
 	} // end class AppFrame
 
-	// **************************************************************//
-	// ******************** View Controller ***********************//
-	// **************************************************************//
-
-	public static class ViewController
-	{
-		protected static final double SMOOTHING_FACTOR = 0.98;
-
-		protected boolean enabled = true;
-
-		protected WorldWindow wwd;
-
-		protected ViewAnimator animator;
-
-		protected Iterable<? extends WWIcon> iconIterable;
-
-		protected Iterable<SdtSprite> modelIterable;
-
-		protected Iterable<? extends ExtentHolder> extentHolderIterable;
-
-
-		public ViewController(WorldWindow wwd)
-		{
-			this.wwd = wwd;
-		}
-
-
-		public boolean isEnabled()
-		{
-			return this.enabled;
-		}
-
-
-		public void setEnabled(boolean enabled)
-		{
-			this.enabled = enabled;
-
-			if (this.animator != null)
-			{
-				this.animator.stop();
-				this.animator = null;
-			}
-		}
-
-
-		private Iterable<? extends WWIcon> getIcons()
-		{
-			return this.iconIterable;
-		}
-
-
-		private void setIcons(Iterable<? extends WWIcon> icons)
-		{
-			this.iconIterable = icons;
-		}
-
-
-		private Iterable<? extends SdtSprite> getModels()
-		{
-			return this.modelIterable;
-		}
-
-
-		private void setModels(Iterable<SdtSprite> iterable)
-		{
-			this.modelIterable = iterable;
-		}
-
-
-		public Iterable<? extends ExtentHolder> getExtentHolders()
-		{
-			return this.extentHolderIterable;
-		}
-
-
-		public void setExtentHolders(Iterable<? extends ExtentHolder> extentHolders)
-		{
-			this.extentHolderIterable = extentHolders;
-		}
-
-
-		public boolean isSceneContained(View view)
-		{
-			ExtentVisibilitySupport vs = new ExtentVisibilitySupport();
-			this.addExtents(vs);
-
-			return vs.areExtentsContained(view);
-		}
-
-
-		public Vec4[] computeViewLookAtForScene(View view)
-		{
-			Globe globe = wwd.getModel().getGlobe();
-			double ve = wwd.getSceneController().getVerticalExaggeration();
-
-			gov.nasa.worldwindx.examples.util.ExtentVisibilitySupport vs = new gov.nasa.worldwindx.examples.util.ExtentVisibilitySupport();
-			this.addExtents(vs);
-
-			return vs.computeViewLookAtContainingExtents(globe, ve, view);
-		}
-
-
-		public Position computePositionFromPoint(Vec4 point)
-		{
-			return wwd.getModel().getGlobe().computePositionFromPoint(point);
-		}
-
-
-		public void gotoScene()
-		{
-			Vec4[] lookAtPoints = this.computeViewLookAtForScene(wwd.getView());
-			if (lookAtPoints == null || lookAtPoints.length != 3)
-				return;
-
-			Position centerPos = wwd.getModel().getGlobe().computePositionFromPoint(lookAtPoints[1]);
-			double zoom = lookAtPoints[0].distanceTo3(lookAtPoints[1]);
-
-			wwd.getView().stopAnimations();
-			wwd.getView().goTo(centerPos, zoom);
-
-			// long timeInMilliseconds = 3000L; // Time in milliseconds you want the animation to take.
-			// View view = ...; // How you get the view depends on the context.
-			// OrbitViewInputHandler ovih = (OrbitViewInputHandler) this.wwd.getView().getViewInputHandler();
-			// ovih.addPanToAnimator(centerPos, this.wwd.getView().getHeading(), this.wwd.getView().getPitch(), 0.0,
-			// timeInMilliseconds, true);
-
-		}
-
-
-		public void sceneChanged()
-		{
-			OrbitView view = (OrbitView) wwd.getView();
-
-			if (!this.isEnabled())
-				return;
-
-			// TODO: was bug introduced in wwj 2.1?
-			if (view != null)
-				if (view.getViewport() != null)
-					if (view.getViewport().getWidth() <= 0d)
-						return;
-
-			if (this.isSceneContained(view))
-				return;
-
-			if (this.animator == null || !this.animator.hasNext())
-			{
-				this.animator = new ViewAnimator(SMOOTHING_FACTOR, view, this);
-				this.animator.start();
-				view.stopAnimations();
-				view.addAnimator(this.animator);
-				view.firePropertyChange(AVKey.VIEW, null, view);
-			}
-		}
-
-
-		protected void addExtents(ExtentVisibilitySupport vs)
-		{
-			// Compute screen extents for objects to track which
-			// have feedback information from their Renderer.
-			ArrayList<ExtentHolder> extentHolders = new ArrayList<ExtentHolder>();
-			ArrayList<ExtentVisibilitySupport.ScreenExtent> screenExtents = new ArrayList<ExtentVisibilitySupport.ScreenExtent>();
-
-			Iterable<? extends WWIcon> icons = this.getIcons();
-			if (icons != null)
-			{
-
-				for (WWIcon o : icons)
-				{
-					if (o instanceof ExtentHolder)
-					{
-						extentHolders.add((ExtentHolder) o);
-
-					}
-					else if (o instanceof AVList)
-					{
-						AVList avl = o;
-						Object b = avl.getValue(AVKey.FEEDBACK_ENABLED);
-						if (b == null || !Boolean.TRUE.equals(b))
-							continue;
-
-						if (avl.getValue(AVKey.FEEDBACK_REFERENCE_POINT) != null)
-						{
-							screenExtents.add(new ExtentVisibilitySupport.ScreenExtent(
-								(Vec4) avl.getValue(AVKey.FEEDBACK_REFERENCE_POINT),
-								(Rectangle) avl.getValue(AVKey.FEEDBACK_SCREEN_BOUNDS)));
-						}
-					}
-				}
-			}
-			
-			// Compute screen extents for WWModels which have feedback 
-			// information.
-			Iterable<? extends SdtSprite> models = this.getModels();
-			if (models != null)
-			{
-				for (SdtSprite o : models)
-				{
-					// We handle models differently as they are not AVList instances
-					// they should be...
-					if (o == null || o.getValue(AVKey.FEEDBACK_ENABLED) == null ||
-						!o.getValue(AVKey.FEEDBACK_ENABLED).equals(Boolean.TRUE))
-						continue;
-
-					if (o instanceof ExtentHolder)
-					{
-						extentHolders.add((ExtentHolder) o);
-
-					}
-					else
-					{
-						if (o.getValue(AVKey.FEEDBACK_REFERENCE_POINT) != null)
-						{
-							screenExtents.add(new ExtentVisibilitySupport.ScreenExtent(
-								(Vec4) o.getValue(AVKey.FEEDBACK_REFERENCE_POINT),
-								(Rectangle) o.getValue(AVKey.FEEDBACK_SCREEN_BOUNDS)));
-						}
-					}
-
-				}
-			}
-			
-			if (!extentHolders.isEmpty())
-			{
-				Globe globe = wwd.getModel().getGlobe();
-				double ve = wwd.getSceneController().getVerticalExaggeration();
-				vs.setExtents(ExtentVisibilitySupport.extentsFromExtentHolders(extentHolders, globe, ve));
-			}
-			if (!screenExtents.isEmpty())
-			{
-				vs.setScreenExtents(screenExtents);
-			}
-
-		}
-	} // end ViewController
-
-	// **************************************************************//
-	// ******************** View Animator *************************//
-	// **************************************************************//
-
-	public static class ViewAnimator extends BasicAnimator
-	{
-		protected static final double LOCATION_EPSILON = 1.0e-9;
-
-		protected static final double ALTITUDE_EPSILON = 0.1;
-
-		protected OrbitView view;
-
-		protected ViewController viewController;
-
-		protected boolean haveTargets;
-
-		protected Position centerPosition;
-
-		protected double zoom;
-
-
-		public ViewAnimator(final double smoothing, OrbitView view, ViewController viewController)
-		{
-			super(new Interpolator()
-				{
-					@Override
-					public double nextInterpolant()
-					{
-						return 1d - smoothing;
-					}
-				});
-
-			this.view = view;
-			this.viewController = viewController;
-		}
-
-
-		@Override
-		public void stop()
-		{
-			super.stop();
-			this.haveTargets = false;
-		}
-
-
-		@Override
-		protected void setImpl(double interpolant)
-		{
-			this.updateTargetValues();
-
-			if (!this.haveTargets)
-			{
-				this.stop();
-				return;
-			}
-
-			if (this.valuesMeetCriteria(this.centerPosition, this.zoom))
-			{
-				this.view.setCenterPosition(this.centerPosition);
-				this.view.setZoom(this.zoom);
-				this.stop();
-			}
-			else
-			{
-				Position newCenterPos = Position.interpolateGreatCircle(interpolant, this.view.getCenterPosition(),
-					this.centerPosition);
-				double newZoom = WWMath.mix(interpolant, this.view.getZoom(), this.zoom);
-				this.view.setCenterPosition(newCenterPos);
-				this.view.setZoom(newZoom);
-			}
-
-			this.view.firePropertyChange(AVKey.VIEW, null, this);
-		}
-
-
-		protected void updateTargetValues()
-		{
-			if (this.viewController.isSceneContained(this.view))
-				return;
-
-			Vec4[] lookAtPoints = this.viewController.computeViewLookAtForScene(this.view);
-			if (lookAtPoints == null || lookAtPoints.length != 3)
-				return;
-
-			this.centerPosition = this.viewController.computePositionFromPoint(lookAtPoints[1]);
-			this.zoom = lookAtPoints[0].distanceTo3(lookAtPoints[1]);
-			if (this.zoom < view.getZoom())
-				this.zoom = view.getZoom();
-			this.haveTargets = true;
-		}
-
-
-		protected boolean valuesMeetCriteria(Position centerPos, double zoom)
-		{
-			Angle cd = LatLon.greatCircleDistance(this.view.getCenterPosition(), centerPos);
-			double ed = Math.abs(this.view.getCenterPosition().getElevation() - centerPos.getElevation());
-			double zd = Math.abs(this.view.getZoom() - zoom);
-
-			return cd.degrees < LOCATION_EPSILON
-				&& ed < ALTITUDE_EPSILON
-				&& zd < ALTITUDE_EPSILON;
-		}
-	} // end ViewAnimator
 
 
 	public static void main(String[] args)
