@@ -45,7 +45,6 @@ import java.net.MulticastSocket;
 import java.net.UnknownHostException;
 
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame;
-import mil.navy.nrl.sdt3d.sdt3d.AppFrame.CmdParser;
 
 public class UdpSocketThread extends SocketThread
 {
@@ -55,10 +54,10 @@ public class UdpSocketThread extends SocketThread
 	String multicastAddr = "";
 
 
-	public UdpSocketThread(AppFrame theSdtApp, int thePort,
+	public UdpSocketThread(AppFrame sdt3dApp, int thePort,
 			String theMulticastAddr)
 	{
-		super(theSdtApp, thePort);
+		super(sdt3dApp, thePort);
 		// TODO Auto-generated constructor stub
 		multicastAddr = theMulticastAddr;
 	} // UdpSocketThread::UdpSocketThread()
@@ -68,7 +67,7 @@ public class UdpSocketThread extends SocketThread
 	public void run()
 	{
 		byte buffer[] = new byte[65535];
-		final CmdParser parser = sdt3dApp.new CmdParser();
+		final SdtCmdParser parser = new SdtCmdParser(sdt3dApp);
 		String inputLine = null;
 		DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 		StringBuilder sb = new StringBuilder();

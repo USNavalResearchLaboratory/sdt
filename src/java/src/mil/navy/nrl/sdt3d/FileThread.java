@@ -43,7 +43,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedList;
 
-import mil.navy.nrl.sdt3d.sdt3d.AppFrame.CmdParser;
 
 // We're extending socketThread so we can share the parseString method
 public class FileThread extends SocketThread
@@ -58,7 +57,7 @@ public class FileThread extends SocketThread
 
 	BufferedReader inputFile = null;
 
-	CmdParser parser = null;
+	SdtCmdParser parser = null;
 
 	LinkedList<FileReaders> fileStack = new LinkedList<FileReaders>();
 
@@ -109,11 +108,11 @@ public class FileThread extends SocketThread
 	}
 
 
-	public FileThread(sdt3d.AppFrame theSdtApp, String fileName, boolean pipeCmd)
+	public FileThread(sdt3d.AppFrame sddt3dApp, String fileName, boolean pipeCmd)
 	{
-		super(theSdtApp, 0);
+		super(sddt3dApp, 0);
 
-		sdt3dApp = theSdtApp;
+		sdt3dApp = sddt3dApp;
 		try
 		{
 			fIn = new FileReader(fileName);
@@ -262,7 +261,7 @@ public class FileThread extends SocketThread
 	@Override
 	public void run()
 	{
-		final CmdParser parser = sdt3dApp.new CmdParser();
+		final SdtCmdParser parser = new SdtCmdParser(sdt3dApp);
 
 		StringBuilder sb = new StringBuilder();
 

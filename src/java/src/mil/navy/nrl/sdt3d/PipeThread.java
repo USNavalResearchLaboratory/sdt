@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.net.SocketException;
 
 import mil.navy.nrl.protolib.ProtoPipe;
-import mil.navy.nrl.sdt3d.sdt3d.AppFrame.CmdParser;
 
 /**
  * This class simply provides a thread that listens on a ProtoPipe(MESSAGE)
@@ -60,7 +59,7 @@ public class PipeThread extends SocketThread
 
 	private sdt3d.AppFrame sdt3dApp;
 
-	CmdParser parser = null;
+	SdtCmdParser parser = null;
 
 
 	public PipeThread(sdt3d.AppFrame theSdtApp)
@@ -87,9 +86,9 @@ public class PipeThread extends SocketThread
 	@Override
 	public void run()
 	{
-		final CmdParser parser = sdt3dApp.new CmdParser();
+		final SdtCmdParser parser = new SdtCmdParser(sdt3dApp);
 		StringBuilder sb = new StringBuilder();
-		parser.SetPipeCmd(true);
+		parser.setPipeCmd(true);
 		try
 		{
 			cmdPipe = new ProtoPipe();

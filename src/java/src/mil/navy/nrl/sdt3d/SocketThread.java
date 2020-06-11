@@ -42,8 +42,6 @@ import java.awt.EventQueue;
 import java.io.IOException;
 import java.io.StringReader;
 
-import mil.navy.nrl.sdt3d.sdt3d.AppFrame.CmdParser;
-
 /**
  * This class provides a UDP socket that listens for SDT commands
  * and passes them to the "sdt3dApp"
@@ -87,7 +85,7 @@ public class SocketThread extends Thread
 	/*
 	 * Called by input threads to parse input and extract the wait commands
 	 */
-	protected void parseString(StringBuilder sb, final CmdParser parser)
+	protected void parseString(StringBuilder sb, final SdtCmdParser parser)
 	{
 		long currentTime = 0;
 		long elapsedTime = 0;
