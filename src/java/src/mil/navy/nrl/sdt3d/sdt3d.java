@@ -217,15 +217,13 @@ public class sdt3d extends SdtApplication
 			implements
 			ActionListener
 	{
-		/**
-		 * 
-		 */
-		// TODO: ljt properly implement
-		private FileWriter fileWriter = null;
+		FileWriter fileWriter = null;
 
-		private PrintWriter logDebugFile = null;
+		PrintWriter logDebugFile = null;
+		
+		public boolean logDebugOutput = false;
 
-		private String version = "2.2";
+		private String version = "2.3";
 
 		private String wwjVersion = "2.1d";
 
@@ -278,99 +276,6 @@ public class sdt3d extends SdtApplication
 				ALL, NODES, LABELS, SPRITES, SYMBOLS, LINKS, LINKLABELS, TRAILS, REGIONS, TILES, ELEVATIONOVERLAY, GEOTIFF, KML, INVALID
 		};
 
-		enum CmdType {
-				CMD_INVALID, CMD_ARG, CMD_NOARG
-		};
-
-		String CMD_LIST[] = {
-			"+bgbounds",
-			"+collapseLinks",
-			"+flyto",
-			"+zoom",
-			"+heading",
-			"+pitch",
-			"+instance",
-			"+sprite",
-			"+image",
-			"+size",
-			"+length",
-			"+scale",
-			"+node",
-			"+type",
-			"+position",
-			"+pos",
-			"+focus",
-			"+follow",
-			"+center",
-			"+path",
-			"+label",
-			"+symbol",
-			"+shape",
-			"+region",
-			"+delete", // remove node and any links to it
-			"+clear", // remove all nodes and links
-			"+link",
-			"+light",
-			"+linklabel",
-			"+loadCache",
-			"+logDebugOutput",
-			"+logfile",
-			"+unlink",
-			"+line",
-			"+wait",
-			"+input",
-			"+tile",
-			"+tileimage",
-			"+trail",
-			"+sector",
-			"+status",
-			"+defaultAltitudeType",
-			"+listen",
-			"-off",
-			"+popup",
-			"-popdown",
-			"+view",
-			"+viewSource",
-			"+viewXml",
-			"+layer",
-			"+nodeLayer",
-			"+linkLayer",
-			"+symbolLayer",
-			"+labelLayer",
-			"+regionLayer",
-			"+tileLayer",
-			"+title",
-			"+elevationOverlay",
-			"+file",
-			"+geoTiff",
-			"+geoTiffFile",
-			"+backgroundColor",
-			"+flatEarth",
-			"+elevationData",
-			"+kml",
-			"+kmlFile",
-			"+stereo",
-			"+offlineMode",
-			"+origin",
-			"-reset",
-			"-resetPerspective",
-			"+lookat",
-			"+userConfigFile",
-			"+symbolOffset",
-			"+orientation",
-			"+offset",
-			"+enableSdtViewControls",
-			"+showLayerPanel",
-			"+showSdtPanel",
-			"+showStatusPanel",
-			"+showGoToPanel",
-			"+showWmsPanel",
-			"+showSdtControlPanel",
-			"+multiFrame",
-			"+modelJarFile",
-			null
-		};
-
 		private String pipe_name = "sdt";
 
 		private boolean pipeCmd = false;
@@ -420,15 +325,15 @@ public class sdt3d extends SdtApplication
 		private JMenu fileMenu, configFileMenu, viewMenu, layerMenu, bookmarkMenu, globeMenu,
 				flatEarthMenu, kmlMenu;
 
-		private JMenuItem openItem, appendItem, loadConfigItem, clearConfigItem, hardResetItem, resetItem, resetPerspectiveItem,
-				screenItem, listenUdpItem, listenTcpItem, exitItem, sdtLayersItem, backgroundColorItem,
-				showLayersItem, removeUDLayersItem, bookmarkItem,
-				loadBookmarkItem, clearSpriteTableItem,
+		private JMenuItem openItem, appendItem, loadConfigItem, clearConfigItem, hardResetItem, 
+				resetItem, resetPerspectiveItem, screenItem, listenUdpItem, listenTcpItem, 
+				exitItem, sdtLayersItem, backgroundColorItem, showLayersItem, removeUDLayersItem, 
+				bookmarkItem, loadBookmarkItem, clearSpriteTableItem,
 				loadDefaultBookmarksItem, loadKMLFileItem, loadKMLUrlItem, loadCacheItem;
 
-		private JCheckBoxMenuItem showStatusItem, showGoToItem, elevationItem, globeItem, mercatorItem, sinusoidalItem,
-				showWmsItem,
-				modSinusoidalItem, latLonItem, stereoItem, collapseLinksItem, symbolOffsetItem, offlineModeItem,
+		private JCheckBoxMenuItem showStatusItem, showGoToItem, elevationItem, globeItem, 
+				mercatorItem, sinusoidalItem, showWmsItem, modSinusoidalItem, latLonItem, 
+				stereoItem, collapseLinksItem, symbolOffsetItem, offlineModeItem,
 				showSdtViewControlsItem, debugItem, showSdtPanelItem, multiFrameItem;
 
 		public static boolean collapseLinks = false;
@@ -437,13 +342,12 @@ public class sdt3d extends SdtApplication
 
 		public boolean multiFrame = false;
 
-		public boolean logDebugOutput = false;
-
 		// used to calculate wait interval when writing log file
 		long lastTime, currentTime = 0;
 
-		private String configDirName = System.getProperty("user.home") + System.getProperty("file.separator") +
-			".config" + System.getProperty("file.separator") + "sdt3d";
+		private static String configDirName = System.getProperty("user.home") + 
+				System.getProperty("file.separator") +
+				".config" + System.getProperty("file.separator") + "sdt3d";
 
 		private String sdtPropertiesFile = "sdt.properties";
 
@@ -584,7 +488,7 @@ public class sdt3d extends SdtApplication
 			super(null, null, true, false, false);
 			initialize();
 
-			CmdParser parser = new CmdParser();
+			SdtCmdParser parser = new SdtCmdParser(this);
 
 			for (int i = 0; i < args.length; i++)
 			{
@@ -735,6 +639,7 @@ public class sdt3d extends SdtApplication
 							setEnableSdtViewControls("off");
 					}
 				});
+			
 			this.sdtViewControlsPanel.add(sdtViewControlsCheckbox);
 			JPanel dummySVCPanel = new JPanel(new BorderLayout());
 			dummySVCPanel.add(this.sdtViewControlsPanel, BorderLayout.EAST);
@@ -812,8 +717,9 @@ public class sdt3d extends SdtApplication
 					}
 				};
 
-			// Give the KML app controller a reference to the BalloonController so that the app controller can open
-			// KML feature balloons when feature's are selected in the on-screen layer tree.
+			// Give the KML app controller a reference to the BalloonController 
+		    // so that the app controller can open KML feature balloons 
+			// when feature's are selected in the on-screen layer tree.
 			this.sdtKmlAppController.setBalloonController(balloonController);
 
 			WorldWind.setOfflineMode(false);
@@ -970,7 +876,8 @@ public class sdt3d extends SdtApplication
 			// Create a placemark on the globe that the user can click to open the balloon.
 			PointPlacemark placemark = new PointPlacemark(balloonPosition);
 			placemark.setLabelText("Click to open balloon");
-			// Associate the balloon with the placemark by setting AVKey.BALLOON. The BalloonController looks for this
+			// Associate the balloon with the placemark by setting AVKey.BALLOON. 
+			// The BalloonController looks for this
 			// value when an object is clicked.
 			placemark.setValue(AVKey.BALLOON, balloon);
 
@@ -1104,6 +1011,58 @@ public class sdt3d extends SdtApplication
 		} // end loadUserConfigFile()
 
 
+		boolean setSymbolOffset(String val)
+		{
+			if (val.equalsIgnoreCase("on"))
+				symbolOffset = true;
+			else
+				symbolOffset = false;
+
+			symbolOffsetItem.setSelected(symbolOffset);
+			getWwd().redraw();
+			if (sharedFrame != null)
+				sharedFrame.wwjPanel.wwd.redraw();
+
+			return true;
+
+		}
+		
+		
+		boolean setMultiFrame(String val)
+		{
+			if (val.equalsIgnoreCase("on"))
+				multiFrame = true;
+			else
+				multiFrame = false;
+			multiFrameItem.setSelected(multiFrame);
+			;
+			if (sharedFrame == null)
+			{
+				// Create multiframe if it doesn't exist and toggle visibility
+				if (this.multiFrame)
+				{
+					if (this.sharedFrame == null)
+					{
+						// We need to remove the view control layer and select listener
+						// before sharing the globe - we readd it later.
+						this.removeViewControlLayer(this);
+						Model modelB = new BasicModel(new Earth(), new LayerList(this.wwjPanel.getWwd().getModel().getLayers()));
+						sharedFrame = new SdtApplication.AppFrame((WorldWindowGLCanvas) this.getWwd(), modelB, true, false, false);
+						WWUtil.alignComponent(null, sharedFrame, AVKey.LEFT_OF_CENTER);
+						this.addViewControlLayer(sharedFrame);
+						this.addViewControlLayer(this);
+
+						// TODO: TBD frameB.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+					}
+					sharedFrame.setVisible(this.multiFrame);
+				}
+
+			}
+			return true;
+
+		}
+		
 		/**
 		 * Adds the specified <code>kmlRoot</code> to this app frame's <code>WorldWindow</code> as a new
 		 * <code>Layer</code>, and adds a new <code>KMLLayerTreeNode</code> for the <code>kmlRoot</code> to this app
@@ -1695,133 +1654,6 @@ public class sdt3d extends SdtApplication
 			return color;
 		} // end sdt3d.getColor()
 
-		/**
-		 * Little helper class to parse commands.
-		 * 
-		 * @author ljt
-		 *
-		 */
-		public class CmdParser
-		{
-
-			String pending_cmd = null;
-
-			boolean seeking_cmd = true;
-
-			String current_cmd = null;
-
-			private SdtSprite currentSprite = null;
-
-			private SdtNode currentNode = null;
-
-			private SdtRegion currentRegion = null;
-
-			private SdtSymbol currentSymbol = null;
-
-			private List<SdtLink> currentLinkSet = new ArrayList<SdtLink>();
-
-			private SdtTile currentTile = null;
-
-			private String currentView = null;
-
-			private String currentGeoTiff = null;
-
-			private SdtSpriteKml currentKml = null;
-
-			boolean pipeCmd = false;
-
-			StringWriter buffer = new StringWriter();
-
-			PrintWriter out = new PrintWriter(buffer);
-
-
-			void SetPipeCmd(boolean theBool)
-			{
-				pipeCmd = true;
-			}
-
-
-			public CmdType GetCmdType(String cmd)
-			{
-
-				if (0 == cmd.length())
-					return CmdType.CMD_INVALID;
-				boolean matched = false;
-				CmdType type = CmdType.CMD_INVALID;
-				String[] nextCmd = CMD_LIST;
-				int i = 0;
-				while (i < CMD_LIST.length - 1)
-				{
-					String validCmd = nextCmd[i].substring(1, nextCmd[i].length());
-					if (validCmd.equalsIgnoreCase(cmd))
-					{
-						if (matched)
-						{
-							// ambiguous command (cmd should match only once)
-							return CmdType.CMD_INVALID;
-						}
-						else
-						{
-							matched = true;
-							if (nextCmd[i].startsWith("+"))
-								type = CmdType.CMD_ARG;
-							else
-								type = CmdType.CMD_NOARG;
-						}
-					}
-					i++;
-				} // end while
-				return type;
-			} // end GetCmdType
-
-
-			/**
-			 * Called by the thread sychronized sdt3d::OnInput loop, this
-			 * method is responsible for waiting for command arguments
-			 * if necessary and invoking sdt3d.processCommand()
-			 * 
-			 * @param str
-			 * @return
-			 */
-			public boolean OnCommand(String str)
-			{
-				// System.out.println("OnCommand(" + str + ")");
-
-				str = str.trim();
-
-				if (null == pending_cmd)
-					pending_cmd = str;
-
-				if (seeking_cmd)
-				{
-					switch (GetCmdType(pending_cmd))
-					{
-						case CMD_ARG:
-							current_cmd = pending_cmd;
-							seeking_cmd = false;
-							break;
-						case CMD_NOARG:
-							processCmd(pending_cmd, null); // ljt error checking?
-							pending_cmd = null;
-							seeking_cmd = true;
-							break;
-						default:
-							seeking_cmd = true;
-							pending_cmd = null;
-							return false;
-					} // end switch
-				}
-				else // Not seeking command
-				{
-					processCmd(current_cmd, str);
-					seeking_cmd = true;
-					pending_cmd = null;
-				} // done seeking cmd
-
-				return true;
-			} // end OnCommand
-		}; // end class CmdParser
-
 
 		private StatusPanel getStatusPanel()
 		{
@@ -1869,12 +1701,12 @@ public class sdt3d extends SdtApplication
 			}
 		} // end highlight
 
-
+		
 		/*
 		 * Reset sdt perspective to default
 		 * 
 		 */
-		private void resetPerspective()
+		void resetPerspective()
 		{
 
 			// unfollow any nodes
@@ -1921,7 +1753,7 @@ public class sdt3d extends SdtApplication
 		 * 
 		 * @param hardReset
 		 */
-		private void resetSystemState(boolean hardReset)
+		void resetSystemState(boolean hardReset)
 		{
 
 			if (hardReset)
@@ -2843,7 +2675,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setPipeName(String val)
+		boolean setPipeName(String val)
 		{
 			if (0 == val.length())
 				return false; // no <spriteName> TODO: error handling
@@ -2861,7 +2693,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setFlyTo(String val)
+		boolean setFlyTo(String val)
 		{
 			if (!this.enableSdtViewControls)
 				return false;
@@ -2901,7 +2733,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setZoom(String val)
+		boolean setZoom(String val)
 		{
 			if (!this.enableSdtViewControls)
 				return false;
@@ -2915,7 +2747,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setHeading(String val)
+		boolean setHeading(String val)
 		{
 			if (!this.enableSdtViewControls)
 				return false;
@@ -2929,7 +2761,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setPitch(String val)
+		boolean setPitch(String val)
 		{
 			if (!this.enableSdtViewControls)
 				return false;
@@ -2943,7 +2775,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setBackgroundBounds(String val)
+		boolean setBackgroundBounds(String val)
 		{
 			if (0 == val.length())
 				return false;
@@ -2999,7 +2831,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setScale(String scale)
+		boolean setScale(String scale)
 		{
 			if (0 == scale.length() || currentSprite == null)
 				return false; // TODO: error handling
@@ -3010,7 +2842,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setSprite(String spriteName)
+		boolean setSprite(String spriteName)
 		{
 			if (0 == spriteName.length())
 				return false; // no <spriteName> TODO: error handling
@@ -3143,7 +2975,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean loadTile(String val)
+		boolean loadTile(String val)
 		{
 			if ((0 == val.length()) || currentTile == null)
 				return false;
@@ -3182,7 +3014,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setTile(String val)
+		boolean setTile(String val)
 		{
 			if (0 == val.length())
 				return false;
@@ -3198,7 +3030,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setTileImage(String val)
+		boolean setTileImage(String val)
 		{
 			if (0 == val.length() || null == currentTile)
 				return false; // no <imageFile>
@@ -3226,7 +3058,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setImage(String fileName)
+		boolean setImage(String fileName)
 		{
 			if (currentSprite == null)
 				return false;
@@ -3270,7 +3102,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setNode(String nodeName)
+		boolean setNode(String nodeName)
 		{
 			if (0 == nodeName.length())
 				return false; // no <nodeName>
@@ -3314,7 +3146,7 @@ public class sdt3d extends SdtApplication
 		} // end SetNode
 
 
-		private boolean setType(String type)
+		boolean setType(String type)
 		{
 			if (0 == type.length() || null == currentNode)
 				return false; // no <Type>
@@ -3388,6 +3220,7 @@ public class sdt3d extends SdtApplication
 					// We may need to recompute symbol dimensions
 					if (currentNode.hasSymbol())
 						currentNode.getSymbol().setInitialized(false);
+					
 					switch (theSprite.getType())
 					{
 						case MODEL:
@@ -3417,7 +3250,7 @@ public class sdt3d extends SdtApplication
 		} // end SetType
 
 
-		private boolean setRegionPosition(String val)
+		boolean setRegionPosition(String val)
 		{
 			if ((0 == val.length()) || currentRegion == null)
 				return false;
@@ -3523,7 +3356,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setEnableSdtViewControls(String val)
+		boolean setEnableSdtViewControls(String val)
 		{
 			if (0 == val.length())
 			{
@@ -3550,7 +3383,7 @@ public class sdt3d extends SdtApplication
 		} // setEnableSdtViewControls
 
 
-		private boolean setShowLayerPanel(String val)
+		boolean setShowLayerPanel(String val)
 		{
 			if (0 == val.length())
 			{
@@ -3575,7 +3408,7 @@ public class sdt3d extends SdtApplication
 		} // setEnableSdtViewControls
 
 
-		private boolean setShowSdtPanel(String val)
+		boolean setShowSdtPanel(String val)
 		{
 			if (0 == val.length())
 			{
@@ -3601,7 +3434,7 @@ public class sdt3d extends SdtApplication
 		} // setSdtPanel
 
 
-		private boolean setShowStatusPanel(String val)
+		boolean setShowStatusPanel(String val)
 		{
 			if (0 == val.length())
 			{
@@ -3626,7 +3459,7 @@ public class sdt3d extends SdtApplication
 		} // setShowStatusPanel
 
 
-		private boolean setShowGoToPanel(String val)
+		boolean setShowGoToPanel(String val)
 		{
 			if (0 == val.length())
 			{
@@ -3651,7 +3484,7 @@ public class sdt3d extends SdtApplication
 		} // setShowGoToPanel
 
 
-		private boolean setShowWmsFrame(String val)
+		boolean setShowWmsFrame(String val)
 		{
 			if (0 == val.length())
 			{
@@ -3681,7 +3514,7 @@ public class sdt3d extends SdtApplication
 		} // setShowWmsPanel
 
 
-		private boolean setShowSdtControlPanel(String val)
+		boolean setShowSdtControlPanel(String val)
 		{
 			if (0 == val.length())
 			{
@@ -3706,7 +3539,7 @@ public class sdt3d extends SdtApplication
 		} // setShowSdtViewControls
 
 
-		private boolean setLogDebugOutput(String val)
+		boolean setLogDebugOutput(String val)
 		{
 			if (0 == val.length())
 			{
@@ -3783,7 +3616,7 @@ public class sdt3d extends SdtApplication
 		} // setLogDebugOutput
 
 
-		private boolean setLoadCache(String val)
+		boolean setLoadCache(String val)
 		{
 			if (0 == val.length())
 			{
@@ -3808,7 +3641,7 @@ public class sdt3d extends SdtApplication
 		} // setLoadCache
 
 
-		private boolean setOrientation(String val)
+		boolean setOrientation(String val)
 		{
 			if ((0 == val.length()) || currentNode == null)
 				return false; // no <params>
@@ -3892,9 +3725,7 @@ public class sdt3d extends SdtApplication
 			return true;
 		}
 
-		
-	
-		private boolean setOffset(String val)
+		boolean setOffset(String val)
 		{
 			if ((0 == val.length()) || currentNode == null)
 				return false; // no <coordinates>
@@ -3940,7 +3771,7 @@ public class sdt3d extends SdtApplication
 		}
 	
 	
-		private boolean setPosition(String val)
+		boolean setPosition(String val)
 		{
 			if ((0 == val.length()) || currentNode == null)
 				return false; // no <coordinates>
@@ -4066,6 +3897,7 @@ public class sdt3d extends SdtApplication
 					getTrailLayer().removeRenderable(currentNode.getPath());
 					getTrailLayer().addRenderable(currentNode.getPath());
 				}
+				
 				Map<String, List<SdtLink>> linkTable = currentNode.getLinkTable();
 				Set<Entry<String, List<SdtLink>>> set = linkTable.entrySet();
 				java.util.Iterator<Entry<String, List<SdtLink>>> it = set.iterator();
@@ -4160,7 +3992,7 @@ public class sdt3d extends SdtApplication
 		// Clear deletes all objects of the specified type or all objects
 		// The SPRITE table is not cleared - delete all DOES clear the sprite table
 		// The redundancy in clear/delete should be cleaned up
-		private boolean clear(String val)
+		boolean clear(String val)
 		{ // check to see if val is valid, valueOf crashes if it isn't
 			boolean valid = false;
 
@@ -4766,7 +4598,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setSize(String val)
+		boolean setSize(String val)
 		{
 			if ((0 == val.length()))
 				return false; // no size
@@ -4801,7 +4633,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setLength(String val)
+		boolean setLength(String val)
 		{
 			if ((0 == val.length()))
 				return false;
@@ -4827,7 +4659,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setLight(String val)
+		boolean setLight(String val)
 		{
 			if ((0 == val.length()))
 				return false; // need on/off
@@ -4861,7 +4693,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setFollow(String val)
+		boolean setFollow(String val)
 		{
 			if (0 == val.length())
 				return false;
@@ -4935,7 +4767,7 @@ public class sdt3d extends SdtApplication
 		} // setFollow
 
 
-		private boolean setFocus(String val)
+		boolean setFocus(String val)
 		{
 			if (0 == val.length())
 				return false;
@@ -5284,7 +5116,7 @@ public class sdt3d extends SdtApplication
 		} // end SetSymbol
 
 
-		private boolean setLine(String val)
+		boolean setLine(String val)
 		{
 			if (currentLinkSet.isEmpty())
 				return false;
@@ -5353,7 +5185,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setLinkLabel(String val)
+		boolean setLinkLabel(String val)
 		{
 			if (currentLinkSet.isEmpty())
 				return false;
@@ -5577,7 +5409,7 @@ public class sdt3d extends SdtApplication
 		} // end getMultilinkSet
 
 
-		private boolean setLink(String val)
+		boolean setLink(String val)
 		{
 			// Here we build a currentLinkSet of all links selected in the
 			// link command (e.g. link x,y,all) for subsequent attribute
@@ -5806,7 +5638,7 @@ public class sdt3d extends SdtApplication
 
 
 		// TODO: make the set selection a common subroutine ljt!!
-		private boolean setUnlink(String val)
+		boolean setUnlink(String val)
 		{
 			if (0 == val.length())
 				return false;
@@ -5932,7 +5764,7 @@ public class sdt3d extends SdtApplication
 		} // end unlink
 
 
-		private boolean setPath(String val)
+		boolean setPath(String val)
 		{
 			if (0 == val.length())
 				return false; // wait for dir
@@ -5944,7 +5776,7 @@ public class sdt3d extends SdtApplication
 			return true;
 		}
 
-		private boolean setModelJarFile(String val)
+		boolean setModelJarFile(String val)
 		{
 			MODEL_JAR_FILE = val;
 			String fileName = findFile(MODEL_JAR_FILE);
@@ -5959,7 +5791,7 @@ public class sdt3d extends SdtApplication
 		}
 		
 		
-		private boolean setLookAt(String val)
+		boolean setLookAt(String val)
 		{
 			if (!this.enableSdtViewControls)
 				return false;
@@ -6069,7 +5901,7 @@ public class sdt3d extends SdtApplication
 		} // setLookAt
 
 
-		private boolean setStatus(String val)
+		boolean setStatus(String val)
 		{			
 			if ((0 == val.length()))
 			{
@@ -6087,7 +5919,7 @@ public class sdt3d extends SdtApplication
 		} // end SetStatus
 
 
-		private boolean setRegion(String regionName)
+		boolean setRegion(String regionName)
 		{
 			if (0 == regionName.length())
 				return false; // no region name
@@ -6104,7 +5936,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setShape(String val)
+		boolean setShape(String val)
 		{
 			if ((0 == val.length()) || currentRegion == null)
 				return false;
@@ -6188,7 +6020,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setAppTitle(String title)
+		boolean setAppTitle(String title)
 		{
 			if (0 == title.length())
 				return false;
@@ -6198,7 +6030,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setDefaultAltitudeType(String val)
+		boolean setDefaultAltitudeType(String val)
 		{
 			if (0 == val.length())
 				return false;
@@ -6212,7 +6044,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setPopup(String val)
+		boolean setPopup(String val)
 		{
 			// TODO: fix to only change text
 			if (0 == val.length())
@@ -6238,14 +6070,14 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setPopdown()
+		boolean setPopdown()
 		{
 			popupFrame.setVisible(false);
 			return true;
 		}
 
 
-		private boolean setView(String val)
+		boolean setView(String val)
 		{
 			if (0 == val.length())
 				return false;
@@ -6259,7 +6091,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setViewXml(String val, boolean loadView)
+		boolean setViewXml(String val, boolean loadView)
 		{
 			if (0 == val.length() || currentView == null)
 				return false;
@@ -6300,7 +6132,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setBackgroundColor(String theColor)
+		boolean setBackgroundColor(String theColor)
 		{
 
 			Color bgColor = getColor(theColor);
@@ -6314,7 +6146,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		public boolean isFlatGlobe()
+		boolean isFlatGlobe()
 		{
 			return getWwd().getModel().getGlobe() instanceof FlatGlobe;
 		}
@@ -6349,7 +6181,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setFlatEarth(String val)
+		boolean setFlatEarth(String val)
 		{
 
 			boolean flat = false;
@@ -6419,7 +6251,7 @@ public class sdt3d extends SdtApplication
 		} // setFlatEarth
 
 
-		private boolean setElevationData(String val)
+		boolean setElevationData(String val)
 		{
 			if (val.equalsIgnoreCase("off"))
 			{
@@ -6439,7 +6271,7 @@ public class sdt3d extends SdtApplication
 		} // setElevationData
 
 
-		private boolean setStereo(String val)
+		boolean setStereo(String val)
 		{
 
 			if (val.equalsIgnoreCase("on"))
@@ -6463,7 +6295,7 @@ public class sdt3d extends SdtApplication
 		} // setStereo
 
 
-		private boolean setCollapseLinks(String val)
+		boolean setCollapseLinks(String val)
 		{
 
 			if (val.equalsIgnoreCase("on"))
@@ -6490,7 +6322,7 @@ public class sdt3d extends SdtApplication
 		} // setCollapseLinks
 
 
-		private boolean setOfflineMode(String val)
+		boolean setOfflineMode(String val)
 		{
 
 			if (val.equalsIgnoreCase("on"))
@@ -6507,7 +6339,7 @@ public class sdt3d extends SdtApplication
 		} // setOfflineMode
 
 
-		private boolean setOrigin(String val)
+		boolean setOrigin(String val)
 		{
 			if (0 == val.length())
 				return false;
@@ -6531,7 +6363,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setLayer(String val)
+		boolean setLayer(String val)
 		{
 			if (0 == val.length())
 				return false;
@@ -6560,7 +6392,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setNodeUDLayer(String val)
+		boolean setNodeUDLayer(String val)
 		{
 			if (0 == val.length() || currentNode == null)
 				return false;
@@ -6583,7 +6415,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setLinkUDLayer(String val)
+		boolean setLinkUDLayer(String val)
 		{
 			if (0 == val.length() || currentLinkSet == null)
 				return false;
@@ -6611,7 +6443,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setSymbolUDLayer(String val)
+		boolean setSymbolUDLayer(String val)
 		{
 			if (currentSymbol == null && currentNode != null)
 				currentSymbol = currentNode.getSymbol();
@@ -6640,7 +6472,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setLabelUDLayer(String val)
+		boolean setLabelUDLayer(String val)
 		{
 			if (0 == val.length() || currentNode == null)
 				return false;
@@ -6668,7 +6500,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setRegionUDLayer(String val)
+		boolean setRegionUDLayer(String val)
 		{
 			if (0 == val.length() || null == currentRegion)
 				return false;
@@ -6691,7 +6523,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setTileUDLayer(String val)
+		boolean setTileUDLayer(String val)
 		{
 			if (0 == val.length() || null == currentTile)
 				return false;
@@ -6948,7 +6780,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setListen(String val)
+		boolean setListen(String val)
 		{
 			if (0 == val.length())
 				return false;
@@ -7133,7 +6965,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean loadInputFile(String val, boolean forceAppend)
+		boolean loadInputFile(String val, boolean forceAppend)
 		{
 			// The pipeCmd flag tells us that we are processing an input file
 			// received over the command pipe - in this case we don't want to
@@ -7183,7 +7015,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setGeoTiff(final String val)
+		boolean setGeoTiff(final String val)
 		{
 			if (val == null || val.isEmpty())
 			{
@@ -7197,7 +7029,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setGeoTiffFile(final String val)
+		boolean setGeoTiffFile(final String val)
 		{
 			if (val == null || val.isEmpty())
 			{
@@ -7218,7 +7050,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setKml(final String val)
+		boolean setKml(final String val)
 		{
 			if (val == null || val.isEmpty())
 				return false;
@@ -7237,7 +7069,7 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private boolean setKmlFile(final String val)
+		boolean setKmlFile(final String val)
 		{
 			if (0 == val.length() || null == currentKml)
 				return false; // no <imageFile>
@@ -7326,317 +7158,6 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		private void processCmd(String pendingCmd, String val)
-		{
-			if (this.doCmd(pendingCmd, val))
-			{
-				if (logDebugOutput)
-				{
-					if (logDebugFile != null)
-					{
-						if (lastTime == 0)
-							lastTime = Time.increasingTimeMillis();
-
-						currentTime = Time.increasingTimeMillis();
-
-						logDebugFile.print(pendingCmd + " \"" + val + "\" \n");
-
-						long wait = currentTime - lastTime;
-						if (wait > 100)
-						{
-							logDebugFile.print("wait " + wait + " \n");
-							lastTime = currentTime;
-						}
-					}
-					else
-					{
-						System.out.println(pendingCmd + " " + val + " \n");
-					}
-
-				}
-			}
-			else
-			{
-				System.out.println("sdt3d::doCmd() cmd> " + pendingCmd + " val>" + val + " failed ");
-			}
-
-		}
-
-
-		private boolean doCmd(String pendingCmd, String val)
-		{
-
-			if (pendingCmd.equalsIgnoreCase("bgbounds"))
-				return setBackgroundBounds(val);
-			else if (pendingCmd.equalsIgnoreCase("flyto"))
-				return setFlyTo(val);
-			else if (pendingCmd.equalsIgnoreCase("zoom"))
-				return setZoom(val);
-			else if (pendingCmd.equalsIgnoreCase("heading"))
-				return setHeading(val);
-			else if (pendingCmd.equalsIgnoreCase("pitch"))
-				return setPitch(val);
-			else if (pendingCmd.equalsIgnoreCase("tileImage"))
-				return setTileImage(val);
-			else if (pendingCmd.equalsIgnoreCase("tile"))
-				return setTile(val);
-			else if (pendingCmd.equalsIgnoreCase("sector"))
-				return loadTile(val);
-			else if (pendingCmd.equalsIgnoreCase("instance"))
-				return setPipeName(val);
-			else if (pendingCmd.equalsIgnoreCase("bgimage"))
-				return false;
-			else if (pendingCmd.equalsIgnoreCase("sprite"))
- 				return setSprite(val);
-			else if (pendingCmd.equalsIgnoreCase("scale"))
-				return setScale(val);
-			else if (pendingCmd.equalsIgnoreCase("image"))
-			{
-				// sprite file not found
-				if (!setImage(val))
-				{
-					// Invalid image assigned, reset our state for the sprite
-					// so we can reassign it to the same name if need be.
-					spriteTable.remove(currentSprite.getName());
-					currentSprite = null;
-					return false;
-				}
-				return true;
-			}
-			else if (pendingCmd.equalsIgnoreCase("node"))
-				return setNode(val);
-			else if (pendingCmd.equalsIgnoreCase("type"))
-				return setType(val);
-			else if (pendingCmd.equalsIgnoreCase("position") || pendingCmd.equalsIgnoreCase("pos"))
-				return setPosition(val);
-			else if (pendingCmd.equalsIgnoreCase("focus"))
-				return setFocus(val);
-			else if (pendingCmd.equalsIgnoreCase("follow"))
-				return setFollow(val);
-			else if (pendingCmd.equalsIgnoreCase("center"))
-				return setRegionPosition(val);
-			else if (pendingCmd.equalsIgnoreCase("clear"))
-				return clear(val);
-			else if (pendingCmd.equalsIgnoreCase("delete"))
-				return delete(val);
-			else if (pendingCmd.equalsIgnoreCase("size"))
-				return setSize(val);
-			else if (pendingCmd.equalsIgnoreCase("length"))
-				return setLength(val);
-			else if (pendingCmd.equalsIgnoreCase("light"))
-				return setLight(val);
-			else if (pendingCmd.equalsIgnoreCase("label"))
-				return setLabel(val);
-			else if (pendingCmd.equalsIgnoreCase("trail"))
-				return setTrail(val);
-			else if (pendingCmd.equalsIgnoreCase("symbol"))
-				return setSymbol(val);
-			else if (pendingCmd.equalsIgnoreCase("shape"))
-				return setShape(val);
-			else if (pendingCmd.equalsIgnoreCase("link"))
-			{
-				// Spurious link commands should not be generated as
-				// performance may be impacted due to refreshing links...
-
-				return (setLink(val));
-			}
-			else if (pendingCmd.equalsIgnoreCase("linklabel"))
-				return setLinkLabel(val);
-			else if (pendingCmd.equalsIgnoreCase("unlink"))
-				return setUnlink(val);
-			else if (pendingCmd.equalsIgnoreCase("line"))
-				return setLine(val);
-			else if (pendingCmd.equalsIgnoreCase("wait"))
-			{
-				return true; // wait is implemented in FileThread only
-			}
-			else if (pendingCmd.equalsIgnoreCase("path"))
-				return setPath(val);
-			else if (pendingCmd.equalsIgnoreCase("modelJarFile"))
-				return setModelJarFile(val);
-			else if (pendingCmd.equalsIgnoreCase("status"))
-				return setStatus(val);
-			else if (pendingCmd.equalsIgnoreCase("region"))
-				return setRegion(val);
-			else if (pendingCmd.equalsIgnoreCase("input"))
-				// Files loaded "in line" in scripts should be processed
-				// immediately. Note that when an input command is recvd
-				// via the input pipe, the file will be appended - pipeCmd
-				// flag controls this.
-				return loadInputFile(val, false);
-			else if (pendingCmd.equalsIgnoreCase("title"))
-				return setAppTitle(val);
-			else if (pendingCmd.equalsIgnoreCase("defaultAltitudeType"))
-				return setDefaultAltitudeType(val);
-			else if (pendingCmd.equalsIgnoreCase("listen"))
-				return setListen(val);
-			else if (pendingCmd.equalsIgnoreCase("popup"))
-				return setPopup(val);
-			else if (pendingCmd.equalsIgnoreCase("popdown"))
-				return setPopdown();
-			else if (pendingCmd.equalsIgnoreCase("layer"))
-				return setLayer(val);
-			else if (pendingCmd.equalsIgnoreCase("nodeLayer"))
-				return setNodeUDLayer(val);
-			else if (pendingCmd.equalsIgnoreCase("linkLayer"))
-				return setLinkUDLayer(val);
-			else if (pendingCmd.equalsIgnoreCase("symbolLayer"))
-				return setSymbolUDLayer(val);
-			else if (pendingCmd.equalsIgnoreCase("labelLayer"))
-				return setLabelUDLayer(val);
-			else if (pendingCmd.equalsIgnoreCase("regionLayer"))
-				return setRegionUDLayer(val);
-			else if (pendingCmd.equalsIgnoreCase("tileLayer"))
-				return setTileUDLayer(val);
-			else if (pendingCmd.equalsIgnoreCase("view"))
-				return setView(val);
-			else if (pendingCmd.equalsIgnoreCase("viewXml"))
-				return setViewXml(val, true);
-			else if (pendingCmd.equalsIgnoreCase("backgroundColor"))
-				return setBackgroundColor(val);
-			else if (pendingCmd.equalsIgnoreCase("flatEarth"))
-				return setFlatEarth(val);
-			else if (pendingCmd.equalsIgnoreCase("elevationData"))
-				return setElevationData(val);
-			else if (pendingCmd.equalsIgnoreCase("stereo"))
-				return setStereo(val);
-			else if (pendingCmd.equalsIgnoreCase("offlineMode"))
-				return setOfflineMode(val);
-			else if (pendingCmd.equalsIgnoreCase("collapseLinks"))
-				return setCollapseLinks(val);
-			else if (pendingCmd.equalsIgnoreCase("elevationOverlay"))
-				return setGeoTiff(val);
-			else if (pendingCmd.equalsIgnoreCase("file"))
-				return setGeoTiffFile(val);
-			else if (pendingCmd.equalsIgnoreCase("geoTiff"))
-				return setGeoTiff(val);
-			else if (pendingCmd.equalsIgnoreCase("geoTiffFile"))
-				return setGeoTiffFile(val);
-			else if (pendingCmd.equalsIgnoreCase("kml"))
-				return setKml(val);
-			else if (pendingCmd.equalsIgnoreCase("kmlFile"))
-				return setKmlFile(val);
-			else if (pendingCmd.equalsIgnoreCase("origin"))
-				return setOrigin(val);
-			else if (pendingCmd.equalsIgnoreCase("reset"))
-			{
-				resetSystemState(false);
-				return true;
-			}
-			else if (pendingCmd.equalsIgnoreCase("hardReset"))
-			{
-				resetSystemState(true);
-				return true;
-			}
-			else if (pendingCmd.equalsIgnoreCase("resetPerspective"))
-			{
-				resetPerspective();
-				return true;
-			}
-			else if (pendingCmd.equalsIgnoreCase("lookat"))
-			{
-				return setLookAt(val);
-
-			}
-			else if (pendingCmd.equalsIgnoreCase("userConfigFile"))
-			{
-				return loadUserConfigFile(val);
-			}
-			else if (pendingCmd.equalsIgnoreCase("symbolOffset"))
-			{
-				if (val.equalsIgnoreCase("on"))
-					symbolOffset = true;
-				else
-					symbolOffset = false;
-
-				symbolOffsetItem.setSelected(symbolOffset);
-				getWwd().redraw();
-				if (sharedFrame != null)
-					sharedFrame.wwjPanel.wwd.redraw();
-
-				return true;
-			}
-			else if (pendingCmd.equalsIgnoreCase("multiFrame"))
-			{
-				if (val.equalsIgnoreCase("on"))
-					multiFrame = true;
-				else
-					multiFrame = false;
-				multiFrameItem.setSelected(multiFrame);
-				;
-				if (sharedFrame == null)
-				{
-					// Create multiframe if it doesn't exist and toggle visibility
-					if (this.multiFrame)
-					{
-						if (this.sharedFrame == null)
-						{
-							// We need to remove the view control layer and select listener
-							// before sharing the globe - we readd it later.
-							this.removeViewControlLayer(this);
-							Model modelB = new BasicModel(new Earth(), new LayerList(this.wwjPanel.getWwd().getModel().getLayers()));
-							sharedFrame = new SdtApplication.AppFrame((WorldWindowGLCanvas) this.getWwd(), modelB, true, false, false);
-							WWUtil.alignComponent(null, sharedFrame, AVKey.LEFT_OF_CENTER);
-							this.addViewControlLayer(sharedFrame);
-							this.addViewControlLayer(this);
-
-							// TODO: TBD frameB.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-						}
-						sharedFrame.setVisible(this.multiFrame);
-					}
-
-				}
-				return true;
-			}
-			else if (pendingCmd.equalsIgnoreCase("orientation"))
-			{
-				return setOrientation(val);
-			}
-			else if (pendingCmd.equalsIgnoreCase("offset"))
-			{
-				return setOffset(val);
-			}
-			else if (pendingCmd.equalsIgnoreCase("enableSdtViewControls"))
-			{
-				return setEnableSdtViewControls(val);
-			}
-			else if (pendingCmd.equalsIgnoreCase("logDebugOutput"))
-			{
-				return setLogDebugOutput(val);
-			}
-			else if (pendingCmd.equalsIgnoreCase("loadCache"))
-			{
-				return setLoadCache(val);
-			}
-			else if (pendingCmd.equalsIgnoreCase("showLayerPanel"))
-			{
-				return setShowLayerPanel(val);
-			}
-			else if (pendingCmd.equalsIgnoreCase("showSdtPanel"))
-			{
-				return setShowSdtPanel(val);
-			}
-			else if (pendingCmd.equalsIgnoreCase("showStatusPanel"))
-			{
-				return setShowStatusPanel(val);
-			}
-			else if (pendingCmd.equalsIgnoreCase("showGoToPanel"))
-			{
-				return setShowGoToPanel(val);
-			}
-			else if (pendingCmd.equalsIgnoreCase("showWmsFrame"))
-			{
-				return setShowWmsFrame(val);
-			}
-			else if (pendingCmd.equalsIgnoreCase("showSdtControlPanel"))
-			{
-				return setShowSdtControlPanel(val);
-			}
-			else
-				return false;
-		} // end ProcessCmd
-
 
 		/**
 		 * The sdt3d::onInput() function is the main command processing "loop" called
@@ -7665,7 +7186,7 @@ public class sdt3d extends SdtApplication
 		 * for each poll interval regardless of how many sdt3d commands
 		 * have been received by the various input threads.
 		 */
-		public synchronized boolean onInput(String str, CmdParser parser)
+		public synchronized boolean onInput(String str, SdtCmdParser parser)
 		{
 			currentNode = parser.currentNode;
 			currentSprite = parser.currentSprite;

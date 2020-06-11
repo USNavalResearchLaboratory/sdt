@@ -47,7 +47,6 @@ import java.net.Socket;
 //import com.google.protobuf.TextFormat;
 
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame;
-import mil.navy.nrl.sdt3d.sdt3d.AppFrame.CmdParser;
 //import mil.navy.nrl.sdtCommands.sdtCommandsProtos.Node;
 
 public class TcpSocketThread extends SocketThread
@@ -56,9 +55,9 @@ public class TcpSocketThread extends SocketThread
 	ServerSocket tcpSocket = null;
 
 
-	public TcpSocketThread(AppFrame theSdtApp, int thePort)
+	public TcpSocketThread(AppFrame sdt3dApp, int thePort)
 	{
-		super(theSdtApp, thePort);
+		super(sdt3dApp, thePort);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -127,7 +126,7 @@ public class TcpSocketThread extends SocketThread
 		@Override
 		public void run()
 		{
-			final CmdParser parser = sdt3dApp.new CmdParser();
+			final SdtCmdParser parser = new SdtCmdParser(sdt3dApp);
 			StringBuilder sb = new StringBuilder();
 
 			try
