@@ -543,16 +543,17 @@ public class SdtSpriteKml extends SdtSpriteModel
 	@Override
 	double getSymbolSize(DrawContext d)
 	{
-		modelRadius = Math.sqrt(3 * (modelScaleVector.x * sizeScale) *
-				(modelScaleVector.x * sizeScale)) / 2.0;
-		
 		if (isRealSize())
 		{
-			return Math.sqrt(3 * (getFixedLength() * sizeScale) *
-					(getFixedLength() * sizeScale));
+			double realScale =  Math.sqrt(3 * (getFixedLength() * modelScaleVector.x) *
+					(getFixedLength() * modelScaleVector.x));
+			return realScale;
 		}
 		
-		// For now modelScaleVector x.y.z dimensions are the same
+		modelRadius = Math.sqrt(3 * (modelScaleVector.x * sizeScale) *
+					(modelScaleVector.x * sizeScale)) / 2.0;
+		
+		// For NOW they are all the same
 		return modelRadius / 2.0;
 	}
 }

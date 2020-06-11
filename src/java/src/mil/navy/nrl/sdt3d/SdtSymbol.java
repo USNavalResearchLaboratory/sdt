@@ -640,6 +640,7 @@ public class SdtSymbol implements Renderable
 	 */
 	double getRadius(DrawContext dc)
 	{
+		// TODO: LJT this is still a mess but I just can't anymore right now!
 		double currentSize = 2;
 		if (dc.getView() == null)
 		{
@@ -660,10 +661,16 @@ public class SdtSymbol implements Renderable
 				
 				currentSize = getMaxDimension() * getScale();
 				
-				if (sdtNode.getSprite().getType() != SdtSpriteIcon.Type.ICON)
+				if (sdtNode.getSprite().getType() == SdtSpriteIcon.Type.MODEL)
 				{
 					currentSize = currentSize / 2; 
 				}
+				else
+				{
+					if (sdtNode.getSprite().getType() == SdtSpriteIcon.Type.KML)
+						currentSize = sdtNode.getSprite().getSymbolSize(dc); 
+				}
+				
 			}
 			else
 			{
