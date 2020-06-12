@@ -5,13 +5,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import gov.nasa.worldwind.BasicModel;
-import gov.nasa.worldwind.Model;
-import gov.nasa.worldwind.avlist.AVKey;
-import gov.nasa.worldwind.awt.WorldWindowGLCanvas;
-import gov.nasa.worldwind.globes.Earth;
-import gov.nasa.worldwind.layers.LayerList;
-import gov.nasa.worldwind.util.WWUtil;
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
 
 public class SdtCmdParser 

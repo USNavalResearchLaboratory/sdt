@@ -3194,7 +3194,8 @@ public class sdt3d extends SdtApplication
 								getNodeModelLayer().removeModel(currentNode.getSprite());
 								break;
 							case ICON:
-								getNodeIconLayer().removeIcon(currentNode.getIcon());
+								if (currentNode.getIcon() != null)
+									getNodeIconLayer().removeIcon(currentNode.getIcon());
 								break;
 							case NONE:
 								break;
@@ -3868,7 +3869,8 @@ public class sdt3d extends SdtApplication
 							getNodeModelLayer().addModel(currentNode.getSprite());
 							break;
 						case ICON:
-							getNodeIconLayer().addIcon(currentNode.getIcon());
+							if (currentNode.getIcon() != null)
+								getNodeIconLayer().addIcon(currentNode.getIcon());
 							break;
 						case NONE:
 							break;
@@ -4274,7 +4276,8 @@ public class sdt3d extends SdtApplication
 							getNodeModelLayer().removeModel(current_node.getSprite());
 							break;
 						case ICON:
-							getNodeIconLayer().removeIcon(current_node.getIcon());
+							if (current_node.getIcon() != null)	
+								getNodeIconLayer().removeIcon(current_node.getIcon());
 							break;
 						case NONE:
 							break;
