@@ -696,15 +696,15 @@ public class SdtNode implements Renderable
 						}
 					}
 					
+					modelPosition = new Position(position.getLatitude(),
+							position.getLongitude(),
+							elevation);
+
 					// If we have an offset we want to use the node's 
 					// _position_ elevation that accounts for node's agl,msl setting 
 					// but models with no offset need the overrides above.
 					if (sprite.hasOffset())
-						modelPosition = sprite.getOffsetPosition(position);
-					else
-						modelPosition = new Position(position.getLatitude(),
-								position.getLongitude(),
-								elevation);
+						modelPosition = sprite.getOffsetPosition(modelPosition);
 					
 					// Reset model and symbol position
 					if (symbol != null)
@@ -1584,7 +1584,8 @@ public class SdtNode implements Renderable
 					theApp.getNodeModelLayer().removeModel(sprite);
 					break;
 				case ICON:
-					theApp.getNodeIconLayer().removeIcon(sprite.getIcon());
+					if (sprite.getIcon() != null)
+						theApp.getNodeIconLayer().removeIcon(sprite.getIcon());
 					break;
 				case NONE:
 					break;
