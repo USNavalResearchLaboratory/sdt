@@ -65,6 +65,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -92,6 +93,8 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.jogamp.opengl.util.awt.Screenshot;
 
@@ -164,6 +167,7 @@ import gov.nasa.worldwindx.examples.WMSLayersPanel;
 import gov.nasa.worldwindx.examples.util.BalloonController;
 import gov.nasa.worldwindx.examples.util.ExtentVisibilitySupport;
 import gov.nasa.worldwindx.examples.util.HotSpotController;
+import mil.navy.nrl.sdt3d.SdtLogDebugDialog.DebugType;
 
 // Google protoBuf example
 //import mil.navy.nrl.sdtCommands.sdtCommandsProtos;
@@ -328,13 +332,13 @@ public class sdt3d extends SdtApplication
 		private JMenuItem openItem, appendItem, loadConfigItem, clearConfigItem, hardResetItem, 
 				resetItem, resetPerspectiveItem, screenItem, listenUdpItem, listenTcpItem, 
 				exitItem, sdtLayersItem, backgroundColorItem, showLayersItem, removeUDLayersItem, 
-				bookmarkItem, loadBookmarkItem, clearSpriteTableItem,
+				bookmarkItem, loadBookmarkItem, clearSpriteTableItem, debugItem,
 				loadDefaultBookmarksItem, loadKMLFileItem, loadKMLUrlItem, loadCacheItem;
 
 		private JCheckBoxMenuItem showStatusItem, showGoToItem, elevationItem, globeItem, 
 				mercatorItem, sinusoidalItem, showWmsItem, modSinusoidalItem, latLonItem, 
 				stereoItem, collapseLinksItem, symbolOffsetItem, offlineModeItem,
-				showSdtViewControlsItem, debugItem, showSdtPanelItem, multiFrameItem;
+				showSdtViewControlsItem, showSdtPanelItem, multiFrameItem;
 
 		public static boolean collapseLinks = false;
 
@@ -1229,6 +1233,7 @@ public class sdt3d extends SdtApplication
 			screenItem = new JMenuItem("Save a screenshot ");
 			listenUdpItem = new JMenuItem("Listen to UDP port...");
 			listenTcpItem = new JMenuItem("Listen to TCP port...");
+			debugItem = new JMenuItem("Debug options ...");
 			exitItem = new JMenuItem("Exit");
 			openItem.addActionListener(this);
 			appendItem.addActionListener(this);
@@ -1240,6 +1245,7 @@ public class sdt3d extends SdtApplication
 			listenUdpItem.addActionListener(this);
 			listenTcpItem.addActionListener(this);
 			exitItem.addActionListener(this);
+			debugItem.addActionListener(this);
 
 			offlineModeItem = new JCheckBoxMenuItem("WWJ offline mode");
 			offlineModeItem.setSelected(false);
@@ -1268,10 +1274,11 @@ public class sdt3d extends SdtApplication
 			fileMenu.addSeparator();
 			fileMenu.add(kmlMenu);
 			fileMenu.add(screenItem);
-			fileMenu.addSeparator();
+			//fileMenu.addSeparator();
 			fileMenu.add(listenUdpItem);
 			fileMenu.add(listenTcpItem);
 			fileMenu.addSeparator();
+			fileMenu.add(debugItem);
 			fileMenu.add(offlineModeItem);
 			fileMenu.add(loadCacheItem);
 			fileMenu.addSeparator();
@@ -1365,12 +1372,6 @@ public class sdt3d extends SdtApplication
 			symbolOffsetItem.setSelected(true);
 			viewMenu.add(symbolOffsetItem);
 			symbolOffsetItem.addActionListener(this);
-
-			debugItem = new JCheckBoxMenuItem("Log debug output");
-			debugItem.setSelected(false);
-			logDebugOutput = false;
-			viewMenu.add(debugItem);
-			debugItem.addActionListener(this);
 
 			viewMenu.addSeparator();
 			showLayersItem = new JCheckBoxMenuItem("Show layer panel");
@@ -1819,7 +1820,6 @@ public class sdt3d extends SdtApplication
 			}
 			
 			logDebugOutput = false;
-			debugItem.setSelected(false);
 			try
 			{
 				if (fileWriter != null)
@@ -1832,6 +1832,7 @@ public class sdt3d extends SdtApplication
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
 			if (logDebugFile != null)
 			{
 				logDebugFile.close();
@@ -2376,14 +2377,45 @@ public class sdt3d extends SdtApplication
 			}
 			else if (event.getSource() == debugItem)
 			{
-				if (debugItem.isSelected())
+				Optional<Pair<DebugType,String>> debug = new SdtLogDebugDialog(this).show();
+
+				if (!debug.isPresent())
 				{
-					logDebugOutput = true;
+					// user cancelled - abort
+					return;
 				}
+
+				
+				logDebugOutput = true;
+				if (debug.get().getLeft().toString().equalsIgnoreCase("File"))
+				{
+					String filename = debug.get().getRight();
+					int index = 1;
+					while (true)
+					{
+						File theFile = new File(filename);
+
+						if (theFile.exists() && theFile.isFile())
+						{
+							filename = filename + "." + index;
+							index++;
+						}
+						else
+						{
+							break;
+						}
+					}
+					try {
+						fileWriter = new FileWriter(filename);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					logDebugFile = new PrintWriter(fileWriter);
+
+				}				
 				else
 				{
-					logDebugOutput = false;
-					debugItem.setSelected(false);
 					try
 					{
 						if (fileWriter != null)
@@ -2401,7 +2433,10 @@ public class sdt3d extends SdtApplication
 						logDebugFile.close();
 						logDebugFile = null;
 					}
-
+					if (debug.get().getLeft().toString().equalsIgnoreCase("Off"))
+					{
+						logDebugOutput = false;
+					}
 				}
 
 			}
@@ -3552,7 +3587,6 @@ public class sdt3d extends SdtApplication
 			if (file[0].equalsIgnoreCase("on"))
 			{
 				logDebugOutput = true;
-				debugItem.setSelected(true);
 
 				// if no filename, log to sdtout
 				if (file.length > 1)
@@ -3594,7 +3628,6 @@ public class sdt3d extends SdtApplication
 			if (val.equalsIgnoreCase("off"))
 			{
 				logDebugOutput = false;
-				debugItem.setSelected(false);
 				try
 				{
 					fileWriter.close();

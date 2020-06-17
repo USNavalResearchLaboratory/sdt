@@ -581,7 +581,7 @@ public class SdtSpriteModel extends SdtModel
 		GL2 gl = dc.getGL().getGL2(); // GL initialization checks for GL2 compatibility.
 
 		Position pos = getPosition();
-
+		
 		if (pos == null)
 			return;
 		Vec4 loc = dc.getGlobe().computePointFromPosition(pos);
