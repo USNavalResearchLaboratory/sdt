@@ -986,16 +986,15 @@ tile radarOverlay tileImage itmOverlay.png sector -77.083194,38.895139,-76.96930
 
     <programlisting>node node01 symbol sphere,X,X,X,X,0.95</programlisting>
 
-    <para>To increase the size of the sphere to 300 meters, retaining other
-    attributes (e.g. color blue, 95% opacity):</para>
+    <para>To increase the size of the sphere to a fixed size of 300 meters,
+    retaining other attributes (e.g. color blue, 95% opacity):</para>
 
     <para><programlisting>node node01 symbol sphere,X,X,300,X,X</programlisting></para>
 
     <para><emphasis role="bold"><emphasis>To turn the symbol red, 300 meters
     wide, 95% opacity:</emphasis></emphasis></para>
 
-    <para><programlisting>node node01 symbol sphere,red,X,X,X,X</programlisting><emphasis
-    role="bold"/></para>
+    <para><programlisting>node node01 symbol sphere,red,X,X,X,X</programlisting></para>
 
     <sect2>
       <title os="">sdt Objects</title>
@@ -1248,10 +1247,12 @@ node node1 symbol sphere,0xff0000</programlisting>
               scaled to directly match the given dimensions. If one of the
               parameters is less than zero, the image's aspect ratio is
               preserved and the image is scaled to match its corresponding
-              dimension to the non-zero parameter given. Either length or size
-              can be set for 3D sprites but not both. The size attribute takes
-              precedence over the length attribute if both are set and length
-              will be set to the given width.</para></entry>
+              dimension to the non-zero parameter given.</para><para>As the
+              view reaches the real world "size" (in meters) of a kml or model
+              sprite the sprite will stay at real world size. If a length in
+              meters is also set for a kml or model, the sprite will use the
+              length as the real world size rather than the sprite pixel
+              "size".</para></entry>
             </row>
 
             <row>
@@ -1267,11 +1268,12 @@ node node1 symbol sphere,0xff0000</programlisting>
             <row>
               <entry><para>length &lt;lengthInMeters&gt;</para></entry>
 
-              <entry><para>Sets a length in meters for 3D sprites. Either
-              length or size can be specified but not both. The size attribute
-              takes precedence over the length attribute if both are set and
-              length will be set to the given width. If a length is set the
-              model will not scale as the viewport changes.</para></entry>
+              <entry><para>For models and kml sprites only, sets a length in
+              meters for 3D sprites. If no size attribute is set the model
+              will be fixed at the length in meters and not scale as the view
+              changes. Setting both size and length will result in a hybrid
+              approach where the real world sprite size is "lengthInMeters"
+              while the model will scale in "size" in pixels.</para></entry>
             </row>
           </tbody>
         </tgroup>
@@ -1581,23 +1583,34 @@ node node2 position -77.005217,38.820009,0</programlisting><para>Note that any
             </row>
 
             <row>
-              <entry><para>orientation
-              &lt;pitch&gt;[,&lt;yaw&gt;[a|r][,&lt;roll&gt;]]</para></entry>
+              <entry><para>offset &lt;x,y,z&gt;|off</para></entry>
 
-              <entry><para>This command can be used to specify the orientation
-              of any 3D model (KML, 3ds, etc) associated with the node. Set
-              each attribute in degrees [0-360]. The &lt;pitch&gt; attribute
-              changes the vertical direction of the model with respect to the
-              earth's surface. The &lt;yaw&gt;, or "heading", attribute
-              defines the motion of the 3D model from side to side with 0
-              degrees being due north. The &lt;roll&gt; attribute changes the
-              orientation of the model with respect to the downward force of
-              gravity (e.g. around its longitudinal axis), with 0 degrees
-              being "wings level".</para><para>By default the yaw will be
-              relative to the node's heading. Use the "a" attribute to make
-              the model's heading "absolute", e.g. to make a model orient 30
-              degrees regardless of node heading:<programlisting>orientation x,30a</programlisting></para><para>This
-              command will be ignored for 2d sprites.</para></entry>
+              <entry><para>Positions the sprite at a cartesian x,y offset from
+              the node lat/lon or offsets elevation by z. This can be used to
+              offset the sprite position from the node location (for example
+              to position a ship slightly below mean sea level) or to change
+              the model rendering position so that "link" end points are at
+              useful places. For models, x,y offset works best when the offset
+              is applied to models oriented via an absolute yaw provided by
+              the scripting engine (rather than the default yaw based off of
+              node position changes) or for models with a fixed position.
+              </para><para>For example, the position of the stealth model in
+              the model definition file results in the model being rendered
+              above the node position.</para><para><firstterm><inlinegraphic
+              fileref="sdt3d-0003.png"/></firstterm></para><para><programlisting>node m1-node01 offset x,x,-110
+node m1-node02 offset x,x,-110</programlisting></para><para>Applying an
+              elevation offset for the node modifies the model central
+              location:</para><para><inlinegraphic
+              fileref="sdt3d-0004.png"/></para><para>This may result in link
+              ends being rendered at more useful
+              locations:</para><para><inlinegraphic
+              fileref="sdt3d-0005.png"/></para><para>without
+              offset:</para><para><inlinegraphic
+              fileref="sdt3d-0006.png"/></para><para>Default humvee model
+              position:</para><para><inlinegraphic
+              fileref="sdt3d-0007.png"/></para><para>with an elevation
+              offset:</para><para><inlinegraphic
+              fileref="sdt3d-0008.png"/></para></entry>
             </row>
 
             <row>

@@ -1697,7 +1697,8 @@ public class SdtNode implements Renderable
 						break;
 					case ICON:
 					{
-						theApp.getNodeIconLayer().addIcon(getIcon());
+						if (getIcon() != null)
+							theApp.getNodeIconLayer().addIcon(getIcon());
 						break;
 					}
 					case NONE:
