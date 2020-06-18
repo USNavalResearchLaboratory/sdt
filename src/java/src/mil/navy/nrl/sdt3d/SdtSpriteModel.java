@@ -41,7 +41,7 @@ public class SdtSpriteModel extends SdtModel
 			X, Y, Z
 	};
 
-	private double modelRadius = -1.0;
+	protected double modelRadius = -1.0;
 	
 	protected double heading = 0.0; // a.k.a. "yaw"
 
@@ -60,6 +60,8 @@ public class SdtSpriteModel extends SdtModel
 	protected double roll = 0.0;
 
 	private double sizeScale = 1.0;
+	
+	private double minimumSizeScale = 1.0;
 
 	boolean useLighting = false;
 
@@ -85,6 +87,7 @@ public class SdtSpriteModel extends SdtModel
 		this.modelYaw = template.modelYaw;
 		this.modelRoll = template.modelRoll;
 		this.sizeScale = template.sizeScale;
+		this.minimumSizeScale = template.minimumSizeScale;
 		this.useLighting = template.useLighting;
 		this.spriteType = Type.MODEL;
 	}
@@ -353,22 +356,26 @@ public class SdtSpriteModel extends SdtModel
 	 */
 	double getLength()
 	{
-		double length = getFixedLength();
+		double lengthInMeters = getFixedLength();
 		
-		// if no length is set, default to width;
-		if (length < 0.0 && iconWidth > 0) length = iconWidth;
-
-		if (length > 0 && length < 32) 
+		if (lengthInMeters > 0 && getWidth() > 0 || lengthInMeters < 0)
 		{
-			//System.out.println("Delete me???!!! " );
-			//iconWidth = -length; iconHeight = -length;
-			length = 32;
+			lengthInMeters = iconWidth;
+			
+			if (lengthInMeters < 0)
+			{
+				lengthInMeters = 32 * getScale();
+			}
 		}
 		
-		// if no length or width set use default width (32) as h,w,l
-		if (length < 0 && iconWidth < 0) {length = 32 * getScale();}
-		
-		return length;
+		return lengthInMeters;
+	}
+	
+	
+	@Override
+	double getModelRadius()
+	{
+		return modelRadius;
 	}
 	
 	/*
@@ -382,12 +389,6 @@ public class SdtSpriteModel extends SdtModel
 		
 		double lengthInMeters = getLength();
 		
-		if (lengthInMeters < 0.0)
-		{
-			sizeScale = getScale();
-			modelRadius = Math.sqrt(3*iconWidth*iconWidth) / 2.0;
-			return;
-		}
 		
 		if (model == null)
 		{
@@ -407,11 +408,20 @@ public class SdtSpriteModel extends SdtModel
 		}
 		sizeScale = lengthInMeters / pLength; // meters per pixel for this model
 		
-		if (pLength > lengthInMeters)
-			modelRadius = Math.sqrt(3 * (this.iconWidth * sizeScale) * (this.iconWidth * sizeScale)) / 2.0;
-		else
-			modelRadius = Math.sqrt(3 * this.iconWidth * this.iconWidth) / 2.0;
+		minimumSizeScale = sizeScale;
 		
+		// We override the minimumSizeScale to the "fixedLength" if 
+		// hybrid sizing has been set.
+		if (getFixedLength() > 0 && getWidth() > 0)
+		{
+			minimumSizeScale = getFixedLength() / pLength;
+		}
+		
+		if (pLength > lengthInMeters)
+			modelRadius = Math.sqrt(3 * (lengthInMeters * sizeScale) * (lengthInMeters * sizeScale)) / 2.0;		
+		else
+			modelRadius = Math.sqrt(3 * lengthInMeters * lengthInMeters) / 2.0;
+				
 		this.iconHeight = pHeight * sizeScale;
 		
 	} // end WWModel3D.setLength()
@@ -467,50 +477,37 @@ public class SdtSpriteModel extends SdtModel
 	
 
 	/*
-	 * computeSizeScale() is called by the node render function to get model elevation
-	 * for models following terrain and by the model3d layer to
-	 * scale and calculate feedback rectangle
+	 * computeSizeScale() is called by the node render function to get 
+	 * model size for elevation offset for models following terrain and
+	 * by the model3d layer to scale and caltulate feedback rectanble
 	 */
 	@Override
 	public double computeSizeScale(DrawContext dc, Vec4 loc)
 	{
 		// Needed for valid symbol size
 		viewAtRealSize = false;
-				
-		if (getFixedLength() > 0.0 && isRealSize)
+
+		double d = loc.distanceTo3(dc.getView().getEyePoint());
+		double pSize = dc.getView().computePixelSizeAtDistance(d);
+			
+			
+		// If no dimensions were set for the model (e.g. modelRadius == -1
+		// calculate modelRadius now
+		if (modelRadius == -1)
 		{
-			// A real-world length (in meters) was set
-			// for this model (no pixel size set)
-			return sizeScale; // meters per pixel for this model
+			setModelRadius();
 		}
-		else
+			
+		double modelSize = (pSize * modelRadius) / this.model.getBounds().getRadius();
+			
+		// Don't let model get smaller than our requested size
+		if (modelSize < minimumSizeScale)
 		{
-			// Here we use the max(width,height) to compute
-			// a scaling factor to produce a constant size
-			// (in the view) 3-D "icon" instead of an
-			// actual size model
-			double d = loc.distanceTo3(dc.getView().getEyePoint());
-			double pSize = dc.getView().computePixelSizeAtDistance(d);
-			
-			
-			// If no dimensions were set for the model (e.g. modelRadius == -1
-			// calculate modelRadius now
-			if (modelRadius == -1)
-			{
-				setModelRadius();
-			}
-			
-			double s = (pSize * modelRadius) / this.model.getBounds().getRadius();
-			
-			// Don't let model get smaller than our requested size
-			if (sizeScale > s)
-			{
-				viewAtRealSize = true;
-				s = sizeScale;
-			}
-			
-			return s;
+			viewAtRealSize = true;
+			modelSize = minimumSizeScale;
 		}
+			
+		return modelSize;
 			
 	} // end SdtObjModel.computeSizeScale()
 	
@@ -538,8 +535,7 @@ public class SdtSpriteModel extends SdtModel
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 
 		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
-		double localSize = this.computeSize(dc, loc);
-		localSize *= computeSizeScale(dc, loc);
+		double localSize = computeSizeScale(dc, loc);
 
 		double width = getWidth();
 		double height = getHeight();
@@ -566,8 +562,7 @@ public class SdtSpriteModel extends SdtModel
 		if (pos == null)
 			return;
 		Vec4 loc = dc.getGlobe().computePointFromPosition(pos);
-		double localSize = this.computeSize(dc, loc);
-		localSize *= computeSizeScale(dc, loc);
+		double localSize = computeSizeScale(dc, loc);
 		if (dc.getView().getFrustumInModelCoordinates().contains(loc))
 		{
 			dc.getView().pushReferenceCenter(dc, loc);
@@ -587,30 +582,6 @@ public class SdtSpriteModel extends SdtModel
 
 	}
 
-	private double computeSize(DrawContext dc, Vec4 loc)
-	{
-		// TODO: Why are we alwasy setting maintainContstantSize to true?
-		// are we even using this?
-		
-		// LJT DELETE THIS function entirely
-		boolean maintainConstantSize = true;
-		double size = 1;
-		// We always set maintainConstantSize to true
-		if (maintainConstantSize)
-			return size;
-
-		if (loc == null)
-		{
-			System.err.println("Null location when computing size of model");
-			return 1;
-		}
-		double d = loc.distanceTo3(dc.getView().getEyePoint());
-		double currentSize = 60 * dc.getView().computePixelSizeAtDistance(d);
-		if (currentSize < 2)
-			currentSize = 2;
-
-		return currentSize;
-	}
 	
 	// Eventually we should extend WWIcon for WWModel3D... These are duplicate functions from the renderer
 	/**

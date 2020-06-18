@@ -677,6 +677,7 @@ public class SdtNode implements Renderable
 						sprite.loadIcon(sprite.getOffsetPosition(position), nodeName, feedbackEnabled);
 					}
 					sprite.setPosition(sprite.getOffsetPosition(position));
+					symbol.setPosition(new Position(position,altitude));
 					
 				}
 				break;

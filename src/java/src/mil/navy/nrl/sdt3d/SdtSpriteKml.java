@@ -52,6 +52,8 @@ public class SdtSpriteKml extends SdtSpriteModel
 	JMenuItem kmlMenuItem = null;
 
 	KMLLayerTreeNode layerNode = null;
+	
+	Vec4 modelScaleVector = null;
 
 	public SdtSpriteKml(SdtSpriteKml template)
 	{
@@ -428,7 +430,7 @@ public class SdtSpriteKml extends SdtSpriteModel
 
 		// Set model position & size
 		colladaRoot.setPosition(position);
-		Vec4 modelScaleVector = this.computeSizeVector(dc, loc);
+		modelScaleVector = this.computeSizeVector(dc, loc);
 		colladaRoot.setModelScale(modelScaleVector);
 
 		// Set model orientation
@@ -460,7 +462,13 @@ public class SdtSpriteKml extends SdtSpriteModel
 		return colladaRoot != null;
 	}
 
-
+	@Override
+	double getModelRadius()
+	{
+		// For NOW they are all the same
+		return modelScaleVector.x;
+	}
+	
 	
 	// These are duplicate functions from the icon renderer
 	/**

@@ -853,7 +853,13 @@ public class SdtSprite implements Renderable
 		
 	}
 
-
+	
+	double getModelRadius()
+	{
+		return 0.0;
+	}
+	
+	
 	public double computeSizeScale(DrawContext dc, Vec4 loc) {
 		// TODO Auto-generated method stub
 		return 0;
