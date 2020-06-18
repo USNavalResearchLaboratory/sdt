@@ -540,18 +540,22 @@ public class SdtSprite implements Renderable
 			}
 			if (size != null)
 			{
+				Integer width = -1;
+				Integer height = -1;
 				String[] dim = size.split(",");
 				// <dimensions> is in format "width,height"
+				if (dim.length == 1)
+				{
+					width = new Integer(dim[0]);
+					height = new Integer(dim[0]);
+				}
 				if (dim.length == 2)
 				{
-					Integer width = new Integer(dim[0]);
-					Integer height = new Integer(dim[1]);
-					theSprite.setSize(width.intValue(), height.intValue()); 
+					width = new Integer(dim[0]);
+					height = new Integer(dim[1]);
 				}
-				else
-				{
-					System.out.println("SdtSprite::setDimension() Bad size dimensions in sprite xml.\n");
-				}
+				theSprite.setSize(width.intValue(), height.intValue()); 
+				theSprite.setRealSize(false);
 			}
 			String offset = null;
 			if (hasTag(el, "offset"))

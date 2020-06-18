@@ -664,7 +664,7 @@ public class SdtNode implements Renderable
 		
 		double modelHeightOffset = 0.0;		
 		
-		if (hasSprite())
+		if (sprite != null)
 		{
 			modelHeightOffset = sprite.getHeight() / 2.0;
 			
@@ -728,7 +728,17 @@ public class SdtNode implements Renderable
 				break;
 				case KML:
 				{
-					// TODO: ljt do follow terrain overrides for kml & symbol repositioning?
+					// Reset model and symbol position
+					if (symbol != null)
+					{
+						if (position == null)
+						{
+							System.out.println("MODEL POSITION == NULL ljt!!\n");
+						}
+
+
+						symbol.setPosition(position);
+					}
 					sprite.setPosition(sprite.getOffsetPosition(position));
 					sprite.setHeading(heading, yaw);
 					sprite.setRoll(roll);
@@ -736,9 +746,11 @@ public class SdtNode implements Renderable
 				}
 				break;
 				case NONE:
-					// TBD: Do we really want to return here?
-					System.out.println("SdtNode::Render() WARNING No valid sprite type assigned\n");
-					return;
+					if (symbol != null)
+					{
+						symbol.setPosition(position);;
+					}
+					break;
 				default:
 					System.out.println("SdtNode::Render() WARNING No valid sprite type assigned\n");
 					return;
@@ -1235,6 +1247,7 @@ public class SdtNode implements Renderable
 			this.sprite = new SdtSpriteKml((SdtSpriteKml) theSprite);
 			break;
 		case NONE:
+			this.sprite = theSprite;
 			break;
 		default:
 			System.out.println("setSprite() invalid type.");

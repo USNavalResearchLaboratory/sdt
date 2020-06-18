@@ -166,7 +166,7 @@ public class SdtSymbol implements Renderable
 	boolean isScalable()
 	{
 		// if a real world length has been set for the sprite (kml & 3ds), don't scale the symbol
-		if (sdtNode != null && sdtNode.hasSprite()) 
+		if (sdtNode != null && sdtNode.getSprite() != null) 
 		{
 			if (sdtNode.getSprite().isRealSize())
 			{
