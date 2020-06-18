@@ -854,7 +854,7 @@ public class SdtSprite implements Renderable
 	}
 
 	
-	double getModelRadius()
+	double getSymbolSize(DrawContext dc)
 	{
 		return 0.0;
 	}

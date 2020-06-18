@@ -677,7 +677,11 @@ public class SdtNode implements Renderable
 						sprite.loadIcon(sprite.getOffsetPosition(position), nodeName, feedbackEnabled);
 					}
 					sprite.setPosition(sprite.getOffsetPosition(position));
-					symbol.setPosition(new Position(position,altitude));
+					
+					if (symbol != null)
+					{
+						symbol.setPosition(new Position(position,altitude));
+					}
 					
 				}
 				break;
@@ -804,13 +808,6 @@ public class SdtNode implements Renderable
 		// Reset position so links and symbols render correctly
 		position = new Position(position, altitude);
 		
-		if (hasSymbol())
-		{
-			// TODO: LJT We don't want to do this each time!
-			// Update symbol coordinates
-			symbol.updateSymbolCoordinates(dc);
-		}
-
 		updateLinkPositions(dc);
 		setLinkUpdate(false);
 
@@ -1548,8 +1545,6 @@ public class SdtNode implements Renderable
 					((directional && tmpLink.isDirectional()) ||
 						(!directional && !tmpLink.isDirectional())))
 				{
-					// System.out.println("Removing link between " + tmpLink.getSrcNode().getName() + " and " +
-					// tmpLink.getDstNode().getName() + " linkID " + tmpLink.getLinkID());
 					link = tmpLink;
 					link.removeRenderables();
 					link.removeLinkFromCheckbox(link);
@@ -1562,7 +1557,6 @@ public class SdtNode implements Renderable
 
 		if (linkList != null && linkList.isEmpty())
 		{
-			// System.out.println("removing dst node from link table " + dstNode.getName());
 			linkTable.remove(dstNode.getName());
 
 		}

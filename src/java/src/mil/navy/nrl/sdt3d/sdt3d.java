@@ -1,17 +1,4 @@
-/*
- /*
- * sdt3d.java
- *
- * Created on February 12, 2008, 10:47 PM
- *
- * To change this template, choose Tools | Template Managers
- * and open the template in the editor.
- * WWJ code:
- * Copyright (C) 2001 United States Government
- * as represented by the Administrator of the
- * National Aeronautics and Space Administration.
- * All Rights Reserved.
-*/
+
 package mil.navy.nrl.sdt3d;
 
 import java.awt.BorderLayout;
@@ -4816,6 +4803,11 @@ public class sdt3d extends SdtApplication
 			}
 			currentSprite.setFixedLength(length.doubleValue());
 
+			if (currentSprite.getHeight() < 0 && currentSprite.getWidth() < 0)
+			{
+				currentSprite.setRealSize(true);
+			}
+			
 			return true;
 		}
 

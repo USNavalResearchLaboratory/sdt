@@ -19,15 +19,13 @@ import gov.nasa.worldwind.avlist.AVList;
 import gov.nasa.worldwind.avlist.AVListImpl;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Vec4;
-import gov.nasa.worldwind.globes.Globe;
 import gov.nasa.worldwind.ogc.kml.impl.KMLController;
 import gov.nasa.worldwind.render.DrawContext;
-import net.java.joglutils.model.geometry.Mesh;
 import net.java.joglutils.model.geometry.Model;
 //
 /**
  *
- * @author RodgersGB
+ * @author Laurie Thompson
  */
 
 public class SdtSpriteModel extends SdtModel
@@ -59,9 +57,9 @@ public class SdtSpriteModel extends SdtModel
 
 	protected double roll = 0.0;
 
-	private double sizeScale = 1.0;
+	protected double sizeScale = 1.0;
 	
-	private double minimumSizeScale = 1.0;
+	protected double minimumSizeScale = 1.0;
 
 	boolean useLighting = false;
 
@@ -284,22 +282,12 @@ public class SdtSpriteModel extends SdtModel
 	}
 	
 	public void setSize(double width, double height)
-	{		
-		//if (width <= 0) width = 32;
-		//if (height <= 0) height = 32;
-		
+	{				
 		// We don't (currently) have kml model sizing info
 		// so setSize and setLength only applicable to 3d models
 		this.iconWidth = width;
 		this.iconHeight = height;
 		
-/*
-		// if no length or width set use default width (32) as the h,w,l
-		if (inLength < 0 && width < 0)
-		{
-			length = 32 * getScale();
-		}
-		*/
 		setModelRadius();
 
 	}
@@ -316,7 +304,6 @@ public class SdtSpriteModel extends SdtModel
 	@Override
 	public boolean isRealSize()
 	{
-		// TODO: ljt is viewAtRealSize used by symbols still?
 		return (isRealSize || viewAtRealSize);
 	}
 
@@ -373,9 +360,12 @@ public class SdtSpriteModel extends SdtModel
 	
 	
 	@Override
-	double getModelRadius()
+	double getSymbolSize(DrawContext dc)
 	{
-		return modelRadius;
+		Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
+		double d = loc.distanceTo3(dc.getView().getEyePoint());
+		
+		return modelRadius = dc.getView().computePixelSizeAtDistance(d);
 	}
 	
 	/*
