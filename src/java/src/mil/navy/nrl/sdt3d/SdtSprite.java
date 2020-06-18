@@ -902,4 +902,14 @@ public class SdtSprite implements Renderable
 		// TODO Auto-generated method stub
 		return 0;
 	}
+	
+	public void setUseLighting(boolean useLighting)
+	{
+		// nooop
+	}
+
+	public void setValue(String key, Object value)
+	{
+		// noop
+	}
 }

@@ -374,16 +374,13 @@ public class SdtNode implements Renderable
 	{
 		this.feedbackEnabled = feedbackEnabled;
 		if (this.sprite.getIcon() != null)
+		{
 			this.sprite.getIcon().setValue(AVKey.FEEDBACK_ENABLED, feedbackEnabled);
-
-		if (this.sprite != null && this.sprite instanceof SdtSpriteModel)
-			((SdtSpriteModel) this.sprite).setValue(AVKey.FEEDBACK_ENABLED, feedbackEnabled);
-
-		// LJT This is for node following - set kml feedback enabled correctly
-		// at the controller level
-		
-		//if (this.kmlController != null)
-		//	this.kmlController.setValue(AVKey.FEEDBACK_ENABLED, feedbackEnabled);
+		}
+		else
+		{
+			sprite.setValue(AVKey.FEEDBACK_ENABLED, feedbackEnabled);
+		}
 
 	}
 

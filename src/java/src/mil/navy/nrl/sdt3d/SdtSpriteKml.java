@@ -502,7 +502,7 @@ public class SdtSpriteKml extends SdtSpriteModel
 		Rectangle rect = new Rectangle((int) (screenPoint.x), (int) (screenPoint.y),
 			(int) (modelScale.x), (int) (modelScale.y));
 
-		this.recordFeedback(dc, kmlController, modelPoint, rect);
+		this.recordFeedback(dc, this, modelPoint, rect);
 		kmlController.render(dc);
 	}
 
@@ -555,58 +555,4 @@ public class SdtSpriteKml extends SdtSpriteModel
 		// For now modelScaleVector x.y.z dimensions are the same
 		return modelRadius / 2.0;
 	}
-	
-	
-	// These are duplicate functions from the icon renderer
-	/**
-	 * Returns true if the ModelRenderer should record feedback about how the specified kmlModel has been processed.
-	 *
-	 * @param dc the current DrawContext.
-	 * @param model the KMLModel to record feedback information for.
-	 *
-	 * @return true to record feedback; false otherwise.
-	 */
-	protected boolean isFeedbackEnabled(DrawContext dc, KMLController kml)
-	{
-		if (dc.isPickingMode())
-			return false;
-
-		Boolean b = (Boolean) kml.getValue(AVKey.FEEDBACK_ENABLED);
-		return (b != null && b);
-	}
-
-
-	/**
-	 * If feedback is enabled for the specified model, this method records feedback about how the specified model has
-	 * been processed.
-	 *
-	 * @param dc the current DrawContext.
-	 * @param model the model which the feedback information refers to.
-	 * @param modelPoint the model's reference point in model coordinates.
-	 * @param screenRect the models's bounding rectangle in screen coordinates.
-	 */
-	protected void recordFeedback(DrawContext dc, KMLController model, Vec4 modelPoint, Rectangle screenRect)
-	{
-		if (!this.isFeedbackEnabled(dc, model))
-			return;
-
-		this.doRecordFeedback(dc, model, modelPoint, screenRect);
-	}
-
-
-	/**
-	 * Records feedback about how the specified WWIcon has been processed.
-	 *
-	 * @param dc the current DrawContext.
-	 * @param icon the icon which the feedback information refers to.
-	 * @param modelPoint the icon's reference point in model coordinates.
-	 * @param screenRect the icon's bounding rectangle in screen coordinates.
-	 */
-	@SuppressWarnings({ "UnusedDeclaration" })
-	protected void doRecordFeedback(DrawContext dc, KMLController model, Vec4 modelPoint, Rectangle screenRect)
-	{
-		model.setValue(AVKey.FEEDBACK_REFERENCE_POINT, modelPoint);
-		model.setValue(AVKey.FEEDBACK_SCREEN_BOUNDS, screenRect);
-	}
-
 }

@@ -125,9 +125,6 @@ public class SdtSpriteIcon extends SdtSprite implements SdtSpriteDimensions
 
 	public UserFacingIcon getIcon()
 	{
-		//if (this.icon == null)
-		//	this.icon = loadIcon(position, nodeName, feedbackEnabled);
-
 		return this.icon;
 	}
 
