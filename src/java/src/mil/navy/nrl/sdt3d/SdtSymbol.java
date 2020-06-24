@@ -495,6 +495,11 @@ public class SdtSymbol implements Renderable
 	 */
 	protected void setPosition(Position pos)
 	{
+		if (pos == null)
+		{
+			System.out.println("Pos == null " );
+		}
+		
 		this.position = pos;
 	}
 	
@@ -719,7 +724,10 @@ public class SdtSymbol implements Renderable
 		return heading;
 	}
 
-	
+	/*
+	 * Reverse the rotation around to true up with the models
+	 * heading.  (Note negative value may be returned).
+	 */
 	double reverseRotation(double orientation, double rotation)
 	{
 		// convert to +0 to +360 range
@@ -732,12 +740,17 @@ public class SdtSymbol implements Renderable
 		// other (360 - abs d1 ) angle change in reverse (opp to d1) direction
 		double d2 = d1 == 0 ? 0 : Math.abs(360 - Math.abs(d1)) * (d1 / Math.abs(d1)) * -1;
 
+		
 		// give whichever has minimum rotation
 		if (Math.abs(d1) < Math.abs(d2))
+		{
 			return d1;
+		}
 		else
+		{
 			return d2;
-
+		}
+			
 	} // reverseRotation
 
 
