@@ -43,13 +43,10 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
-import com.sun.prism.paint.Color;
-
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.render.DrawContext;
-import gov.nasa.worldwind.render.Renderable;
 
 public class SdtCone extends SdtSymbol 
 {
@@ -94,7 +91,7 @@ public class SdtCone extends SdtSymbol
 		heading = Math.abs(heading) % 360;
 
 		// reverse symbol heading to true up with node heading
-		heading = reverseRotation(heading,90);
+		heading = reverseRotation(heading, 90);
 
 		return heading;
 	}
@@ -157,6 +154,7 @@ public class SdtCone extends SdtSymbol
 
 	}
 	
+	
 	/**
 	 * OpenGL code to build the cone
 	 * 
@@ -197,9 +195,9 @@ public class SdtCone extends SdtSymbol
 		double elevation = rAzimuth;
 		gl.glRotated(elevation, 0, -1, 0);
 		
-		gl.glRotated(getPosition().getLatitude().getDegrees()
+		//gl.glRotated(getPosition().getLatitude().getDegrees()
 						// * Angle.fromDegrees(elevation).cos(), 1, 0, 0);
-						* Angle.fromDegrees(elevation).cos(), -1, 0, 0);
+		//				* Angle.fromDegrees(elevation).cos(), -1, 0, 0);
 
 		// width = radius of cone base
 		double currentWidth =  getWidth(); 
@@ -253,7 +251,6 @@ public class SdtCone extends SdtSymbol
 		dc.getGLU().gluDeleteQuadric(quadric);
 
 	}
-	
 		
 	private void resetGLState(GL2 gl)
 	{

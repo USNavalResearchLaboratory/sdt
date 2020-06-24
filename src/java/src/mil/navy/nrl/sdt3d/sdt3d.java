@@ -5106,11 +5106,7 @@ public class sdt3d extends SdtApplication
 
 						// Orientation or "yaw"
 						double lAzimuth = Double.valueOf(absolutePositioning);
-						if (lAzimuth < 0 || lAzimuth > 360)
-						{
-							System.out.println("Error: Symbol lAzimuth out of range (0-360)" + lAzimuth);
-							lAzimuth = 0;
-						}
+						
 						currentSymbol.setLAzimuth(lAzimuth);
 						break;
 					}
@@ -5118,12 +5114,6 @@ public class sdt3d extends SdtApplication
 					{
 						// Elevation or "pitch"
 						double rAzimuth = Double.valueOf(attrs[ind]);
-						if (rAzimuth < 0 || rAzimuth > 360)
-						{
-							System.out.println("Error: Symbol rAzimuth out of range (0-360)" + rAzimuth);
-							rAzimuth = 0;
-						}
-
 						currentSymbol.setRAzimuth(rAzimuth);
 						
 						break;
