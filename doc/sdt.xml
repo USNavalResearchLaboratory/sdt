@@ -1251,7 +1251,7 @@ node node1 symbol sphere,0xff0000</programlisting>
               view reaches the real world "size" (in meters) of a kml or model
               sprite the sprite will stay at real world size. If a length in
               meters is also set for a kml or model, the sprite will use the
-              length as the real world size rather than the sprite pixel
+              length as the real world size rather than the sprite
               "size".</para></entry>
             </row>
 
@@ -1829,10 +1829,10 @@ node &lt;nodeName&gt; trail,red,x,path,x,x,n</programlisting></para></entry>
                         <entry>cylinder</entry>
 
                         <entry>Orientation or "yaw" defines the degrees
-                        (0-360) the symbol should orient counterclockwise from
-                        due east. By default the orientation will be
-                        calculated <link linkend="relative">relative</link> to
-                        the node's heading. Use the <link
+                        (0-360) the symbol should orient clockwise from due
+                        north. By default the orientation will be calculated
+                        <link linkend="relative">relative</link> to the node's
+                        heading. Use the <link
                         linkend="absolute">absolute</link> attribute to define
                         an absolute orientation.</entry>
 
