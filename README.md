@@ -25,6 +25,15 @@ https://kenai.com/projects/jogl/sources/jogl-utils-git
 Details of modifications required to these distributions are
 available in the docs directory.
 
+sdt3d also relies on the following jar files.  See the getDependencies file for jar locations for manual download.
+
+apache:
+commons-io-2.6.jar 
+commons-lang3-3.10.jar 
+commons-text-1.8.jar 
+
+mozilla:
+juniversalchardet-1.0.3.jar 
 
 SDT (2D)
 
@@ -38,9 +47,44 @@ See the sdt documentation in the docs directory for the latest build
 instructions for both sdt and sdt3d or the README-SDT3D.txt and
 README-SDT.txt files located in the src distribution.
 
-Changes included in Release 2.2
+Release 2.3
+-----------
+1. Now supports loading openFlight models.
 
- 1. Sdt version updated to 2.2 as the performance enhancements are significant.
+2. Cone rendering improved.
+
+3. New log debug dialog available on file menu.  Options to turn debug loggin off, log to console, or log to file.  Option to change default debug log file name.
+
+4. New node offset attribute.  Offset positions a node's sprite at a cartesian x,y offset or elevation z.
+
+node <node> offset <x,y,z>
+
+Offset is also available in sprite.xml
+
+5. Parsing of sprite.xml files improved.  (Attributes no longer required, only attributes in file are applied)
+
+6. Kml model sizing and symbol sizing improved.
+
+7. 3d model symbol sizing improved.
+
+8. Hybrid model sizing fixed.
+
+   length dimension set: model is fixed at length size regardless of view
+
+   size dimension set: model is sized at size in pixels and uses size as "real-world" length
+
+   length & size set: "hybrid model" model is sized at size in pixel but uses length as the "real-world" model length
+
+9. Link end bug fix.
+
+10. Command to set name of any model-jar file.  models in jar file will be autodetected.
+
+11. Code has been refactored.
+    
+Release 2.2
+-----------
+
+1. Sdt version updated to 2.2 as the performance enhancements are significant.
 
 2. Multiple input flows (including multiple TCP clients) can now be successfully inteleaved.
 
