@@ -1,23 +1,16 @@
 package mil.navy.nrl.sdt3d;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
-
-import javax.swing.text.html.HTMLDocument.Iterator;
-
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
 
 /**
@@ -56,19 +49,18 @@ public class ScenarioModel
 	
 	ScenarioModel()
 	{
-
 	}
 	
 	
-	void loadState()
+	void loadState(String scenarioFileName)
 	{
-		Instant startTime = Instant.now();
+		try {				
+			FileInputStream fis = new FileInputStream(scenarioFileName);
 
-		LinkedHashMap<Long,Map<Integer,String>> sdtCommandMap = null; //new LinkedHashMap<Long, Map<Integer,String>>();
-		FileInputStream fis;
-		try {
-			
-			fis = new FileInputStream("modelState.ser");
+		
+			Instant startTime = Instant.now();
+
+			LinkedHashMap<Long,Map<Integer,String>> sdtCommandMap = null; //new LinkedHashMap<Long, Map<Integer,String>>();
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			sdtCommandMap = (LinkedHashMap<Long, Map<Integer, String>>) ois.readObject();
 			//System.out.println(sdtCommandMap);
@@ -78,32 +70,32 @@ public class ScenarioModel
 			Instant endTime = Instant.now();
 			Duration interval = Duration.between(startTime, endTime);
 			System.out.println("loadModelState() Execution time in seconds: " + interval.getSeconds());
-
 			
+	
+			//sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
+			synMap = Collections.synchronizedMap(sdtCommandMap);
+
+			sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
+			synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
+		
+			endTime = Instant.now();
+			interval = Duration.between(startTime, endTime);
+			System.out.println("loadModelState() Total execution time in seconds: " + interval.getSeconds());
+
 		} catch (IOException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	
-		//sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
-		synMap = Collections.synchronizedMap(sdtCommandMap);
-
-		sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
-		synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
-		
-		Instant endTime = Instant.now();
-		Duration interval = Duration.between(startTime, endTime);
-		System.out.println("loadModelState() Total execution time in seconds: " + interval.getSeconds());
 	}
 	
 	
-	void saveState()
+	void saveState(String scenarioFileName)
 	{
 		FileOutputStream fos;
 		try {
 			Instant startTime = Instant.now();
 			
-			fos = new FileOutputStream("modelState.ser");
+			fos = new FileOutputStream(scenarioFileName);
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(sdtCommandMap);
 			oos.close();

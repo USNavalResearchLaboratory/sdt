@@ -165,9 +165,7 @@ public class ScenarioThread extends SocketThread
 			
 			if (lastTime < scenarioPlaybackStartTime)
 			{
-				value = " " + pendingCmd + " \"" + value + " \"\n";
-				
-				//System.out.println("lastTime> " + lastTime + " scenarioPlaybackStartTime> " + scenarioPlaybackStartTime);
+				value = " " + pendingCmd + " \"" + value + " \"\n";				
 			}
 			else
 			{
@@ -202,6 +200,9 @@ public class ScenarioThread extends SocketThread
 					&&
 				(!pendingCmd.equalsIgnoreCase("listen")))
 			{
+				//scenarioController.getView().resumeScenarioPlayback();
+				// ljt review all this
+				scenarioController.updatePlaybackTime(lastTime);
 				sb.append(value, 0, value.length());
 				parseString(sb, parser);	
 			}
