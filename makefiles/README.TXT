@@ -2,7 +2,14 @@ See the README-SDT3d.TXT and README-SDT.TXT files in the root project
 directory for instructions for building the applications.  html and
 pdf build instructions are also available in the docs directory.
 
-Note:
+The perferred java implementation for sdt3d 2.0 is opendjdk java 1.8
+
+hint:
+in .bashrc
+
+set JAVA_HOME="$(/usr/libexec/java_home -v 1.8"
+
+For java versions note:
 
 On certain OSX implementations there is some conflict after upgrading from
 OSX's 1.6 Java JDK to Oracle's 1.7 JDK.
@@ -24,3 +31,4 @@ Make a symlink from 1.6 jdk include directory to jdk 1.7 include dir
 Finally be sure to compile against 1.6 jdk
 
 export JAVA_HOME=`/usr/libexec/java_home -v 1.6`
+
