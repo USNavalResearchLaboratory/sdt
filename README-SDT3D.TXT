@@ -123,6 +123,10 @@ Osx:
 (To make both the sdt and sdt3d projects use "make all".  Note to make sdt 2D
 you must have wxWidgets installed);
 
+To rebuild just the sdt3d.jar file:
+
+make -f Makefile.<platform> build_sdt3d
+
 If something goes wrong with the above build step, you may need to
 recover via:
 
@@ -187,6 +191,19 @@ worldwind workspace to the joglutils project.
 6.  Modify the sdt3d java build path to find the java jre libraries in
 the appropriate location for your system if necessary.  (sdt3d project
 properties java build path libraries section)
+
+7.  sdt3d also relies on the following jar files.  See the getDependencies file for jar locations for manual download.
+
+Add these to your project.
+
+apache:
+commons-io-2.6.jar 
+commons-lang3-3.10.jar 
+commons-text-1.8.jar 
+
+mozilla:
+juniversalchardet-1.0.3.jar 
+
 
 The "sdt3d" project uses relative paths for the referenced native
 libraries (Java OpenGL, Protolib-jni, etc) and should build.  The
