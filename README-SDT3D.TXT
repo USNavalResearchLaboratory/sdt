@@ -125,7 +125,7 @@ you must have wxWidgets installed);
 
 To rebuild just the sdt3d.jar file:
 
-make -f Makefile.<platform> build_sdt3d
+make -f Makefile.<platform> build-sdt3d
 
 If something goes wrong with the above build step, you may need to
 recover via:
