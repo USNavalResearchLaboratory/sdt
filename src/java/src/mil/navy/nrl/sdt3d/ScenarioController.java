@@ -4,18 +4,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-
+import java.util.Optional;
+import javax.swing.JFrame;
 import javax.swing.Timer;
 
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
@@ -31,6 +30,7 @@ public class ScenarioController implements PropertyChangeListener
 	public static final String RECORDING_STOPPED = "recordingStopped";
 	public static final String SAVE_STATE = "saveState";
 	public static final String LOAD_STATE = "loadState";
+	public static final String CONFIGURE_SCENARIO = "configureScenario";
 	
 	public static final String SKIP_BACK = "skipBack";
 	public static final String SKIP_FORWARD = "skipForward";
@@ -42,7 +42,7 @@ public class ScenarioController implements PropertyChangeListener
 	public static final String RESUME_LIVE_PLAY = "resumeLivePlay";
 	
 	
-	private ScenarioModel scenarioModel = new ScenarioModel();
+	private ScenarioModel scenarioModel;
 	private ScenarioPlaybackPanel scenarioPlaybackPanel;
 	
 	private sdt3d.AppFrame listener;
@@ -51,12 +51,19 @@ public class ScenarioController implements PropertyChangeListener
 		
 	private Timer commandMapTimer = null;
 
+	private JFrame mainWindow;
+	
+	static String SCENARIO_FILENAME = System.getProperty("user.dir") 
+			+ File.separator
+			+ "sdtScenarioRecording";
+
 	
 	public ScenarioController(sdt3d.AppFrame listener, ScenarioPlaybackPanel scenarioPlaybackPanel)
 	{
+		this.scenarioModel = new ScenarioModel();
 		this.scenarioPlaybackPanel = scenarioPlaybackPanel;
 		this.listener = listener;
-		
+		this.mainWindow = mainWindow;
 		initController();
 	}
 
@@ -95,6 +102,11 @@ public class ScenarioController implements PropertyChangeListener
 		scenarioModel.appendBufferModel();
 	}
 	
+
+	void updatePlaybackTime(Long time)
+	{
+		scenarioPlaybackPanel.updatePlaybackTime(time);
+	}
 	
 	int getScenarioSecsFromRealTime(Long realScenarioTime)
 	{
@@ -106,9 +118,8 @@ public class ScenarioController implements PropertyChangeListener
 			if (entry.getValue() >= realScenarioTime) 
 			{
 			
-				Date theTime = new Date(realScenarioTime);
-				System.out.println("realScenarioTime> " + realScenarioTime + " key>" + entry.getKey() + " fmtReal> " + theTime);
-				
+				//Date theTime = new Date(realScenarioTime);
+			
 				sliderTime = entry.getKey();
 				break;
 			}
@@ -157,11 +168,12 @@ public class ScenarioController implements PropertyChangeListener
 	
 	private void saveState()
 	{
-		getScenarioModel().saveState();
+		// Save the model state (sdt commands)
+		getScenarioModel().saveState(SCENARIO_FILENAME + ".cmdMap");
 		
 		FileOutputStream fos;
 		try {
-			fos = new FileOutputStream("controllerState.ser");
+			fos = new FileOutputStream(SCENARIO_FILENAME + ".timeMap");
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(scenarioSliderTimeMap);
 			oos.close();
@@ -173,18 +185,34 @@ public class ScenarioController implements PropertyChangeListener
 		}		
 	}
 	
+	
+	void configureScenarioState()
+	{
+		Optional<String> fileName = new ScenarioSettingsDialog(mainWindow).show(SCENARIO_FILENAME);
+
+		if (!fileName.isPresent())
+		{
+			// user cancelled - abort
+			// LJT TODO: handle other config options
+			return;
+		}
+
+		SCENARIO_FILENAME = fileName.get();
+	}
+	
 		
 	void loadState()
 	{
-		getScenarioModel().loadState();
+		// Load scenario commands
+		getScenarioModel().loadState(SCENARIO_FILENAME + ".cmdMap");
 		
 		scenarioSliderTimeMap = null;
 		FileInputStream fis;
 		try {
-			fis = new FileInputStream("controllerState.ser");
+			// Load scenario command time map
+			fis = new FileInputStream(SCENARIO_FILENAME + ".timeMap");
 			ObjectInputStream ois = new ObjectInputStream(fis);			
 			scenarioSliderTimeMap = (Map<Integer, Long>) ois.readObject();
-			//System.out.println(scenarioSliderTimeMap);
 			ois.close();
 			fis.close();
 
@@ -201,14 +229,13 @@ public class ScenarioController implements PropertyChangeListener
 	
 	Integer  getElapsedSecs()
 	{
-		System.out.println("here");
 		// hack for now
 		//Map.Entry<Integer, Long> entry = (Entry<Integer, Long>) scenarioSliderTimeMap.entrySet().toArray()[scenarioSliderTimeMap.size()];
 		Integer key = 0;
 		for (Map.Entry<Integer, Long> entry : scenarioSliderTimeMap.entrySet()) {
 			key = entry.getKey();
 			//ArrayList<String> value = entry.getValue();
-			}
+		}
 		
 		return key;  //Integer.valueOf(scenarioSliderTimeMap.entrySet().toArray()[scenarioSliderTimeMap.size()]);
 	}
@@ -262,7 +289,13 @@ public class ScenarioController implements PropertyChangeListener
 			listener.modelPropertyChange(ScenarioController.LOAD_STATE, null, null);
 		}
 
-		
+		if (event.getPropertyName().equals(CONFIGURE_SCENARIO))
+		{
+			// Stop recording and save state
+			// LJT TODO listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
+			configureScenarioState();
+			//listener.modelPropertyChange(ScenarioController.LOAD_STATE, null, null);
+		}
 		//System.out.println("ScenarioController::propertyChange");
 		if (event.getPropertyName().equals(STOP_SCENARIO_PLAYBACK))
 		{	                		
@@ -282,6 +315,11 @@ public class ScenarioController implements PropertyChangeListener
 		{
 			//System.out.println("Controller propertyChange RESUME_LIVE_PLAY");
 			listener.modelPropertyChange(ScenarioController.RESUME_LIVE_PLAY, null, null);
+		}
+		
+		if (event.getPropertyName().equals(SKIP_FORWARD))
+		{
+			//listener.modelPropertyChange(ScenarioController.SKIP_FORWARD);
 		}
 	}
 	
