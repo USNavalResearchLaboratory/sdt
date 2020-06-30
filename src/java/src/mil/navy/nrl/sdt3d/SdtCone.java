@@ -91,7 +91,7 @@ public class SdtCone extends SdtSymbol
 		heading = Math.abs(heading) % 360;
 
 		// reverse symbol heading to true up with node heading
-		heading = reverseRotation(heading, 90);
+		heading = reverseRotation(heading, 180);
 
 		return heading;
 	}
@@ -169,36 +169,30 @@ public class SdtCone extends SdtSymbol
 				getPosition().getLongitude(),
 				getPosition().getElevation());
 		
+		
 		// The usual order of operations is:
 		// Translate (move the origin to the right location)
 		// Rotate (orient the coordinate axes right)
 		// Scale (get the object to the right size)
 		gl.glTranslated(topCenter.x, topCenter.y, topCenter.z);
 
-		gl.glRotated(90 + getPosition().getLongitude().getDegrees(), 0, 1, 0);
+	    // Rotate to align with longitude.
+        gl.glRotated(this.getPosition().getLongitude().degrees, 0, 1, 0);
+
+        // Rotate to align with latitude.
+        gl.glRotated(Math.abs(90 - this.getPosition().getLatitude().degrees), 1, 0, 0);
 		
-		// rotation about x-axis is pitch/elevation		
-		// rotation about y-axis is heading/yaw
-		// rotation about z-axis is roll/bank
-		// glRotated(degrees, x, y, z) 
-		
+        
 		// Convert heading so 0/360 is due north orientation clockwise
-		double heading = convertToModelHeading(lAzimuth);
+		double heading = convertToModelHeading(lAzimuth);		
 
-		// orientation/heading 
-		gl.glRotated(heading, -1, 0, 0);
-		gl.glRotated(getPosition().getLatitude().getDegrees() 
-				* Angle.fromDegrees(heading).sin(), 0, 1, 0);		
-		
-		// elevation is 0-360 with 0 to the east 180 to the west 90 due north etc
-		// degrees tilted up from the earth's surface
+		// Apply the azimuth.
+		gl.glRotated(heading, 0, 1, 0);
+
 		double elevation = rAzimuth;
-		gl.glRotated(elevation, 0, -1, 0);
+		gl.glRotated(elevation, -1, 0, 0);
 		
-		//gl.glRotated(getPosition().getLatitude().getDegrees()
-						// * Angle.fromDegrees(elevation).cos(), 1, 0, 0);
-		//				* Angle.fromDegrees(elevation).cos(), -1, 0, 0);
-
+		
 		// width = radius of cone base
 		double currentWidth =  getWidth(); 
 		// height = length from cone tip to center of base
@@ -249,9 +243,10 @@ public class SdtCone extends SdtSymbol
 		gl.glTranslated(0, 0, currentHeight);
 		dc.getGLU().gluDisk(quadric, 0d, currentWidth, 30, 30);
 		dc.getGLU().gluDeleteQuadric(quadric);
-
+		
 	}
 		
+	
 	private void resetGLState(GL2 gl)
 	{
 		// reset our state
