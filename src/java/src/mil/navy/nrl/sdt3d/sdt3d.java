@@ -5092,6 +5092,7 @@ public class sdt3d extends SdtApplication
 					}
 					case 7:
 					{
+						// azimuth/heading/yaw
 						String absolutePositioning = attrs[ind];
 						if (absolutePositioning.endsWith("a"))
 						{
