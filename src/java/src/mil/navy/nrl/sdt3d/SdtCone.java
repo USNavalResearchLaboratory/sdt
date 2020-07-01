@@ -70,6 +70,11 @@ public class SdtCone extends SdtSymbol
 	@Override
 	public void setLAzimuth(double d)
 	{
+		while (d < 0)
+		{
+			d += 360;
+		}	
+		
 		this.lAzimuth = d;
 	}
 
