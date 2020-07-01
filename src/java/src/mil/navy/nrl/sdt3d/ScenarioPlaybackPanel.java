@@ -82,16 +82,16 @@ public class ScenarioPlaybackPanel extends JPanel
     {
         this.startStopButton.setEnabled(true);
 
-    		updateEnabledState(true);
+    	updateEnabledState(true);
     		
-    		setPlayMode(RECORDING);
+    	setPlayMode(RECORDING);
     		
-    		startStopButton.setText("Pause");
+    	startStopButton.setText("Pause");
     
     }
     
   
-    public void clearRecording()
+    public void reset()
     {
 		// clean all this starting/stopping up!!
 		startStopButton.setText("Start Recording");
@@ -103,9 +103,10 @@ public class ScenarioPlaybackPanel extends JPanel
 			player.stop();
     			player = null;
 		}
-    		scenarioSecs = 0;
-    		elapsedSecs = 0;
-    		playbackOnly = false;
+		scenarioSecs = 0;
+		elapsedSecs = 0;
+		playbackOnly = false;
+		loadStateButton.setEnabled(true);
     		
     }
     
@@ -122,7 +123,7 @@ public class ScenarioPlaybackPanel extends JPanel
 		
     }
     
-    private void initComponents()
+    void initComponents()
     {
         //======== this ========
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
@@ -547,8 +548,8 @@ public class ScenarioPlaybackPanel extends JPanel
     void stopScenarioPlayback()
     {
 		setPlayMode(PLAY_PAUSED);   
-    		startStopButton.setText("Start");
-    		speedFactorSpinner.setEnabled(false);
+		startStopButton.setText("Start");
+		speedFactorSpinner.setEnabled(false);
      }
     
     
@@ -604,6 +605,8 @@ public class ScenarioPlaybackPanel extends JPanel
     			{
     				playbackOnly = false;
     			}
+       			System.out.println("START_RECORDING scenarioSecs> " + scenarioSecs);
+       		 
     			setPlayMode(START_RECORDING);   
     			stopRecordingButton.setEnabled(playMode == START_RECORDING);
     			firePropertyChange(ScenarioController.RECORDING_STARTED, null, scenarioSecs);
@@ -616,7 +619,7 @@ public class ScenarioPlaybackPanel extends JPanel
     			speedFactorSpinner.setEnabled(false);
     			scenarioSecs = scenarioSlider.getValue();
     			setScenarioTime(scenarioSecs);
-    			//System.out.println("PLAY_PAUSED PLAYBACK scenarioSecs> " + scenarioSecs);
+    			System.out.println("PLAYING scenarioSecs> " + scenarioSecs);
     			setPlayMode(PLAYING);   			
     			firePropertyChange(ScenarioController.START_SCENARIO_PLAYBACK, null, scenarioSecs);
     		}
@@ -627,7 +630,7 @@ public class ScenarioPlaybackPanel extends JPanel
     			
     			setPlayMode(PLAY_PAUSED);
     			scenarioSecs = scenarioSlider.getValue();
-    			//System.out.println("PLAY_STOPPED scenarioSlider value> " + scenarioSlider.getValue());
+    			System.out.println("PAUSED scenarioSlider value> " + scenarioSlider.getValue());
     			firePropertyChange(ScenarioController.STOP_SCENARIO_PLAYBACK, null, scenarioSlider.getValue());  
     		}
     }
@@ -653,7 +656,8 @@ public class ScenarioPlaybackPanel extends JPanel
     private void forwardButtonActionPerformed()
     {    
 		// TODO: Check for end of scenario
-		updateScenarioTime(scenarioSlider.getValue() + 1);
+		updateScenarioTime(scenarioSlider.getValue() + 10);
+		scenarioSlider.setValue(scenarioSlider.getValue() + 10);
 		firePropertyChange(ScenarioController.SKIP_FORWARD, null, scenarioSlider.getValue());
     }
 

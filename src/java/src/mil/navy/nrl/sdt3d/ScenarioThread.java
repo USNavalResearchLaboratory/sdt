@@ -44,6 +44,8 @@ public class ScenarioThread extends SocketThread
 	
 	int lastWaitTime = 0;
 	
+	Long lastTime = new Long(0);	
+	
 	HashMap<Integer, String> int2Cmd;
 
 	public ScenarioThread(sdt3d.AppFrame theApp, ScenarioController scenarioController, HashMap<Integer, String> int2Cmd, Long scenarioPlaybackStartTime)
@@ -110,13 +112,31 @@ public class ScenarioThread extends SocketThread
 	}
 	
 	
+	public void setScenarioStartTime(Long newTime)
+	{
+		scenarioPlaybackStartTime = newTime;
+		lastTime = scenarioPlaybackStartTime;
+		
+		Date date = new Date(scenarioPlaybackStartTime);
+		// use correct format ('S' for milliseconds)
+		SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+		formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+		// format date
+		String formatted = formatter.format(date);
+
+		
+		System.out.println("New scenariostarttime value> " + formatted);
+	}
+	
+	
 	@Override
 	public void run()
 	{
+		System.out.println("ScenarioThread::Run()");
 		// started via thread start
 		this.running = true;
 		clearState();
-		Long lastTime = new Long(0);	
+		lastTime = new Long(0);	
 		// implement a get first
 		synchronized(getScenarioModel().getSynMap()) 
 		{
@@ -157,15 +177,34 @@ public class ScenarioThread extends SocketThread
 				key = (int) cmdEntry.getKey();
 				pendingCmd = int2Cmd.get(key);
 				value = (String) cmdEntry.getValue();
-    			}			
+    		}			
 
 			Long waitTime = entry.getKey() - lastTime;
 			lastTime = entry.getKey();
 			
 			
+			Date date = new Date(lastTime);
+			// use correct format ('S' for milliseconds)
+			SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+			formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+			// format date
+			String formatted = formatter.format(date);
+			//System.out.println("lastTime> " + formatted + " scenarioPlaybackStartTime> " + scenarioPlaybackStartTime);
+
+			Date sdate = new Date(scenarioPlaybackStartTime);
+			// use correct format ('S' for milliseconds)
+			SimpleDateFormat sformatter = new SimpleDateFormat("HH:mm:ss");
+			sformatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+			// format date
+			String sformatted = sformatter.format(sdate);
+
+			
+			
 			if (lastTime < scenarioPlaybackStartTime)
 			{
-				value = " " + pendingCmd + " \"" + value + " \"\n";				
+				value = " " + pendingCmd + " \"" + value + " \"\n";	
+
+				//System.out.println("LastTime> " + formatted + " < scenarioPlaybackStartTime " + sformatted);
 			}
 			else
 			{
@@ -176,6 +215,8 @@ public class ScenarioThread extends SocketThread
 					waitTime = new Long(0);
 				}
 				
+				//System.out.println("	LastTime> " + formatted + " >= scenarioPlaybackStartTime " + sformatted);
+
 				value = pendingCmd + " \"" + value + " \"\n";
 				try
 				{	
