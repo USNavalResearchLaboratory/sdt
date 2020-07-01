@@ -2072,6 +2072,10 @@ public class sdt3d extends SdtApplication
 			if (hardReset)
 			{
 
+				// ljt todo: here?
+				startScenarioThread((long) 0);
+				scenarioController.reset();
+				
 				// shutdown any socket threads, recreate menu item
 				if (udpSocketThread != null && !udpSocketThread.stopped())
 				{
@@ -7481,7 +7485,7 @@ public class sdt3d extends SdtApplication
 		            		stopScenarioThread();
 		            		if (event.getPropertyName().equals(ScenarioController.RECORDING_STARTED))
 		            		{
-		            			//System.out.println("RECORDING_STARTED sdt3d\n");
+		            			System.out.println("RECORDING_STARTED sdt3d\n");
 		            			recordScenario = true;
 		            			playbackOnly = false;
 		            			
@@ -7491,7 +7495,7 @@ public class sdt3d extends SdtApplication
 		            			// The user stopped recording, keep the data model available
 		            			// and don't reset controller
 		            			
-		            			//System.out.println("RECORDING_STOPPED sdt3d\n");
+		            			System.out.println("RECORDING_STOPPED sdt3d\n");
 		            			
 		    					if (scenarioThread != null) 
 		    					{ 
@@ -7512,13 +7516,14 @@ public class sdt3d extends SdtApplication
 		            		*/
 		            		if (event.getPropertyName().equals(ScenarioController.LOAD_STATE))
 		            		{
+		            			System.out.println("LOAD_STATE sdt3d (resetting system state)\n");
+
 		            			resetSystemState(false);
-		            			//scenarioController.loadState();
 		            		}
 		            		
 		                if (event.getPropertyName().equals(ScenarioController.START_SCENARIO_PLAYBACK))
 		                {
-		                		//System.out.println("SCENARIO_PLAYBACK sdt3d\n");
+		                		System.out.println("START_SCENARIO_PLAYBACK sdt3d\n");
 		                		scenarioController.appendBufferModel();
 	                			
 		                		// oldValue: sliderStartTime, newValue: scenarioStartTime
@@ -7526,15 +7531,32 @@ public class sdt3d extends SdtApplication
 	                			playbackScenario = true;	  
 	                			playbackStopped = false;
 						}
+		                if (event.getPropertyName().equals(ScenarioController.SKIP_FORWARD))
+		                {
+	                		System.out.println("SKIP_FORWARD sdt3d\n");
+
+		                	if (scenarioThread != null)
+		                	{
+		                		playbackScenario = true;
+		                		playbackStopped = true;		                		
+
+		                		scenarioThread.setScenarioStartTime((Long) event.getNewValue());
+		                		
+		                		//startScenarioThread((Long) event.getNewValue());
+	                			playbackScenario = true;	  
+	                			playbackStopped = false;
+
+		                	}
+		                }
 		                if (event.getPropertyName().equals(ScenarioController.STOP_SCENARIO_PLAYBACK))
 		                {	
-		                		//System.out.println("SCEANRIO_PLAYBACK_STOPPED sdt3d\n");
+		                		System.out.println("STOP_SCENARIO_PLAYBACK sdt3d\n");
 		                		playbackScenario = true;
 		                		playbackStopped = true;		                		
 		                }
 		                if (event.getPropertyName().equals(ScenarioController.RESUME_LIVE_PLAY))
 		                	{
-		                		//System.out.println("RESUME_LIVE_PLAY sdt3d\n");
+		                		System.out.println("RESUME_LIVE_PLAY sdt3d\n");
 		                		// TODO: Need to playback what is in the buffer prior to resuming play
 		                		scenarioController.appendBufferModel();
 		                		playbackScenario = false;

@@ -10,10 +10,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
+
 import javax.swing.JFrame;
 import javax.swing.Timer;
 
@@ -156,7 +159,7 @@ public class ScenarioController implements PropertyChangeListener
 	 */
 	public void reset()
 	{
-		getView().clearRecording();
+		getView().reset();
 		
 		recording = false;
 		stopCommandMapTimer();
@@ -300,7 +303,7 @@ public class ScenarioController implements PropertyChangeListener
 		if (event.getPropertyName().equals(STOP_SCENARIO_PLAYBACK))
 		{	                		
 			//System.out.println("Controller propertyChange PLAY_STOPPED");
-			listener.modelPropertyChange(ScenarioController.STOP_SCENARIO_PLAYBACK, null, null);
+			listener.modelPropertyChange(ScenarioController.STOP_SCENARIO_PLAYBACK, null, event.getNewValue());
 			
 		}
 		
@@ -319,8 +322,53 @@ public class ScenarioController implements PropertyChangeListener
 		
 		if (event.getPropertyName().equals(SKIP_FORWARD))
 		{
-			//listener.modelPropertyChange(ScenarioController.SKIP_FORWARD);
+			skipForwardToSliderTime(event);
 		}
+	}
+	
+	
+	void skipForwardToSliderTime(PropertyChangeEvent event)
+	{
+		
+		// LJT TODO: merge with getCommandAtSliderTime
+		int sliderStartTime = (int) event.getNewValue();
+		
+		// If no value provided start at beginning
+		if (sliderStartTime == 0)
+		{
+			if (!scenarioSliderTimeMap.isEmpty())
+			{
+				Map.Entry<Integer, Long> entry = scenarioSliderTimeMap.entrySet().iterator().next();
+				sliderStartTime = entry.getKey();
+			}
+		} 
+		else 
+		{
+			if (!scenarioSliderTimeMap.containsKey(sliderStartTime))
+			{	
+				System.out.println("ScenarioController::propertyChange() map does not contain key>" + event.getNewValue());
+				// Stop playback
+				getView().startStopButtonActionPerformed();
+				return;
+			}
+		}
+
+		
+		// Get the command map key for the scenario slider time
+		Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
+		
+		Date date = new Date(scenarioPlaybackStartTime);
+		// use correct format ('S' for milliseconds)
+		SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+		formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+		// format date
+		String formatted = formatter.format(date);
+
+		
+		System.out.println("New value> " + formatted);
+
+		listener.modelPropertyChange(ScenarioController.SKIP_FORWARD, sliderStartTime, scenarioPlaybackStartTime);		
+	
 	}
 	
 	
@@ -342,7 +390,7 @@ public class ScenarioController implements PropertyChangeListener
 			if (!scenarioSliderTimeMap.containsKey(sliderStartTime))
 			{	
 				System.out.println("ScenarioController::propertyChange() map does not contain key>" + event.getNewValue());
-				// Stop playback
+	   		 
 				getView().startStopButtonActionPerformed();
 				return;
 			}
