@@ -48,7 +48,8 @@ public class ScenarioThread extends SocketThread
 	
 	HashMap<Integer, String> int2Cmd;
 
-	public ScenarioThread(sdt3d.AppFrame theApp, ScenarioController scenarioController, HashMap<Integer, String> int2Cmd, Long scenarioPlaybackStartTime)
+	public ScenarioThread(sdt3d.AppFrame theApp, ScenarioController scenarioController, 
+			HashMap<Integer, String> int2Cmd, Long scenarioPlaybackStartTime)
 	{
 		super(theApp, 0);
 
@@ -164,6 +165,7 @@ public class ScenarioThread extends SocketThread
 			 */
 			if (stopRecordingFlag)
 			{
+				System.out.println("ScenarioThread() Recording stopped");
 				return;
 			}
 			Entry<Long, Map<Integer,String>> entry = itr.next();
@@ -204,7 +206,7 @@ public class ScenarioThread extends SocketThread
 			{
 				value = " " + pendingCmd + " \"" + value + " \"\n";	
 
-				//System.out.println("LastTime> " + formatted + " < scenarioPlaybackStartTime " + sformatted);
+				System.out.println("LastTime> " + formatted + " < scenarioPlaybackStartTime " + sformatted);
 			}
 			else
 			{
@@ -215,7 +217,7 @@ public class ScenarioThread extends SocketThread
 					waitTime = new Long(0);
 				}
 				
-				//System.out.println("	LastTime> " + formatted + " >= scenarioPlaybackStartTime " + sformatted);
+				System.out.println("	LastTime> " + formatted + " >= scenarioPlaybackStartTime " + sformatted);
 
 				value = pendingCmd + " \"" + value + " \"\n";
 				try

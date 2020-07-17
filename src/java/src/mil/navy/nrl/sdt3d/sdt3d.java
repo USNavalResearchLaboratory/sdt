@@ -350,7 +350,7 @@ public class sdt3d extends SdtApplication
 
 		private boolean logDebugOutput = false;
 		
-		boolean recordScenario = true;
+		boolean recordScenario = false;
 		// clean up these booleans
 		boolean playbackOnly = false;
 				
@@ -1711,8 +1711,10 @@ public class sdt3d extends SdtApplication
 		{
 			if (scenarioThread != null)
 			{
+				// sets stopFlag to true
 				scenarioThread.stopThread();
 			}
+			//scenarioController = new ScenarioController(this, scenarioPlaybackPanel);
 			scenarioThread = new ScenarioThread(this, scenarioController, int2Cmd, scenarioPlaybackStartTime);
 			scenarioThread.start();
 		}
@@ -1928,9 +1930,15 @@ public class sdt3d extends SdtApplication
 			if (hardReset)
 			{
 
-				// ljt todo: here?
-				startScenarioThread((long) 0);
+				// Stop scenario recording and reset state
+				// ?? Is this the problem??
+				startScenarioThread((long)0);
 				scenarioController.reset();
+				
+				
+				//startStopScenarioRecording("off");
+
+				
 				
 				// shutdown any socket threads, recreate menu item
 				if (udpSocketThread != null && !udpSocketThread.stopped())
@@ -1946,9 +1954,9 @@ public class sdt3d extends SdtApplication
 					tcpSocketThread = null;
 					toggleTcpOn();
 				}
-								
-				// Stop scenario recording and reset state
+					
 				startStopScenarioRecording("off");
+
 				
 				// Reset system modes
 				this.setOfflineMode("off");
@@ -3812,6 +3820,7 @@ public class sdt3d extends SdtApplication
 
 		private boolean startStopScenarioRecording(String val)
 		{
+
 			if (0 == val.length())
 			{
 				System.out.println("setRecordScenario() error invalid value\n");
@@ -3834,6 +3843,12 @@ public class sdt3d extends SdtApplication
 						scenarioThread.stopRecording();
 						stopScenarioThread();
 					}
+					
+					// ljt todo: here?
+					// or was this it??
+					//startScenarioThread((long) 0);
+
+					
 					scenarioController.reset();
 					scenarioThread = null;						
 					recordScenario = false;
@@ -7388,7 +7403,7 @@ public class sdt3d extends SdtApplication
 			}
 		}
 
-		private void logDebugOutput(String pendingCmd, String val)
+		void logDebugOutput(String pendingCmd, String val)
 		{
 			// Don't want to log playback commands but shouldn't get here
 			// in any event
@@ -7439,6 +7454,8 @@ public class sdt3d extends SdtApplication
 		            			
 		    					if (scenarioThread != null) 
 		    					{ 
+		    						// TBD: see if we really need the stop recording flat
+		    						// in the scenarioThread - do we have other state to use
 		    						scenarioThread.stopRecording();
 		    						stopScenarioThread();
 		    					}
@@ -7506,68 +7523,6 @@ public class sdt3d extends SdtApplication
 		        });
 		}
 		
-		void processCmd(String pendingCmd, String val,boolean scenarioCmd)
-		{									
-			/*
-			 * If we are recording the scenario either update our model
-			 * if we are not playing it back, or the buffered command
-			 * model if we are.
-			 */
-			if (recordScenario && !playbackOnly)
-			{
-				if (!playbackScenario && !scenarioCmd) 
-				{
-					//System.out.println("Updating model..");
-					scenarioController.updateModel(cmd2Int.get(pendingCmd), val);
-				}
-				else
-				{
-					if (!scenarioCmd)
-					{
-						scenarioController.updateBufferModel(cmd2Int.get(pendingCmd),val);
-					}
-				}	
-			}
-			
-			if ((playbackScenario && !scenarioCmd)
-					||
-					playbackStopped)
-			{
-				
-				return;
-			}
-		
-			/*
-			 * If we are no longer scenario recording/playback, don't play back
-			 * any scenario commands (fix this text)
-			 * 
-			 * or if we have stopped recording and are just playing back the scenario
-			 * 
-			 * clean all these booleans up
-			 */
-			if (!recordScenario && scenarioCmd && !playbackOnly)
-			{
-				return;
-			}
-			
-			if (playbackOnly && !scenarioCmd)
-			{
-				return;
-			}
-			
-			
-			if (parser.doCmd(pendingCmd, val))
-			{
-				logDebugOutput(pendingCmd, val);
-			}
-			else
-			{
-				System.out.println("sdt3d::doCmd() cmd> " + pendingCmd + " val>" + val + " failed ");
-			}
-		
-		}
-
-
 
 
 		/**
@@ -7619,7 +7574,10 @@ public class sdt3d extends SdtApplication
 				str = str.substring(0, str.lastIndexOf("\""));
 			}
 			String cmd = str.concat(" ");
-			parser.OnCommand(cmd, scenarioCmd);
+			parser.OnCommand(cmd, scenarioCmd,					
+					recordScenario, playbackOnly,
+					playbackScenario, scenarioController,
+					playbackStopped, cmd2Int);
 
 			// So we don't clobbering file/pipe state when interleaving
 			// the two command sets

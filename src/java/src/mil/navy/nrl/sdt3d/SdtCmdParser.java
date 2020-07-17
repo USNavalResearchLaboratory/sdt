@@ -3,6 +3,7 @@ package mil.navy.nrl.sdt3d;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
@@ -149,10 +150,11 @@ public class SdtCmdParser
 	 * @param str
 	 * @return
 	 */
-	public boolean OnCommand(String str, boolean scenarioCmd)
+	public boolean OnCommand(String str, boolean scenarioCmd,
+			boolean recordScenario, boolean playbackOnly,
+			boolean playbackScenario, ScenarioController scenarioController,
+			boolean playbackStopped, HashMap<String, Integer> cmd2Int)
 	{
-		// System.out.println("OnCommand(" + str + ")");
-
 		str = str.trim();
 
 		if (null == pending_cmd)
@@ -167,7 +169,10 @@ public class SdtCmdParser
 					seeking_cmd = false;
 					break;
 				case CMD_NOARG:
-					sdt3dApp.processCmd(pending_cmd, null, scenarioCmd); // ljt error checking?
+					processCmd(pending_cmd, null, scenarioCmd,
+							recordScenario,playbackOnly,
+							playbackScenario, scenarioController,
+							playbackStopped, cmd2Int); // ljt error checking?
 					pending_cmd = null;
 					seeking_cmd = true;
 					break;
@@ -179,13 +184,85 @@ public class SdtCmdParser
 		}
 		else // Not seeking command
 		{
-			sdt3dApp.processCmd(current_cmd, str, scenarioCmd);
+			processCmd(current_cmd, str, scenarioCmd,
+					recordScenario, playbackOnly,
+					playbackScenario, scenarioController,
+					playbackStopped, cmd2Int);
 			seeking_cmd = true;
 			pending_cmd = null;
 		} // done seeking cmd
 
 		return true;
 	} // end OnCommand
+
+	
+	void processCmd(String pendingCmd, String val, 
+			boolean scenarioCmd, boolean recordScenario, boolean playbackOnly,
+			boolean playbackScenario, ScenarioController scenarioController,
+			boolean playbackStopped, HashMap<String, Integer> cmd2Int)
+	// LJT TODO Move cmd2int to this class if we keep
+	{									
+		/*
+		 * If we are recording the scenario either update our model
+		 * if we are not playing it back, or the buffered command
+		 * model if we are.
+		 */
+		if (recordScenario && !playbackOnly)
+		{
+			if (!playbackScenario && !scenarioCmd) 
+			{
+				//System.out.println("Updating model..");
+				scenarioController.updateModel(cmd2Int.get(pendingCmd), val);
+			}
+			else
+			{
+				if (!scenarioCmd)
+				{
+					scenarioController.updateBufferModel(cmd2Int.get(pendingCmd),val);
+				}
+			}	
+		}
+		
+		if ((playbackScenario && !scenarioCmd)
+				||
+				playbackStopped)
+		{
+			
+			return;
+		}
+	
+		/*
+		 * If we are no longer scenario recording/playback, don't play back
+		 * any scenario commands (fix this text)
+		 * 
+		 * or if we have stopped recording and are just playing back the scenario
+		 * 
+		 * clean all these booleans up
+		 */
+		if (!recordScenario && scenarioCmd && !playbackOnly)
+		{
+			return;
+		}
+		
+		if (playbackOnly && !scenarioCmd)
+		{
+			return;
+		}
+		
+		
+		if (doCmd(pendingCmd, val))
+		{
+			// TODO LJT Move this here
+			sdt3dApp.logDebugOutput(pendingCmd, val);
+		}
+		else
+		{
+			System.out.println("sdt3d::doCmd() cmd> " + pendingCmd + " val>" + val + " failed ");
+		}
+	
+	}
+
+
 
 	
 	public CmdType GetCmdType(String cmd)

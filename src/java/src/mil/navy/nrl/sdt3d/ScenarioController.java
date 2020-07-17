@@ -157,6 +157,8 @@ public class ScenarioController implements PropertyChangeListener
 	 * Reset stops all recording and clears the data model
 	 * Called by a hard system reset.
 	 */
+	
+	//not uesd?? delete
 	public void reset()
 	{
 		getView().reset();
@@ -365,7 +367,7 @@ public class ScenarioController implements PropertyChangeListener
 		String formatted = formatter.format(date);
 
 		
-		System.out.println("New value> " + formatted);
+		System.out.println("Slider Time> " + sliderStartTime + " New value> " + formatted);
 
 		listener.modelPropertyChange(ScenarioController.SKIP_FORWARD, sliderStartTime, scenarioPlaybackStartTime);		
 	
