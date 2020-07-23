@@ -9,8 +9,9 @@ import java.util.List;
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
 
 public class SdtCmdParser 
-{
-
+{	
+	private final HashMap<String, Integer> cmd2Int = new HashMap<>();
+	
 	enum CmdType {
 		CMD_INVALID, CMD_ARG, CMD_NOARG
 	};
@@ -140,8 +141,27 @@ public class SdtCmdParser
 	public SdtCmdParser(sdt3d.AppFrame theApp)
 	{
 		this.sdt3dApp = theApp;
+		
+		initialize_cmd_map();
 	}
 
+
+	private void initialize_cmd_map()
+	{
+		int x = 0;
+		for (String cmd : SdtCmdParser.CMD_LIST)
+		{
+			if (cmd == null)
+			{
+				continue;
+			}
+			x++;
+			// Load our cmd maps and remove the leading +/- 
+			cmd2Int.put(cmd.substring(1).toLowerCase(), x);
+		}
+	}
+	
+	
 	/**
 	 * Called by the thread sychronized sdt3d::OnInput loop, this
 	 * method is responsible for waiting for command arguments
@@ -153,7 +173,7 @@ public class SdtCmdParser
 	public boolean OnCommand(String str, boolean scenarioCmd,
 			boolean recordScenario, boolean playbackOnly,
 			boolean playbackScenario, ScenarioController scenarioController,
-			boolean playbackStopped, HashMap<String, Integer> cmd2Int)
+			boolean playbackStopped)
 	{
 		str = str.trim();
 
@@ -172,7 +192,7 @@ public class SdtCmdParser
 					processCmd(pending_cmd, null, scenarioCmd,
 							recordScenario,playbackOnly,
 							playbackScenario, scenarioController,
-							playbackStopped, cmd2Int); // ljt error checking?
+							playbackStopped); // ljt error checking?
 					pending_cmd = null;
 					seeking_cmd = true;
 					break;
@@ -187,7 +207,7 @@ public class SdtCmdParser
 			processCmd(current_cmd, str, scenarioCmd,
 					recordScenario, playbackOnly,
 					playbackScenario, scenarioController,
-					playbackStopped, cmd2Int);
+					playbackStopped);
 			seeking_cmd = true;
 			pending_cmd = null;
 		} // done seeking cmd
@@ -199,9 +219,10 @@ public class SdtCmdParser
 	void processCmd(String pendingCmd, String val, 
 			boolean scenarioCmd, boolean recordScenario, boolean playbackOnly,
 			boolean playbackScenario, ScenarioController scenarioController,
-			boolean playbackStopped, HashMap<String, Integer> cmd2Int)
-	// LJT TODO Move cmd2int to this class if we keep
-	{									
+			boolean playbackStopped)
+	{	
+		
+		System.out.println("SdtCmdParser::processCmd() " + pendingCmd + " " + val);
 		/*
 		 * If we are recording the scenario either update our model
 		 * if we are not playing it back, or the buffered command
@@ -212,13 +233,13 @@ public class SdtCmdParser
 			if (!playbackScenario && !scenarioCmd) 
 			{
 				//System.out.println("Updating model..");
-				scenarioController.updateModel(cmd2Int.get(pendingCmd), val);
+				scenarioController.updateModel(cmd2Int.get(pendingCmd.toLowerCase()), val);
 			}
 			else
 			{
 				if (!scenarioCmd)
 				{
-					scenarioController.updateBufferModel(cmd2Int.get(pendingCmd),val);
+					scenarioController.updateBufferModel(cmd2Int.get(pendingCmd.toLowerCase()),val);
 				}
 			}	
 		}

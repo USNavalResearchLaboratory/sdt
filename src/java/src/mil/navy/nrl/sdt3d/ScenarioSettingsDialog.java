@@ -45,6 +45,7 @@ import java.awt.GridBagLayout;
 import java.awt.MouseInfo;
 import java.awt.event.ItemEvent;
 import java.io.File;
+import java.io.FileFilter;
 import java.util.Optional;
 
 import javax.swing.BorderFactory;
@@ -56,6 +57,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -165,9 +167,14 @@ public class ScenarioSettingsDialog
 	{
 		browserButton.addActionListener( e-> {
 			
+				 
 			JFileChooser jFileChooser = new JFileChooser();
 			jFileChooser.setSelectedFile(new File(scenarioFileName));
-			int returnVal = jFileChooser.showSaveDialog(mainWindow);
+						
+			FileNameExtensionFilter filter = new FileNameExtensionFilter("Scenario File", "cmdMap");
+			jFileChooser.setFileFilter(filter);
+		
+			int returnVal = jFileChooser.showOpenDialog(mainWindow); //showSaveDialog(mainWindow);
 					
 			if (returnVal == JFileChooser.APPROVE_OPTION)
 			{

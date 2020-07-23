@@ -32,7 +32,7 @@ public class ScenarioModel
 	 * specified map.  In order to guarantee serial access, all access to the backing map
 	 * must be accomplished through the returned mpa.
 	 */
-	private Map<Long, Map<Integer, String>> synMap = Collections.synchronizedMap(sdtCommandMap);
+	private Map<Long, Map<Integer, String>> synSdtCommandMap = Collections.synchronizedMap(sdtCommandMap);
 		
 	/*
 	* LinkedHashMap maintains insertion order
@@ -44,7 +44,7 @@ public class ScenarioModel
 	 * specified map.  In order to guarantee serial access, all access to the backing map
 	 * must be accomplished through the returned mpa.
 	 */
-	private Map<Long, Map<Integer, String>> synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
+	private Map<Long, Map<Integer, String>> synSdtBufferCommandMap = Collections.synchronizedMap(sdtBufferCommandMap);
 
 	
 	ScenarioModel()
@@ -52,7 +52,7 @@ public class ScenarioModel
 	}
 	
 	
-	void loadState(String scenarioFileName)
+	void loadRecording(String scenarioFileName)
 	{
 		try {				
 			FileInputStream fis = new FileInputStream(scenarioFileName);
@@ -60,27 +60,30 @@ public class ScenarioModel
 		
 			Instant startTime = Instant.now();
 
-			LinkedHashMap<Long,Map<Integer,String>> sdtCommandMap = null; //new LinkedHashMap<Long, Map<Integer,String>>();
+			// The command map keeps a list of commands received and time
+			// of reception
+			LinkedHashMap<Long,Map<Integer,String>> sdtCommandMap = null; 
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			sdtCommandMap = (LinkedHashMap<Long, Map<Integer, String>>) ois.readObject();
 			//System.out.println(sdtCommandMap);
 			ois.close();
 			fis.close();
 
+			synSdtCommandMap = Collections.synchronizedMap(sdtCommandMap);
+
+			
 			Instant endTime = Instant.now();
 			Duration interval = Duration.between(startTime, endTime);
 			System.out.println("loadModelState() Execution time in seconds: " + interval.getSeconds());
 			
-	
-			//sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
-			synMap = Collections.synchronizedMap(sdtCommandMap);
-
+			// The buffered command map keeps track of commands received 
+			// while we are playing back a part of a scenario
 			sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
-			synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
+			synSdtBufferCommandMap = Collections.synchronizedMap(sdtBufferCommandMap);
 		
 			endTime = Instant.now();
 			interval = Duration.between(startTime, endTime);
-			System.out.println("loadModelState() Total execution time in seconds: " + interval.getSeconds());
+			System.out.println("loadRecording() Total execution time in seconds: " + interval.getSeconds());
 
 		} catch (IOException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -89,7 +92,7 @@ public class ScenarioModel
 	}
 	
 	
-	void saveState(String scenarioFileName)
+	void saveRecording(String scenarioFileName)
 	{
 		FileOutputStream fos;
 		try {
@@ -103,7 +106,7 @@ public class ScenarioModel
 			
 			Instant endTime = Instant.now();
 			Duration interval = Duration.between(startTime, endTime);
-			System.out.println("saveModelState() Execution time in seconds: " + interval.getSeconds());
+			System.out.println("saveRecording() Execution time in seconds: " + interval.getSeconds());
 	
 		}  catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -114,26 +117,26 @@ public class ScenarioModel
 	
 	void  clearModelState()
 	{	
-		sdtCommandMap.clear(); // probably don't need clear
+		sdtCommandMap.clear(); 
 		sdtCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
-		synMap = Collections.synchronizedMap(sdtCommandMap);
+		synSdtCommandMap = Collections.synchronizedMap(sdtCommandMap);
 
 		sdtBufferCommandMap.clear();
 		sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
-		synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
+		synSdtBufferCommandMap = Collections.synchronizedMap(sdtBufferCommandMap);
 		
 	}
 	
 	
-	Map<Long, Map<Integer, String>> getSynMap()
+	Map<Long, Map<Integer, String>> getSynSdtCommandMap()
 	{
-		return synMap;
+		return synSdtCommandMap;
 	}
 	
 	
-	Map<Long, Map<Integer, String>> getSynBufferMap()
+	Map<Long, Map<Integer, String>> getSynSdtBufferCommandMap()
 	{
-		return synBufferMap;
+		return synSdtBufferCommandMap;
 	}
 	
 		
@@ -146,33 +149,38 @@ public class ScenarioModel
 		
 		Map<Integer,String> cmd = new HashMap<Integer,String>();
 		cmd.put(pendingCmd, val);
-		synchronized(synMap) {
-			synMap.put(currentTime, cmd);
+		synchronized(synSdtCommandMap) {
+			synSdtCommandMap.put(currentTime, cmd);
 		}
 	}	
 	
 
+	/*
+	 * Appends any commands stored in the buffered command map
+	 * to our primary command map.
+	 */
 	void appendBufferModel()
 	{
-		synchronized(synBufferMap)
+		synchronized(synSdtBufferCommandMap)
 		{
-			synchronized(synMap) 
+			synchronized(synSdtCommandMap) 
 			{
 				// Append any cmds added to our buffer while we were stopped
 				
-				if ((synBufferMap.size() == 0)
+				if ((synSdtBufferCommandMap.size() == 0)
 						||
-					(synBufferMap.size() == synMap.size()))
+					(synSdtBufferCommandMap.size() == synSdtCommandMap.size()))
 				{
 					return;
 				}
 				//System.out.println("Appending synbuffer>" + synBufferMap.size());
-				synMap.putAll(synBufferMap);
+				synSdtCommandMap.putAll(synSdtBufferCommandMap);
 				sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
-				synBufferMap = Collections.synchronizedMap(sdtBufferCommandMap);
+				synSdtBufferCommandMap = Collections.synchronizedMap(sdtBufferCommandMap);
 			}
 		}
 	}
+	
 	
 	/*
 	 * Called from the app when replaying the scenario/ 
@@ -183,9 +191,9 @@ public class ScenarioModel
 		
 		Map<Integer,String> cmd = new HashMap<Integer,String>();
 		cmd.put(pendingCmd, val);
-		synchronized(synBufferMap)
+		synchronized(synSdtBufferCommandMap)
 		{ 
-			synBufferMap.put(currentTime, cmd);
+			synSdtBufferCommandMap.put(currentTime, cmd);
 		}
 	}	
 }

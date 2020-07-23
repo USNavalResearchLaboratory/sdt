@@ -277,10 +277,6 @@ public class sdt3d extends SdtApplication
 				ALL, NODES, LABELS, SPRITES, SYMBOLS, LINKS, LINKLABELS, TRAILS, REGIONS, TILES, ELEVATIONOVERLAY, GEOTIFF, KML, INVALID
 		};
 
-		private final HashMap<Integer, String> int2Cmd = new HashMap<>();
-		
-		private final HashMap<String, Integer> cmd2Int = new HashMap<>();
-
 		private String pipe_name = "sdt";
 
 		private boolean pipeCmd = false;
@@ -524,10 +520,7 @@ public class sdt3d extends SdtApplication
 		{			
 			// Build application panels, set up controllers and listeners etc.
 			buildApplicationGui();
-			
-			// initialize command maps
-			initialize_cmd_maps();
-			
+						
 			// Start listening for commands on a protopipe
 			startProtoPipe();
 	
@@ -600,24 +593,7 @@ public class sdt3d extends SdtApplication
 
 		}
 
-		
-		private void initialize_cmd_maps()
-		{
-			int x = 0;
-			for (String cmd : SdtCmdParser.CMD_LIST)
-			{
-				if (cmd == null)
-				{
-					continue;
-				}
-				x++;
-				// Load our cmd maps and remove the leading +/- 
-				cmd2Int.put(cmd.substring(1), x);
-				int2Cmd.put(x, cmd.substring(1));
-			}
-		}
 
-		
 		private void createViewController()
 		{
 			// We extended KMLViewController to provide gx:tour support
@@ -1709,13 +1685,17 @@ public class sdt3d extends SdtApplication
 		
 		private void startScenarioThread(Long scenarioPlaybackStartTime)
 		{
+			
+			loadUserPreferencesFile();
+
 			if (scenarioThread != null)
 			{
 				// sets stopFlag to true
 				scenarioThread.stopThread();
 			}
 			//scenarioController = new ScenarioController(this, scenarioPlaybackPanel);
-			scenarioThread = new ScenarioThread(this, scenarioController, int2Cmd, scenarioPlaybackStartTime);
+			scenarioThread = new ScenarioThread(this, 
+					scenarioController, scenarioPlaybackStartTime);
 			scenarioThread.start();
 		}
 		
@@ -4579,7 +4559,12 @@ public class sdt3d extends SdtApplication
 				SdtSpriteKml theKml = i.next().getValue();
 				if (theKml.getKmlMenuItem() != null)
 					kmlMenu.remove(theKml.getKmlMenuItem());
-				getKmlLayer().removeRenderable(theKml.getKmlController());
+				
+				
+				if (theKml.getKmlController() != null) 
+				{
+					getKmlLayer().removeRenderable(theKml.getKmlController());
+				}
 				i.remove();
 			}
 			// Clear the panel tree
@@ -7439,8 +7424,18 @@ public class sdt3d extends SdtApplication
 		            {
 		            		stopScenarioThread();
 		            		if (event.getPropertyName().equals(ScenarioController.RECORDING_STARTED))
-		            		{
+		            		{     
+		            			// Put an entry in our model so we track when recording
+		            			// is actually started.  Change sdt3d title.
+		            			String scenarioName = ScenarioController.SCENARIO_FILENAME;
+		            			int sepPos = scenarioName.lastIndexOf("/");
+		            			if (sepPos != -1)
+		            			{
+		            				scenarioName = scenarioName.substring(++sepPos);
+		            			}
+
 		            			System.out.println("RECORDING_STARTED sdt3d\n");
+		            			setTitle("Recording Scenario (" + scenarioName + ")");
 		            			recordScenario = true;
 		            			playbackOnly = false;
 		            			
@@ -7451,7 +7446,8 @@ public class sdt3d extends SdtApplication
 		            			// and don't reset controller
 		            			
 		            			System.out.println("RECORDING_STOPPED sdt3d\n");
-		            			
+		            			setTitle("sdt-3D");
+
 		    					if (scenarioThread != null) 
 		    					{ 
 		    						// TBD: see if we really need the stop recording flat
@@ -7471,10 +7467,22 @@ public class sdt3d extends SdtApplication
 		            			scenarioController.saveState();
 		            		}
 		            		*/
-		            		if (event.getPropertyName().equals(ScenarioController.LOAD_STATE))
+		            		if (event.getPropertyName().equals(ScenarioController.LOAD_RECORDING))
 		            		{
 		            			System.out.println("LOAD_STATE sdt3d (resetting system state)\n");
-
+		            			
+		            			// We are storing it in the model as well...
+		            			// Put an entry in our model so we track when recording
+		            			// is actually started.  Change sdt3d title.
+		            			String scenarioName = ScenarioController.SCENARIO_FILENAME;
+		            			int sepPos = scenarioName.lastIndexOf("/");
+		            			if (sepPos != -1)
+		            			{
+		            				scenarioName = scenarioName.substring(++sepPos);
+		            			}
+		            			
+		            			setTitle("Scenario Playback (" + scenarioName + ")");
+		            			
 		            			resetSystemState(false);
 		            		}
 		            		
@@ -7482,7 +7490,7 @@ public class sdt3d extends SdtApplication
 		                {
 		                		System.out.println("START_SCENARIO_PLAYBACK sdt3d\n");
 		                		scenarioController.appendBufferModel();
-	                			
+		            			
 		                		// oldValue: sliderStartTime, newValue: scenarioStartTime
 		                		startScenarioThread((Long) event.getNewValue());
 	                			playbackScenario = true;	  
@@ -7577,7 +7585,7 @@ public class sdt3d extends SdtApplication
 			parser.OnCommand(cmd, scenarioCmd,					
 					recordScenario, playbackOnly,
 					playbackScenario, scenarioController,
-					playbackStopped, cmd2Int);
+					playbackStopped);
 
 			// So we don't clobbering file/pipe state when interleaving
 			// the two command sets

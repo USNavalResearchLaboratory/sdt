@@ -119,7 +119,10 @@ public class SdtSpriteKml extends SdtSpriteModel
 		KMLRoot kmlRoot = null;
 		try
 		{
-			kmlRoot = KMLRoot.createAndParse(spritePath);
+			if (spritePath != null)
+			{
+				kmlRoot = KMLRoot.createAndParse(spritePath);
+			}
 		}
 		catch (IOException e)
 		{

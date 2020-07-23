@@ -42,25 +42,38 @@ public class ScenarioThread extends SocketThread
 	
 	private Long scenarioPlaybackStartTime;
 	
-	int lastWaitTime = 0;
-	
 	Long lastTime = new Long(0);	
 	
-	HashMap<Integer, String> int2Cmd;
+	private final HashMap<Integer, String> int2Cmd = new HashMap<>();
+
 
 	public ScenarioThread(sdt3d.AppFrame theApp, ScenarioController scenarioController, 
-			HashMap<Integer, String> int2Cmd, Long scenarioPlaybackStartTime)
+			Long scenarioPlaybackStartTime)
 	{
 		super(theApp, 0);
+		
+		initialize_cmd_map();
 
 		this.scenarioController = scenarioController;
 		this.scenarioModel = scenarioController.getScenarioModel();
 		this.scenarioPlaybackStartTime = scenarioPlaybackStartTime;
-		this.int2Cmd = int2Cmd;
 		isScenarioThread = true;
 	}
 
-
+	private void initialize_cmd_map()
+	{
+		int x = 0;
+		for (String cmd : SdtCmdParser.CMD_LIST)
+		{
+			if (cmd == null)
+			{
+				continue;
+			}
+			x++;
+			// Load our cmd map and remove the leading +/- 
+			int2Cmd.put(x, cmd.substring(1).toLowerCase());
+		}
+	}
 	public boolean stopped()
 	{
 		return stopFlag;
@@ -138,13 +151,16 @@ public class ScenarioThread extends SocketThread
 		this.running = true;
 		clearState();
 		lastTime = new Long(0);	
+		long firstTime = new Long(0);	
+
 		// implement a get first
-		synchronized(getScenarioModel().getSynMap()) 
+		synchronized(getScenarioModel().getSynSdtCommandMap()) 
 		{
-			Iterator<Entry<Long, Map<Integer, String>>> titr = getScenarioModel().getSynMap().entrySet().iterator();
+			Iterator<Entry<Long, Map<Integer, String>>> titr = getScenarioModel().getSynSdtCommandMap().entrySet().iterator();
 			if (titr.hasNext()) 
 			{
 				lastTime = titr.next().getKey();
+				firstTime = lastTime;
 			}
 		}
 		boolean started = false;
@@ -155,9 +171,10 @@ public class ScenarioThread extends SocketThread
 		Float speedFactor = scenarioController.getView().getSpeedFactorValue();
 
 		
-		synchronized(scenarioModel.getSynMap()) {
-		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getSynMap().entrySet().iterator();		
+		synchronized(scenarioModel.getSynSdtCommandMap()) {
+		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getSynSdtCommandMap().entrySet().iterator();		
 
+		
 		while (itr.hasNext())
 		{
 			/*
@@ -181,13 +198,15 @@ public class ScenarioThread extends SocketThread
 				value = (String) cmdEntry.getValue();
     		}			
 
+			//
+			System.out.println("\n\nlastTime> " + lastTime + " key> " + entry.getKey());
 			Long waitTime = entry.getKey() - lastTime;
 			lastTime = entry.getKey();
 			
 			
 			Date date = new Date(lastTime);
 			// use correct format ('S' for milliseconds)
-			SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+			SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss.SSSSSS");
 			formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 			// format date
 			String formatted = formatter.format(date);
@@ -195,18 +214,37 @@ public class ScenarioThread extends SocketThread
 
 			Date sdate = new Date(scenarioPlaybackStartTime);
 			// use correct format ('S' for milliseconds)
-			SimpleDateFormat sformatter = new SimpleDateFormat("HH:mm:ss");
+			SimpleDateFormat sformatter = new SimpleDateFormat("HH:mm:ss.SSSSSS");
 			sformatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 			// format date
 			String sformatted = sformatter.format(sdate);
 
+			Date fdate = new Date(firstTime);
+			// use correct format ('S' for milliseconds)
+			SimpleDateFormat fformatter = new SimpleDateFormat("HH:mm:ss.SSSSSS");
+			fformatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+			// format date
+			String fformatted = fformatter.format(fdate);
+
+			//System.out.println("FirstTime> " + fformatted + " waitTime> " + waitTime + " LastTime> " + formatted + " >= scenarioPlaybackStartTime \n" + sformatted 
+			//		+ " " + pendingCmd + " " + value);
+
+			Date wdate = new Date(waitTime);
+			// use correct format ('S' for milliseconds)
+			SimpleDateFormat wformatter = new SimpleDateFormat("HH:mm:ss.SSSSSS");
+			wformatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+			// format date
+			String wformatted = wformatter.format(wdate);
+
+			System.out.println("FirstTime> " + fformatted + " wait> " + wformatted + " waitTime> " + waitTime + 
+					"\n LastTime> " + formatted + " >= scenarioPlaybackStartTime " + sformatted 
+					+ " " + pendingCmd + " " + value);
+
 			
-			
-			if (lastTime < scenarioPlaybackStartTime)
+			if (lastTime <= scenarioPlaybackStartTime)
 			{
 				value = " " + pendingCmd + " \"" + value + " \"\n";	
 
-				System.out.println("LastTime> " + formatted + " < scenarioPlaybackStartTime " + sformatted);
 			}
 			else
 			{
@@ -217,7 +255,7 @@ public class ScenarioThread extends SocketThread
 					waitTime = new Long(0);
 				}
 				
-				System.out.println("	LastTime> " + formatted + " >= scenarioPlaybackStartTime " + sformatted);
+				//System.out.println("	LastTime> " + formatted + " >= scenarioPlaybackStartTime " + sformatted);
 
 				value = pendingCmd + " \"" + value + " \"\n";
 				try
@@ -228,8 +266,9 @@ public class ScenarioThread extends SocketThread
 					if (!stopFlag)
 					{
 						waitTime = (long) (waitTime * speedFactor);
-
+						
 						sleep(waitTime);
+
 					}
 				}
 				catch (InterruptedException e)
@@ -276,8 +315,8 @@ public class ScenarioThread extends SocketThread
 		final SdtCmdParser parser = new SdtCmdParser(theApp);
 		StringBuilder sb = new StringBuilder();
 
-		synchronized(getScenarioModel().getSynBufferMap()) {
-		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getSynBufferMap().entrySet().iterator();		
+		synchronized(getScenarioModel().getSynSdtBufferCommandMap()) {
+		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getSynSdtBufferCommandMap().entrySet().iterator();		
 		while (!stopFlag && itr.hasNext())
 		{
 			Entry<Long, Map<Integer,String>> entry = itr.next();
@@ -291,7 +330,7 @@ public class ScenarioThread extends SocketThread
 				key = (int) cmdEntry.getKey();
 				pendingCmd = int2Cmd.get(key);
 				value = (String) cmdEntry.getValue();
-    			}			
+    		}			
 
 			value = " " + pendingCmd + " \"" + value + " \"\n";
 				

@@ -566,7 +566,7 @@ public class ScenarioPlaybackPanel extends JPanel
     {
        	configureScenarioButtonActionPerformed();
        	saveRecordingButton.setEnabled(false);
-       	firePropertyChange(ScenarioController.SAVE_STATE, null, null);
+       	firePropertyChange(ScenarioController.SAVE_RECORDING, null, null);
     }
  
     
@@ -579,7 +579,7 @@ public class ScenarioPlaybackPanel extends JPanel
     	//setPlayMode(PLAYING);
     	playbackOnly = true;
     	//updateEnabledState(true);
-    	firePropertyChange(ScenarioController.LOAD_STATE, null, null);
+    	firePropertyChange(ScenarioController.LOAD_RECORDING, null, null);
     }
  
     

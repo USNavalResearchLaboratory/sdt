@@ -12,6 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -31,8 +32,8 @@ public class ScenarioController implements PropertyChangeListener
 	public static final String STOP_SCENARIO_PLAYBACK = "scenarioPlaybackStopped";
 	public static final String RECORDING_STARTED = "recordingStarted"; // TODO: cleanup
 	public static final String RECORDING_STOPPED = "recordingStopped";
-	public static final String SAVE_STATE = "saveState";
-	public static final String LOAD_STATE = "loadState";
+	public static final String SAVE_RECORDING = "saveState";
+	public static final String LOAD_RECORDING = "loadState";
 	public static final String CONFIGURE_SCENARIO = "configureScenario";
 	
 	public static final String SKIP_BACK = "skipBack";
@@ -44,8 +45,8 @@ public class ScenarioController implements PropertyChangeListener
 	// TODO: Not yet implemented
 	public static final String RESUME_LIVE_PLAY = "resumeLivePlay";
 	
-	
 	private ScenarioModel scenarioModel;
+	
 	private ScenarioPlaybackPanel scenarioPlaybackPanel;
 	
 	private sdt3d.AppFrame listener;
@@ -53,20 +54,20 @@ public class ScenarioController implements PropertyChangeListener
 	private Map<Integer, Long> scenarioSliderTimeMap = new LinkedHashMap<Integer,Long>();
 		
 	private Timer commandMapTimer = null;
-
-	private JFrame mainWindow;
 	
 	static String SCENARIO_FILENAME = System.getProperty("user.dir") 
 			+ File.separator
 			+ "sdtScenarioRecording";
 
-	
-	public ScenarioController(sdt3d.AppFrame listener, ScenarioPlaybackPanel scenarioPlaybackPanel)
+	private final HashMap<String, Integer> cmd2Int = new HashMap<>();
+
+	public ScenarioController(sdt3d.AppFrame listener, 
+			ScenarioPlaybackPanel scenarioPlaybackPanel)
 	{
 		this.scenarioModel = new ScenarioModel();
 		this.scenarioPlaybackPanel = scenarioPlaybackPanel;
 		this.listener = listener;
-		this.mainWindow = mainWindow;
+		initialize_cmd_map();
 		initController();
 	}
 
@@ -75,6 +76,21 @@ public class ScenarioController implements PropertyChangeListener
 		getView().setListener(this);		
 	}
 	
+	
+	private void initialize_cmd_map()
+	{
+		int x = 0;
+		for (String cmd : SdtCmdParser.CMD_LIST)
+		{
+			if (cmd == null)
+			{
+				continue;
+			}
+			x++;
+			// Load our cmd maps and remove the leading +/- 
+			cmd2Int.put(cmd.substring(1).toLowerCase(), x);
+		}
+	}
 	
 	ScenarioModel getScenarioModel()
 	{
@@ -106,11 +122,18 @@ public class ScenarioController implements PropertyChangeListener
 	}
 	
 
+	/*
+	 * Called by the scenario thread to update the HH:MM:SS field
+	 * time is the current time saved in the command map.
+	 */
 	void updatePlaybackTime(Long time)
 	{
 		scenarioPlaybackPanel.updatePlaybackTime(time);
 	}
 	
+	/*
+	 * Gets the 
+	 */
 	int getScenarioSecsFromRealTime(Long realScenarioTime)
 	{
 		// TODO:  Fix/Optimize!
@@ -138,10 +161,10 @@ public class ScenarioController implements PropertyChangeListener
 	 * Called by the scenario thread to set slider to
 	 * scenario playback time
 	 */
-	public void setScenarioTime(Long scenarioTime)
-	{
-		getView().setScenarioTime(getScenarioSecsFromRealTime(scenarioTime));
-	}
+	//public void setScenarioTime(Long scenarioTime)
+	//{
+	//	getView().setScenarioTime(getScenarioSecsFromRealTime(scenarioTime));
+	//}
 
 	
 	private void startRecording()
@@ -151,6 +174,16 @@ public class ScenarioController implements PropertyChangeListener
 		startCommandMapTimer();
 		
 		recording = true;
+		
+		// Put an entry in our model so we track when recording
+		// is actually started.  Change sdt3d title.
+		String scenarioName = SCENARIO_FILENAME;
+		int sepPos = SCENARIO_FILENAME.lastIndexOf("/");
+		if (sepPos != -1)
+		{
+			scenarioName = SCENARIO_FILENAME.substring(++sepPos);
+		}
+		updateModel(cmd2Int.get("title"), "Scenario Playback (" + scenarioName + ")");
 	}
 	
 	/*
@@ -174,7 +207,7 @@ public class ScenarioController implements PropertyChangeListener
 	private void saveState()
 	{
 		// Save the model state (sdt commands)
-		getScenarioModel().saveState(SCENARIO_FILENAME + ".cmdMap");
+		getScenarioModel().saveRecording(SCENARIO_FILENAME + ".cmdMap");
 		
 		FileOutputStream fos;
 		try {
@@ -193,7 +226,7 @@ public class ScenarioController implements PropertyChangeListener
 	
 	void configureScenarioState()
 	{
-		Optional<String> fileName = new ScenarioSettingsDialog(mainWindow).show(SCENARIO_FILENAME);
+		Optional<String> fileName = new ScenarioSettingsDialog(listener).show(SCENARIO_FILENAME);
 
 		if (!fileName.isPresent())
 		{
@@ -201,15 +234,18 @@ public class ScenarioController implements PropertyChangeListener
 			// LJT TODO: handle other config options
 			return;
 		}
-
-		SCENARIO_FILENAME = fileName.get();
+		// We allow the user to selected the command map as "the"
+		// scenario file but we have two files so strip off the
+		// extension.  TODO: create some hidden subfiles or something
+		String scenarioName = fileName.get();
+		SCENARIO_FILENAME = scenarioName.replace(".cmdMap","");
 	}
 	
 		
-	void loadState()
+	void loadRecording()
 	{
 		// Load scenario commands
-		getScenarioModel().loadState(SCENARIO_FILENAME + ".cmdMap");
+		getScenarioModel().loadRecording(SCENARIO_FILENAME + ".cmdMap");
 		
 		scenarioSliderTimeMap = null;
 		FileInputStream fis;
@@ -278,7 +314,7 @@ public class ScenarioController implements PropertyChangeListener
 			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
 		}
 		
-		if (event.getPropertyName().equals(SAVE_STATE))
+		if (event.getPropertyName().equals(SAVE_RECORDING))
 		{
 			// Stop recording and save state
 			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
@@ -286,12 +322,12 @@ public class ScenarioController implements PropertyChangeListener
 			//listener.modelPropertyChange(ScenarioController.SAVE_STATE, null, null);
 		}
 
-		if (event.getPropertyName().equals(LOAD_STATE))
+		if (event.getPropertyName().equals(LOAD_RECORDING))
 		{
 			// Stop recording and save state
 			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
-			loadState();
-			listener.modelPropertyChange(ScenarioController.LOAD_STATE, null, null);
+			loadRecording();
+			listener.modelPropertyChange(ScenarioController.LOAD_RECORDING, null, null);
 		}
 
 		if (event.getPropertyName().equals(CONFIGURE_SCENARIO))
