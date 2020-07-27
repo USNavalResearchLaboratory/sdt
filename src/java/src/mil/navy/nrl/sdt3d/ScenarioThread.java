@@ -174,6 +174,7 @@ public class ScenarioThread extends SocketThread
 		synchronized(scenarioModel.getSynSdtCommandMap()) {
 		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getSynSdtCommandMap().entrySet().iterator();		
 
+		//long gatedWaitTime = 0;
 		
 		while (itr.hasNext())
 		{
@@ -199,8 +200,9 @@ public class ScenarioThread extends SocketThread
     		}			
 
 			//
-			System.out.println("\n\nlastTime> " + lastTime + " key> " + entry.getKey());
+			//System.out.println("\n\nlastTime> " + lastTime + " key> " + entry.getKey());
 			Long waitTime = entry.getKey() - lastTime;
+			//gatedWaitTime = gatedWaitTime + waitTime;
 			lastTime = entry.getKey();
 			
 			
@@ -236,9 +238,10 @@ public class ScenarioThread extends SocketThread
 			// format date
 			String wformatted = wformatter.format(wdate);
 
-			System.out.println("FirstTime> " + fformatted + " wait> " + wformatted + " waitTime> " + waitTime + 
-					"\n LastTime> " + formatted + " >= scenarioPlaybackStartTime " + sformatted 
-					+ " " + pendingCmd + " " + value);
+			//System.out.println("FirstTime> " + fformatted + " wait> " + wformatted + " waitTime> " + waitTime + 
+			//		"\n LastTime> " + formatted + " >= scenarioPlaybackStartTime " + sformatted + 
+			//		//"\n gatedWaitTime> " + gatedWaitTime + "\n" +
+			//		" " + pendingCmd + " " + value);
 
 			
 			if (lastTime <= scenarioPlaybackStartTime)
@@ -251,8 +254,6 @@ public class ScenarioThread extends SocketThread
 				if (!started)
 				{
 					started = true;
-					// No wait when playback starts
-					waitTime = new Long(0);
 				}
 				
 				//System.out.println("	LastTime> " + formatted + " >= scenarioPlaybackStartTime " + sformatted);
@@ -265,6 +266,11 @@ public class ScenarioThread extends SocketThread
 					// will be correct.
 					if (!stopFlag)
 					{
+						//if (gatedWaitTime > 100)
+						//{
+						//	sleep((long) (gatedWaitTime * speedFactor));
+						//	gatedWaitTime = 0;
+						//}
 						waitTime = (long) (waitTime * speedFactor);
 						
 						sleep(waitTime);

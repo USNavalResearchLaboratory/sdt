@@ -5,12 +5,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TimeZone;
+
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
 
 /**
@@ -65,12 +69,13 @@ public class ScenarioModel
 			LinkedHashMap<Long,Map<Integer,String>> sdtCommandMap = null; 
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			sdtCommandMap = (LinkedHashMap<Long, Map<Integer, String>>) ois.readObject();
-			//System.out.println(sdtCommandMap);
+			System.out.println(sdtCommandMap);
 			ois.close();
 			fis.close();
 
 			synSdtCommandMap = Collections.synchronizedMap(sdtCommandMap);
 
+			System.out.println("cmdMap> " + sdtCommandMap);
 			
 			Instant endTime = Instant.now();
 			Duration interval = Duration.between(startTime, endTime);
@@ -146,6 +151,16 @@ public class ScenarioModel
 	void updateModel(int pendingCmd, String val)
 	{
 		long currentTime = Time.increasingTimeMillis();
+		
+		Date wdate = new Date(currentTime);
+		// use correct format ('S' for milliseconds)
+		SimpleDateFormat wformatter = new SimpleDateFormat("HH:mm:ss.SSSSSS");
+		wformatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+		// format date
+		String wformatted = wformatter.format(wdate);
+
+		
+		System.out.println("time> " + wformatted + "currentTime> " + currentTime + " " + pendingCmd + " " + val);
 		
 		Map<Integer,String> cmd = new HashMap<Integer,String>();
 		cmd.put(pendingCmd, val);

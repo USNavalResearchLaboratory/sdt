@@ -9,7 +9,7 @@
 #      
 # Set the path to be used to search for referenced files.  (Change as appropriate for your environment.)
 #
-path "../scripts/sprites/;"
+#path "../scripts/sprites/;"
 
 #
 # Set the background bounds and imagery (2d) for the display

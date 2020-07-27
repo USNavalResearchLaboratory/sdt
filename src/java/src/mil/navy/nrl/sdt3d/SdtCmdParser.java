@@ -222,7 +222,7 @@ public class SdtCmdParser
 			boolean playbackStopped)
 	{	
 		
-		System.out.println("SdtCmdParser::processCmd() " + pendingCmd + " " + val);
+		//System.out.println("SdtCmdParser::processCmd() " + pendingCmd + " " + val);
 		/*
 		 * If we are recording the scenario either update our model
 		 * if we are not playing it back, or the buffered command

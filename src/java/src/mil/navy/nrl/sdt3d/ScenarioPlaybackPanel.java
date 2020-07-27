@@ -172,7 +172,8 @@ public class ScenarioPlaybackPanel extends JPanel
             {
                 //---- Position Spinner ----
                 this.scenarioSpinner = new JSpinner();
-                this.scenarioSpinner.setModel(new SpinnerListModel(new String[] {"   0"}));
+                this.scenarioSpinner.setModel(new SpinnerNumberModel(0,0,maxSliderValue, 1));
+                		//new SpinnerListModel(new String[] {"   0"}));
                 this.scenarioSpinner.setEnabled(false);
                 Dimension size = new Dimension(50, this.scenarioSpinner.getPreferredSize().height);
                 this.scenarioSpinner.setMinimumSize(size);
@@ -427,7 +428,8 @@ public class ScenarioPlaybackPanel extends JPanel
     // Spinner not yet implemented
     private void setPositionSpinnerNumber(int n)
     {
-        this.scenarioSpinner.setValue(String.format("%,4d", n));
+        //this.scenarioSpinner.setValue(String.format("%,4d", n));
+    	scenarioSpinner.setValue(n);
     }
 
     
@@ -459,7 +461,8 @@ public class ScenarioPlaybackPanel extends JPanel
     // Spinner not yet implemented
     private void positionSpinnerStateChanged()
     {
-    		setTimeDelta(getCurrentPositionNumber(), 0);
+    		//setTimeDelta(getCurrentPositionNumber(), 0);
+    		scenarioSlider.setValue(getCurrentPositionNumber());
     }
 
     
@@ -469,10 +472,23 @@ public class ScenarioPlaybackPanel extends JPanel
     		if (scenarioSlider.getValue() >= elapsedSecs)
     		{
     			scenarioSlider.setValue(elapsedSecs);
-    		}
-    		updateReadout(scenarioSlider.getValue());
-    		firePropertyChange(ScenarioController.POSITION_CHANGE, 0, scenarioSlider.getValue());
+     		}
+    		
+    		System.out.println("scenarioPlayback::positionsliderstatechanged() " + scenarioSlider.getValue());
+    		
+    		elapsedScenarioTimeValue.setText(String.valueOf(scenarioSlider.getValue()));
+    		scenarioSpinner.setValue(scenarioSlider.getValue());
+    		
+    		//updateReadout(scenarioSlider.getValue());
+    		//firePropertyChange(ScenarioController.POSITION_CHANGE, 0, scenarioSlider.getValue());
      }
+
+    
+    void updateReadout(int time)
+    {
+        elapsedScenarioTimeValue.setText(String.valueOf(time)); 
+        //setPositionSpinnerNumber(time);
+    }
 
     
     // Spinner not yet implemented
@@ -496,18 +512,12 @@ public class ScenarioPlaybackPanel extends JPanel
     		this.scenarioSlider.setValue(value);
     }
 
-
-    void updateReadout(int time)
-    {
-        elapsedScenarioTimeValue.setText(String.valueOf(time)); 
-    }
-
     
     void updatePlaybackTime(Long time)
     {
 		Date date = new Date(time);
 		// use correct format ('S' for milliseconds)
-		SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+		SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss.SSSSSS");
 		formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 		// format date
 		String formatted = formatter.format(date);
@@ -519,7 +529,7 @@ public class ScenarioPlaybackPanel extends JPanel
     
     void updateScenarioTime(int currentScenarioValue)
     {
-     		// If we've gone beyond our initial scenario time increase the slider
+     	// If we've gone beyond our initial scenario time increase the slider
     	if (currentScenarioValue > maxSliderValue)
     	{
     		// TODO: Optimize this
@@ -528,7 +538,9 @@ public class ScenarioPlaybackPanel extends JPanel
      	}
     	
      	scenarioSlider.setValue(currentScenarioValue);
-     	updateReadout(currentScenarioValue);
+        elapsedScenarioTimeValue.setText(String.valueOf(currentScenarioValue)); 
+
+     	//updateReadout(currentScenarioValue);
     }
     
     
