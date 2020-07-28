@@ -399,7 +399,7 @@ public class SdtSpriteModel extends SdtModel
 		Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
 		double d = loc.distanceTo3(dc.getView().getEyePoint());
 		
-		return modelRadius = dc.getView().computePixelSizeAtDistance(d);
+		return dc.getView().computePixelSizeAtDistance(d);
 	}
 	
 	/*
@@ -451,6 +451,13 @@ public class SdtSpriteModel extends SdtModel
 	} // end WWModel3D.setLength()
 
 
+	@Override
+	public double getModelRadius()
+	{
+		return modelRadius;
+	}
+	
+	
 	@Override
 	public void setScale(float theScale)
 	{
@@ -539,7 +546,6 @@ public class SdtSpriteModel extends SdtModel
 	//@Override
 	public void render(DrawContext dc) 
 	{		
-			
 		if (position == null)
 			return;
 		
@@ -568,7 +574,7 @@ public class SdtSpriteModel extends SdtModel
 		Rectangle rect = new Rectangle((int) (screenPoint.x),
 				(int) (screenPoint.y), (int) (width * localSize),
 				(int) (height * localSize));
-				
+			
 		this.recordFeedback(dc, this, modelPoint, rect);
 			
 		
