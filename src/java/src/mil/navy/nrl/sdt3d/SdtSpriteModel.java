@@ -345,7 +345,10 @@ public class SdtSpriteModel extends SdtModel
 	public void setUseLighting(boolean useLighting)
 	{
 		this.useLighting = useLighting;
-		model.setUseLighting(useLighting);
+		if (model != null)
+		{
+			model.setUseLighting(useLighting);
+		}
 	}
 
 
@@ -392,7 +395,7 @@ public class SdtSpriteModel extends SdtModel
 		return lengthInMeters;
 	}
 	
-	
+	// not used?
 	@Override
 	double getSymbolSize(DrawContext dc)
 	{
@@ -410,9 +413,7 @@ public class SdtSpriteModel extends SdtModel
 	 */
 	void setModelRadius()
 	{
-		
 		double lengthInMeters = getLength();
-		
 		
 		if (model == null)
 		{
@@ -430,6 +431,7 @@ public class SdtSpriteModel extends SdtModel
 			pLength = pWidth;
 			pWidth = temp;
 		}
+		
 		sizeScale = lengthInMeters / pLength; // meters per pixel for this model
 		
 		minimumSizeScale = sizeScale;
@@ -442,11 +444,12 @@ public class SdtSpriteModel extends SdtModel
 		}
 		
 		if (pLength > lengthInMeters)
-			modelRadius = Math.sqrt(3 * (lengthInMeters * sizeScale) * (lengthInMeters * sizeScale)) / 2.0;		
+			modelRadius = Math.sqrt(3 * (lengthInMeters * minimumSizeScale) * (lengthInMeters * minimumSizeScale)) / 2.0;		
 		else
 			modelRadius = Math.sqrt(3 * lengthInMeters * lengthInMeters) / 2.0;
 				
-		this.iconHeight = pHeight * sizeScale;
+		this.iconHeight = pHeight * minimumSizeScale;
+		//System.out.println("modelRadius> " + modelRadius + " lengthInMeters> " + lengthInMeters + "minimumSizeScale> " + minimumSizeScale);
 		
 	} // end WWModel3D.setLength()
 
@@ -534,9 +537,14 @@ public class SdtSpriteModel extends SdtModel
 		// Don't let model get smaller than our requested size
 		if (modelSize < minimumSizeScale)
 		{
+			//System.out.println("modelRadius" + modelRadius + "BoundsModelRadius> " + 
+			//		model.getBounds().getRadius() + "viewAtRealSize ModelSize> " + modelSize + 
+			//		" minimumSizeScale> " + minimumSizeScale + " sizeScale> " + sizeScale);
 			viewAtRealSize = true;
-			modelSize = minimumSizeScale;
+			modelSize = minimumSizeScale; // * pSize;
+
 		}
+	
 			
 		return modelSize;
 			
@@ -566,7 +574,7 @@ public class SdtSpriteModel extends SdtModel
 
 		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
 		double localSize = computeSizeScale(dc, loc);
-
+		
 		double width = getWidth();
 		double height = getHeight();
 		gl.glLoadIdentity();
