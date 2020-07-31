@@ -447,10 +447,7 @@ public class SdtSpriteModel extends SdtModel
 			modelRadius = Math.sqrt(3 * (lengthInMeters * sizeScale) * (lengthInMeters * sizeScale)) / 2.0;		
 		else
 			modelRadius = Math.sqrt(3 * lengthInMeters * lengthInMeters) / 2.0;
-				
-		this.iconHeight = pHeight * minimumSizeScale;
-		//System.out.println("modelRadius> " + modelRadius + " lengthInMeters> " + lengthInMeters + "minimumSizeScale> " + minimumSizeScale);
-		
+						
 	} // end WWModel3D.setLength()
 
 
@@ -521,6 +518,15 @@ public class SdtSpriteModel extends SdtModel
 		// Needed for valid symbol size
 		viewAtRealSize = false;
 
+		if (getFixedLength() > 0.0 && isRealSize)
+		{
+			// A real-world length (in meters) was set
+			// for this model (no pixel size set)
+			
+			return sizeScale; // meterss per pixel for this model
+		}
+		
+		
 		double d = loc.distanceTo3(dc.getView().getEyePoint());
 		double pSize = dc.getView().computePixelSizeAtDistance(d);
 			
@@ -537,14 +543,10 @@ public class SdtSpriteModel extends SdtModel
 		// Don't let model get smaller than our requested size
 		if (modelSize < minimumSizeScale)
 		{
-			//System.out.println("modelRadius" + modelRadius + "BoundsModelRadius> " + 
-			//		model.getBounds().getRadius() + "viewAtRealSize ModelSize> " + modelSize + 
-			//		" minimumSizeScale> " + minimumSizeScale + " sizeScale> " + sizeScale);
 			viewAtRealSize = true;
-			modelSize = minimumSizeScale; // * pSize;
+			modelSize = minimumSizeScale; 
 
 		}
-	
 			
 		return modelSize;
 			
