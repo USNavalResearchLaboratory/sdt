@@ -382,6 +382,9 @@ public class SdtSpriteModel extends SdtModel
 	{
 		double lengthInMeters = getFixedLength();
 		
+		// Only checking lengthInMeters resulted in model not being offset
+		// from ground level correctly.  I guess bc model radius??  Fix this
+		// up too.
 		if (lengthInMeters > 0 && getWidth() > 0 || lengthInMeters < 0)
 		{
 			lengthInMeters = iconWidth;
@@ -447,6 +450,9 @@ public class SdtSpriteModel extends SdtModel
 			modelRadius = Math.sqrt(3 * (lengthInMeters * sizeScale) * (lengthInMeters * sizeScale)) / 2.0;		
 		else
 			modelRadius = Math.sqrt(3 * lengthInMeters * lengthInMeters) / 2.0;
+		
+		// This affects model size scaling
+		this.iconHeight = pHeight * sizeScale;
 						
 	} // end WWModel3D.setLength()
 
@@ -542,6 +548,7 @@ public class SdtSpriteModel extends SdtModel
 			
 		// Don't let model get smaller than our requested size
 		if (modelSize < minimumSizeScale)
+		//if (modelSize < sizeScale)
 		{
 			viewAtRealSize = true;
 			modelSize = minimumSizeScale; 
