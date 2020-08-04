@@ -3759,6 +3759,7 @@ public class sdt3d extends SdtApplication
 			return true;
 		}
 
+
 		boolean setOffset(String val)
 		{
 			if ((0 == val.length()) || currentNode == null)
@@ -3786,15 +3787,15 @@ public class sdt3d extends SdtApplication
 
 			currentNode.setNodeUpdate(true);
 
-			Float y = 0.0f;
 			Float x = 0.0f;
+			Float y = 0.0f;
 			Float z = 0.0f;
 			
-			if (!coord[1].equalsIgnoreCase("x"))
-				x = new Float(coord[1]);
-
 			if (!coord[0].equalsIgnoreCase("x"))
-				y = new Float(coord[0]);
+				x = new Float(coord[0]);
+
+			if (!coord[1].equalsIgnoreCase("x"))
+				y = new Float(coord[1]);
 
 			if (coord.length > 2 && !coord[2].equalsIgnoreCase("x"))
 				z = new Float(coord[2]);
@@ -3980,8 +3981,8 @@ public class sdt3d extends SdtApplication
 							Angle heading = view.getHeading();
 							Double zoom = ((OrbitView) view).getZoom();
 							Position eyePosition = view.getCurrentEyePosition();
-							view.setOrientation(eyePosition, focusPosition);
 							view.setPitch(pitch);
+							view.setOrientation(eyePosition, focusPosition);
 							view.setHeading(heading);
 							view.setFieldOfView(fov);
 							((OrbitView) view).setZoom(zoom);
@@ -4654,12 +4655,11 @@ public class sdt3d extends SdtApplication
 				width = new Integer(dim[0]);
 				height = new Integer(dim[0]);
 			}
-			if (dim.length ==2)
+			if (dim.length == 2)
 			{
 				width = new Integer(dim[0]);
 				height = new Integer(dim[1]);
 			}
-
 			currentSprite.setSize(width.intValue(), height.intValue());
 			// If we are setting a size specifically, we are not
 			// a real size model - e.g. the model will stay in sight
@@ -4685,12 +4685,18 @@ public class sdt3d extends SdtApplication
 				return false;
 			}
 			currentSprite.setFixedLength(length.doubleValue());
-
-			if (currentSprite.getHeight() < 0 && currentSprite.getWidth() < 0)
+			
+			// We aren't checking height here because currently height is set when
+			// setFixedLength() (or setSize()) calls setModelRadius() which sets 
+			// the height to the actual model bounds height * sizeScale.
+			//
+			// This is confusing and should be reworked!
+			
+			if (currentSprite.getWidth() < 0)
 			{
 				currentSprite.setRealSize(true);
 			}
-			
+
 			return true;
 		}
 
@@ -4705,6 +4711,7 @@ public class sdt3d extends SdtApplication
 				// TODO warn about no "node" specified
 				return false;
 			}
+			
 			String status = val;
 			if (status.equalsIgnoreCase("on"))
 			{
@@ -4798,6 +4805,7 @@ public class sdt3d extends SdtApplication
 			else
 			{
 				theNode.setFeedbackEnabled(true);
+				viewController.setEnabled(true);
 			}
 			return true;
 		} // setFollow
@@ -5092,7 +5100,6 @@ public class sdt3d extends SdtApplication
 					}
 					case 7:
 					{
-						// azimuth/heading/yaw
 						String absolutePositioning = attrs[ind];
 						if (absolutePositioning.endsWith("a"))
 						{
@@ -5107,7 +5114,6 @@ public class sdt3d extends SdtApplication
 
 						// Orientation or "yaw"
 						double lAzimuth = Double.valueOf(absolutePositioning);
-						
 						currentSymbol.setLAzimuth(lAzimuth);
 						break;
 					}
