@@ -261,7 +261,7 @@ public class SdtSpriteKml extends SdtSpriteModel
 
 	
 	/*
-	 * Called by rendering function
+	 * Called by model rendering function
 	 */	
 	public Vec4 computeSizeVector(DrawContext dc, Vec4 loc)
 	{		
@@ -323,7 +323,42 @@ public class SdtSpriteKml extends SdtSpriteModel
 		return modelScaleVec;
 	}
 
+	/*
+	 * Called during symbol rendering when symbol dimensions are not
+	 * explicitly set.  Still does not scale icon hugging kml symbol correctly.
+	 * KML symbols sizes should be explicitly set until we can
+	 * correctly get size of model.
+	 */
+	@Override
+	public double getModelRadius()
+	{
+		Vec4 modelScaleVec;
+		if (getFixedLength() > 0.0 && isRealSize)
+		{
+			// if "real-world" size only use fixed length
+			double localSize = getFixedLength();
+			Double scale = (double) getScale();
+			modelScaleVec = new Vec4(localSize * scale, localSize * scale, localSize * scale);
+		}
+		else
+		{			
+			double size = (iconWidth > iconHeight) ? iconWidth : iconHeight;
+						
+			// If model is rendering at real world size use
+			// fixed length for symbol size, if set.
+			if (viewAtRealSize)
+			{
+				size = getFixedLength() > 0 ? getFixedLength() : size;
+			}
+			Double scale = (double) getScale();
+			modelScaleVec = new Vec4(size * scale, size * scale, size * scale);
+		}
+		
 
+		return modelScaleVec.x;
+	}
+	
+	
 	public void setLayerNode(KMLLayerTreeNode theLayerNode)
 	{
 		layerNode = theLayerNode;

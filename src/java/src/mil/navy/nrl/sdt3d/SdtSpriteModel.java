@@ -345,7 +345,10 @@ public class SdtSpriteModel extends SdtModel
 	public void setUseLighting(boolean useLighting)
 	{
 		this.useLighting = useLighting;
-		model.setUseLighting(useLighting);
+		if (model != null)
+		{
+			model.setUseLighting(useLighting);
+		}
 	}
 
 
@@ -379,6 +382,9 @@ public class SdtSpriteModel extends SdtModel
 	{
 		double lengthInMeters = getFixedLength();
 		
+		// Only checking lengthInMeters resulted in model not being offset
+		// from ground level correctly.  I guess bc model radius??  Fix this
+		// up too.
 		if (lengthInMeters > 0 && getWidth() > 0 || lengthInMeters < 0)
 		{
 			lengthInMeters = iconWidth;
@@ -392,14 +398,14 @@ public class SdtSpriteModel extends SdtModel
 		return lengthInMeters;
 	}
 	
-	
+	// not used?
 	@Override
 	double getSymbolSize(DrawContext dc)
 	{
 		Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
 		double d = loc.distanceTo3(dc.getView().getEyePoint());
 		
-		return modelRadius = dc.getView().computePixelSizeAtDistance(d);
+		return dc.getView().computePixelSizeAtDistance(d);
 	}
 	
 	/*
@@ -410,9 +416,7 @@ public class SdtSpriteModel extends SdtModel
 	 */
 	void setModelRadius()
 	{
-		
 		double lengthInMeters = getLength();
-		
 		
 		if (model == null)
 		{
@@ -430,6 +434,7 @@ public class SdtSpriteModel extends SdtModel
 			pLength = pWidth;
 			pWidth = temp;
 		}
+		
 		sizeScale = lengthInMeters / pLength; // meters per pixel for this model
 		
 		minimumSizeScale = sizeScale;
@@ -445,12 +450,20 @@ public class SdtSpriteModel extends SdtModel
 			modelRadius = Math.sqrt(3 * (lengthInMeters * sizeScale) * (lengthInMeters * sizeScale)) / 2.0;		
 		else
 			modelRadius = Math.sqrt(3 * lengthInMeters * lengthInMeters) / 2.0;
-				
-		this.iconHeight = pHeight * sizeScale;
 		
+		// This affects model size scaling
+		this.iconHeight = pHeight * sizeScale;
+						
 	} // end WWModel3D.setLength()
 
 
+	@Override
+	public double getModelRadius()
+	{
+		return modelRadius;
+	}
+	
+	
 	@Override
 	public void setScale(float theScale)
 	{
@@ -511,6 +524,15 @@ public class SdtSpriteModel extends SdtModel
 		// Needed for valid symbol size
 		viewAtRealSize = false;
 
+		if (getFixedLength() > 0.0 && isRealSize)
+		{
+			// A real-world length (in meters) was set
+			// for this model (no pixel size set)
+			
+			return sizeScale; // meterss per pixel for this model
+		}
+		
+		
 		double d = loc.distanceTo3(dc.getView().getEyePoint());
 		double pSize = dc.getView().computePixelSizeAtDistance(d);
 			
@@ -526,9 +548,11 @@ public class SdtSpriteModel extends SdtModel
 			
 		// Don't let model get smaller than our requested size
 		if (modelSize < minimumSizeScale)
+		//if (modelSize < sizeScale)
 		{
 			viewAtRealSize = true;
-			modelSize = minimumSizeScale;
+			modelSize = minimumSizeScale; 
+
 		}
 			
 		return modelSize;
@@ -539,7 +563,6 @@ public class SdtSpriteModel extends SdtModel
 	//@Override
 	public void render(DrawContext dc) 
 	{		
-			
 		if (position == null)
 			return;
 		
@@ -560,7 +583,7 @@ public class SdtSpriteModel extends SdtModel
 
 		Vec4 loc = dc.getGlobe().computePointFromPosition(position);
 		double localSize = computeSizeScale(dc, loc);
-
+		
 		double width = getWidth();
 		double height = getHeight();
 		gl.glLoadIdentity();
@@ -568,7 +591,7 @@ public class SdtSpriteModel extends SdtModel
 		Rectangle rect = new Rectangle((int) (screenPoint.x),
 				(int) (screenPoint.y), (int) (width * localSize),
 				(int) (height * localSize));
-				
+			
 		this.recordFeedback(dc, this, modelPoint, rect);
 			
 		

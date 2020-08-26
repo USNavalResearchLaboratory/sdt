@@ -673,7 +673,10 @@ public class SdtSymbol implements Renderable
 				else
 				{
 					if (sdtNode.getSprite().getType() == SdtSpriteIcon.Type.KML)
-						currentSize = sdtNode.getSprite().getSymbolSize(dc); 
+					{
+						// KML model radius already multiplies by compute pixel?
+						currentSize = sdtNode.getSprite().getModelRadius() * getScale();
+					}
 				}
 				
 			}
@@ -681,7 +684,7 @@ public class SdtSymbol implements Renderable
 			{
 				if (sdtNode.getSprite().getType() == SdtSpriteIcon.Type.ICON)
 				{
-					currentSize = (getMaxDimension() * getScale()) * dc.getView().computePixelSizeAtDistance(d);
+					currentSize = ((getMaxDimension() * getScale()) / 2)  * dc.getView().computePixelSizeAtDistance(d);
 				}
 				else
 				{
@@ -692,7 +695,8 @@ public class SdtSymbol implements Renderable
 					}
 					else
 					{
-						currentSize = sdtNode.getSprite().getSymbolSize(dc); 
+						// Else use the sprite dimensions
+						currentSize = sdtNode.getSprite().getModelRadius() * getScale() * dc.getView().computePixelSizeAtDistance(d);
 					}
 				}
 			}
