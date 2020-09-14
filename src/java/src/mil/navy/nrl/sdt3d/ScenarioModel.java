@@ -158,9 +158,8 @@ public class ScenarioModel
 		wformatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 		// format date
 		String wformatted = wformatter.format(wdate);
-
 		
-		System.out.println("time> " + wformatted + "currentTime> " + currentTime + " " + pendingCmd + " " + val);
+		//System.out.println("time> " + wformatted + "currentTime> " + currentTime + " " + pendingCmd + " " + val);
 		
 		Map<Integer,String> cmd = new HashMap<Integer,String>();
 		cmd.put(pendingCmd, val);

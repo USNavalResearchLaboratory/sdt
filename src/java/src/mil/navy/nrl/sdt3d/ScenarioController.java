@@ -131,9 +131,7 @@ public class ScenarioController implements PropertyChangeListener
 		scenarioPlaybackPanel.updatePlaybackTime(time);
 	}
 	
-	/*
-	 * Gets the 
-	 */
+
 	int getScenarioSecsFromRealTime(Long realScenarioTime)
 	{
 		// TODO:  Fix/Optimize!
@@ -161,10 +159,11 @@ public class ScenarioController implements PropertyChangeListener
 	 * Called by the scenario thread to set slider to
 	 * scenario playback time
 	 */
-	//public void setScenarioTime(Long scenarioTime)
-	//{
-	//	getView().setScenarioTime(getScenarioSecsFromRealTime(scenarioTime));
-	//}
+	public void setScenarioTime(Long scenarioTime)
+	{
+		// TODO: Implement
+		getView().setScenarioTime(getScenarioSecsFromRealTime(scenarioTime));
+	}
 
 	
 	private void startRecording()
@@ -234,7 +233,7 @@ public class ScenarioController implements PropertyChangeListener
 			// LJT TODO: handle other config options
 			return;
 		}
-		// We allow the user to selected the command map as "the"
+		// We allow the user to select the command map as "the"
 		// scenario file but we have two files so strip off the
 		// extension.  TODO: create some hidden subfiles or something
 		String scenarioName = fileName.get();
@@ -270,22 +269,20 @@ public class ScenarioController implements PropertyChangeListener
 	
 	Integer  getElapsedSecs()
 	{
-		// hack for now
 		//Map.Entry<Integer, Long> entry = (Entry<Integer, Long>) scenarioSliderTimeMap.entrySet().toArray()[scenarioSliderTimeMap.size()];
+		//Integer.valueOf(scenarioSliderTimeMap.entrySet().toArray()[scenarioSliderTimeMap.size()]);
+		
 		Integer key = 0;
 		for (Map.Entry<Integer, Long> entry : scenarioSliderTimeMap.entrySet()) {
 			key = entry.getKey();
-			//ArrayList<String> value = entry.getValue();
-		}
-		
-		return key;  //Integer.valueOf(scenarioSliderTimeMap.entrySet().toArray()[scenarioSliderTimeMap.size()]);
+		}		
+		return key;  
 	}
 	
 	/*
 	 * Stop recording is called when the user stops recording.
 	 * The data model is retained for user playback.
-	 */
-	
+	 */	
 	public void stopRecording()
 	{
 		getView().stopRecording();
@@ -297,10 +294,9 @@ public class ScenarioController implements PropertyChangeListener
 	@Override
 	public void propertyChange(PropertyChangeEvent event)
 	{	
+		// TODO: Switch statement
 		if (event.getPropertyName().equals(RECORDING_STARTED))
 		{
-			//System.out.println("Controller propertyChange PLAY_STARTING");
-
 			if (!recording)
 			{
 				startRecording();
@@ -319,12 +315,10 @@ public class ScenarioController implements PropertyChangeListener
 			// Stop recording and save state
 			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
 			saveState();
-			//listener.modelPropertyChange(ScenarioController.SAVE_STATE, null, null);
 		}
 
 		if (event.getPropertyName().equals(LOAD_RECORDING))
 		{
-			// Stop recording and save state
 			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
 			loadRecording();
 			listener.modelPropertyChange(ScenarioController.LOAD_RECORDING, null, null);
@@ -332,114 +326,56 @@ public class ScenarioController implements PropertyChangeListener
 
 		if (event.getPropertyName().equals(CONFIGURE_SCENARIO))
 		{
-			// Stop recording and save state
+			// Stop recording and save state?
 			// LJT TODO listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
 			configureScenarioState();
-			//listener.modelPropertyChange(ScenarioController.LOAD_STATE, null, null);
 		}
-		//System.out.println("ScenarioController::propertyChange");
+		
 		if (event.getPropertyName().equals(STOP_SCENARIO_PLAYBACK))
 		{	                		
-			//System.out.println("Controller propertyChange PLAY_STOPPED");
 			listener.modelPropertyChange(ScenarioController.STOP_SCENARIO_PLAYBACK, null, event.getNewValue());
 			
 		}
 		
 		if (event.getPropertyName().equals(START_SCENARIO_PLAYBACK))
 		{	                		
-			//System.out.println("Controller propertyChange PLAY_STARTED");
+			int sliderStartTime = (int) event.getNewValue();
+			
+			Long scenarioPlaybackStartTime = (long) sliderStartTime;
+			if (sliderStartTime != 0)
+			{
+				scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
+			}
+			listener.modelPropertyChange(ScenarioController.START_SCENARIO_PLAYBACK, sliderStartTime, scenarioPlaybackStartTime);		
 
-			getCommandAtSliderTime(event);
 		}
 		
 		if (event.getPropertyName().equals(RESUME_LIVE_PLAY))
 		{
-			//System.out.println("Controller propertyChange RESUME_LIVE_PLAY");
 			listener.modelPropertyChange(ScenarioController.RESUME_LIVE_PLAY, null, null);
 		}
 		
 		if (event.getPropertyName().equals(SKIP_FORWARD))
 		{
-			skipForwardToSliderTime(event);
+			int sliderStartTime = (int) event.getNewValue();
+						
+			Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
+
+			listener.modelPropertyChange(ScenarioController.SKIP_FORWARD, sliderStartTime, scenarioPlaybackStartTime);		
 		}
-	}
-	
-	
-	void skipForwardToSliderTime(PropertyChangeEvent event)
-	{
 		
-		// LJT TODO: merge with getCommandAtSliderTime
-		int sliderStartTime = (int) event.getNewValue();
-		
-		// If no value provided start at beginning
-		if (sliderStartTime == 0)
+		if (event.getPropertyName().equals(SKIP_BACK))
 		{
-			if (!scenarioSliderTimeMap.isEmpty())
+			Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(event.getNewValue());
+
+			if (scenarioPlaybackStartTime == null)
 			{
-				Map.Entry<Integer, Long> entry = scenarioSliderTimeMap.entrySet().iterator().next();
-				sliderStartTime = entry.getKey();
+				scenarioPlaybackStartTime = (long) 0;
 			}
-		} 
-		else 
-		{
-			if (!scenarioSliderTimeMap.containsKey(sliderStartTime))
-			{	
-				System.out.println("ScenarioController::propertyChange() map does not contain key>" + event.getNewValue());
-				// Stop playback
-				getView().startStopButtonActionPerformed();
-				return;
-			}
+			listener.modelPropertyChange(ScenarioController.SKIP_BACK, 0, scenarioPlaybackStartTime);		
 		}
-
-		
-		// Get the command map key for the scenario slider time
-		Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
-		
-		Date date = new Date(scenarioPlaybackStartTime);
-		// use correct format ('S' for milliseconds)
-		SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-		formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-		// format date
-		String formatted = formatter.format(date);
-
-		
-		System.out.println("Slider Time> " + sliderStartTime + " New value> " + formatted);
-
-		listener.modelPropertyChange(ScenarioController.SKIP_FORWARD, sliderStartTime, scenarioPlaybackStartTime);		
-	
 	}
-	
-	
-	void getCommandAtSliderTime(PropertyChangeEvent event)
-	{
-		int sliderStartTime = (int) event.getNewValue();
 		
-		// If no value provided start at beginning
-		if (sliderStartTime == 0)
-		{
-			if (!scenarioSliderTimeMap.isEmpty())
-			{
-				Map.Entry<Integer, Long> entry = scenarioSliderTimeMap.entrySet().iterator().next();
-				sliderStartTime = entry.getKey();
-			}
-		} 
-		else 
-		{
-			if (!scenarioSliderTimeMap.containsKey(sliderStartTime))
-			{	
-				System.out.println("ScenarioController::propertyChange() map does not contain key>" + event.getNewValue());
-	   		 
-				getView().startStopButtonActionPerformed();
-				return;
-			}
-		}
-
-		
-		// Get the command map key for the scenario slider time
-		Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
-		listener.modelPropertyChange(ScenarioController.START_SCENARIO_PLAYBACK, sliderStartTime, scenarioPlaybackStartTime);		
-	}
-	
 	
 	/*
 	 * Timer to control updating the scenario scrollbar once a second as

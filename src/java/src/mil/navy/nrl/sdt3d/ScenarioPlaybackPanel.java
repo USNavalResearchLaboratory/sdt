@@ -65,6 +65,8 @@ public class ScenarioPlaybackPanel extends JPanel
     private int elapsedSecs = 0; 
     // scenarioSecs is scenario play time
     private int scenarioSecs = 0;
+    // time when scenario is paused to determine if we should skip back/forward
+    private int currentSecs = 0;
 		 
     public ScenarioPlaybackPanel()
     {
@@ -141,12 +143,12 @@ public class ScenarioPlaybackPanel extends JPanel
                     time.add(Box.createHorizontalGlue());
                     elapsedScenarioTime = new JLabel();
                     elapsedScenarioTime.setText("Elapsed Time:");
-                    time.add(this.elapsedScenarioTime);
+                    time.add(elapsedScenarioTime);
                     time.add(Box.createHorizontalStrut(3));
 
                     elapsedScenarioTimeValue = new JLabel();
                     elapsedScenarioTimeValue.setText("0");
-                    time.add(this.elapsedScenarioTimeValue);
+                    time.add(elapsedScenarioTimeValue);
                     time.add(Box.createHorizontalGlue());
                     
                     //.add(Box.createHorizontalGlue());
@@ -451,43 +453,37 @@ public class ScenarioPlaybackPanel extends JPanel
     
     Float getSpeedFactorValue()
     {
-    		String val = (String) speedFactorSpinner.getValue();
-    		String [] value = val.split("x",2);
-    		Float speedFactor = new Float(value[1]);
-    		return speedFactor;
+    	String val = (String) speedFactorSpinner.getValue();
+    	String [] value = val.split("x",2);
+    	Float speedFactor = new Float(value[1]);
+    	return speedFactor;
     }
     
     
     // Spinner not yet implemented
     private void positionSpinnerStateChanged()
     {
-    		//setTimeDelta(getCurrentPositionNumber(), 0);
-    		scenarioSlider.setValue(getCurrentPositionNumber());
+    	//setTimeDelta(getCurrentPositionNumber(), 0);
+    	scenarioSlider.setValue(getCurrentPositionNumber());
     }
 
     
     private void positionSliderStateChanged()
     {
-    		// Don't allow slider to go beyone our scenario elapsed time
-    		if (scenarioSlider.getValue() >= elapsedSecs)
-    		{
-    			scenarioSlider.setValue(elapsedSecs);
-     		}
+    	// Don't allow slider to go beyond our scenario elapsed time
+    	if (scenarioSlider.getValue() >= elapsedSecs)
+    	{
+    		scenarioSlider.setValue(elapsedSecs);
+    	}
     		
-    		System.out.println("scenarioPlayback::positionsliderstatechanged() " + scenarioSlider.getValue());
-    		
-    		elapsedScenarioTimeValue.setText(String.valueOf(scenarioSlider.getValue()));
-    		scenarioSpinner.setValue(scenarioSlider.getValue());
-    		
-    		//updateReadout(scenarioSlider.getValue());
-    		//firePropertyChange(ScenarioController.POSITION_CHANGE, 0, scenarioSlider.getValue());
+    	elapsedScenarioTimeValue.setText(String.valueOf(scenarioSlider.getValue()));
+    	scenarioSpinner.setValue(scenarioSlider.getValue());
      }
 
     
     void updateReadout(int time)
     {
         elapsedScenarioTimeValue.setText(String.valueOf(time)); 
-        //setPositionSpinnerNumber(time);
     }
 
     
@@ -545,6 +541,7 @@ public class ScenarioPlaybackPanel extends JPanel
     
     
     // TODO: Resume not yet fully implemented - eventually call this from scenario thread
+    // obsolete?
     void resumeScenarioPlayback()
     {
     		playPauseButton.setText("Pause");
@@ -560,7 +557,7 @@ public class ScenarioPlaybackPanel extends JPanel
     void stopScenarioPlayback()
     {
 		setPlayMode(PLAY_PAUSED);   
-		playPauseButton.setText("Start");
+		playPauseButton.setText("Play");
 		speedFactorSpinner.setEnabled(false);
      }
     
@@ -587,6 +584,8 @@ public class ScenarioPlaybackPanel extends JPanel
     	
     	configureScenarioButtonActionPerformed();
     	loadRecordingButton.setEnabled(false);
+		playPauseButton.setText("Start Recording");
+    	playPauseButton.setEnabled(false);
     	initPlayback();
     	//setPlayMode(PLAYING);
     	playbackOnly = true;
@@ -597,58 +596,76 @@ public class ScenarioPlaybackPanel extends JPanel
     
     private void configureScenarioButtonActionPerformed()
     {
-    		//loadStateButton.setEnabled(false);
-    		//initPlayback();
-    		//setPlayMode(PLAYING);
-    		//playbackOnly = true;
-    		//updateEnabledState(true);
-    		firePropertyChange(ScenarioController.CONFIGURE_SCENARIO, null, null);
+    	//loadStateButton.setEnabled(false);
+    	//initPlayback();
+    	//setPlayMode(PLAYING);
+    	//playbackOnly = true;
+    	//updateEnabledState(true);
+    	playPauseButton.setEnabled(false);
+    	playPauseButton.setText("Loading Recording");
+    	firePropertyChange(ScenarioController.CONFIGURE_SCENARIO, null, null);
     }
     
     
     void startStopButtonActionPerformed()
     {
-    	
-    		if (playMode == START_RECORDING || playMode == CLEAR_RECORDING)
+    	// TODO: ljt switch statement?
+    	if (playMode == START_RECORDING || playMode == CLEAR_RECORDING)
+    	{
+    		playPauseButton.setText("Pause");
+    		playPauseButton.setEnabled(false);
+    		speedFactorSpinner.setEnabled(false);
+    		elapsedSecs = 0;
+    		scenarioSecs = 0;
+    		setScenarioTime(scenarioSecs);
+    		if (playMode == START_RECORDING)
     		{
-    			playPauseButton.setText("Pause");
-    			playPauseButton.setEnabled(false);
-    			speedFactorSpinner.setEnabled(false);
-    			elapsedSecs = 0;
-    			scenarioSecs = 0;
-    			setScenarioTime(scenarioSecs);
-    			if (playMode == START_RECORDING)
-    			{
-    				playbackOnly = false;
-    			}
-       			System.out.println("START_RECORDING scenarioSecs> " + scenarioSecs);
+    			playbackOnly = false;
+    		}
+    		System.out.println("START_RECORDING scenarioSecs> " + scenarioSecs);
        		 
-    			setPlayMode(START_RECORDING);   
-    			startStopRecordingButton.setEnabled(playMode == START_RECORDING);
-    			firePropertyChange(ScenarioController.RECORDING_STARTED, null, scenarioSecs);
-    			return;
-    		}
+    		setPlayMode(START_RECORDING);   
+    		startStopRecordingButton.setEnabled(playMode == START_RECORDING);
+    		firePropertyChange(ScenarioController.RECORDING_STARTED, null, scenarioSecs);
+    		return;
+    	}
     	
-    		if (playMode == PLAY_PAUSED)
-    		{   			
-    			playPauseButton.setText("Pause");
-    			speedFactorSpinner.setEnabled(false);
-    			scenarioSecs = scenarioSlider.getValue();
-    			setScenarioTime(scenarioSecs);
-    			System.out.println("PLAYING scenarioSecs> " + scenarioSecs);
-    			setPlayMode(PLAYING);   			
-    			firePropertyChange(ScenarioController.START_SCENARIO_PLAYBACK, null, scenarioSecs);
-    		}
-    		else
+    	if (playMode == PLAY_PAUSED)
+    	{   			
+    		playPauseButton.setText("Pause");
+    		speedFactorSpinner.setEnabled(false);
+    		scenarioSecs = scenarioSlider.getValue();
+    		setScenarioTime(scenarioSecs);
+    		System.out.println("PLAYING scenarioSecs> " + scenarioSecs);
+    		setPlayMode(PLAYING);   			
+
+    		if (scenarioSlider.getValue() < currentSecs)
     		{
-    			playPauseButton.setText("Play");    			
-    			speedFactorSpinner.setEnabled(true);
+    			firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
+        	}
+    		else
+    	   	{
+    			if (scenarioSlider.getValue() > currentSecs)
+    			{
+    				firePropertyChange(ScenarioController.SKIP_FORWARD, null, scenarioSlider.getValue());
+     	   		}
+    			else
+    			{
+     	   			firePropertyChange(ScenarioController.START_SCENARIO_PLAYBACK, null, scenarioSecs);
+    			}
+    	   	}
+    	}
+    	else
+    	{
+    		playPauseButton.setText("Play");    			
+    		speedFactorSpinner.setEnabled(true);
     			
-    			setPlayMode(PLAY_PAUSED);
-    			scenarioSecs = scenarioSlider.getValue();
-    			System.out.println("PAUSED scenarioSlider value> " + scenarioSlider.getValue());
-    			firePropertyChange(ScenarioController.STOP_SCENARIO_PLAYBACK, null, scenarioSlider.getValue());  
-    		}
+    		currentSecs = scenarioSlider.getValue();
+    		setPlayMode(PLAY_PAUSED);
+    		scenarioSecs = scenarioSlider.getValue();
+    		System.out.println("PAUSED currentSecs> " + currentSecs + " scenarioSlider value> " + scenarioSlider.getValue());
+    		firePropertyChange(ScenarioController.STOP_SCENARIO_PLAYBACK, null, scenarioSlider.getValue());  
+    	}
     }
     
     // not yet implemented
@@ -703,33 +720,36 @@ public class ScenarioPlaybackPanel extends JPanel
     {
         if (player != null)
             return;
+        
         // Player runs continuously keeping track of elapsed scenario time
         // We only update the slider display if taping or playing.
+        
+        // TODO: ljt update only when taping?
         player = new Timer(1000, new ActionListener()
         {
             // Animate the view motion by controlling the positionSpinner and positionDelta
             public void actionPerformed(ActionEvent actionEvent)
             {
-            		if (playMode != STOP_RECORDING && !playbackOnly)
-            		{
-            			elapsedSecs++;
-            		}
+            	if (playMode != STOP_RECORDING && !playbackOnly)
+            	{
+            		elapsedSecs++;
+            	}
             		
-            		if (playMode == RECORDING && !playbackOnly)
-            		{
-            			updateScenarioTime(elapsedSecs);
-            		}
+            	if (playMode == RECORDING && !playbackOnly)
+            	{
+            		updateScenarioTime(elapsedSecs);
+            	}
             		            		
-            		if (playMode == PLAYING)
-            		{
-                		scenarioSecs++;
-                		updateScenarioTime(scenarioSecs);
-            		}
+            	if (playMode == PLAYING)
+            	{
+            		scenarioSecs++;
+            		updateScenarioTime(scenarioSecs);
+            	}
             		
-            		if (playMode == PLAY_PAUSED)
-            		{
-            			updateScenarioTime(scenarioSlider.getValue());
-            		}
+            	if (playMode == PLAY_PAUSED)
+            	{
+            		updateScenarioTime(scenarioSlider.getValue());
+            	}
             }
         });
         player.start();
@@ -739,14 +759,14 @@ public class ScenarioPlaybackPanel extends JPanel
     
     void setPlayMode(int mode)
     {    	
-    		// If we stopped recording and now want to replay restart our player
-    		if (playMode == STOP_RECORDING)
+    	// If we stopped recording and now want to replay restart our player
+    	if (playMode == STOP_RECORDING)
+    	{
+    		if (player != null)
     		{
-    			if (player != null)
-    			{
-    				player.start();
-    			}
+    			player.start();
     		}
+    	}
     	
         playMode = mode;
         if ((playMode == PLAYING || playMode == RECORDING  || playMode == START_RECORDING) 
