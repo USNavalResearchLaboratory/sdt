@@ -359,7 +359,7 @@ public class sdt3d extends SdtApplication
 		// used to calculate wait interval when writing log file
 		long lastTime, currentTime = 0;
 
-		private static String configDirName = System.getProperty("user.home") + 
+		static String CONFIG_DIR_NAME = System.getProperty("user.home") + 
 				System.getProperty("file.separator") +
 				".config" + System.getProperty("file.separator") + "sdt3d";
 
@@ -720,7 +720,7 @@ public class sdt3d extends SdtApplication
 			horizontalSplitPane.setContinuousLayout(true); // prevents the pane's being obscured when expanding right
 
 			this.getContentPane().add(horizontalSplitPane, BorderLayout.CENTER);
-			this.scenarioPlaybackPanel = new ScenarioPlaybackPanel(); 
+			this.scenarioPlaybackPanel = new ScenarioPlaybackPanel(this); 
 			this.getContentPane().add(scenarioPlaybackPanel, BorderLayout.SOUTH);
 			this.scenarioPlaybackPanel.setVisible(true);
 			
@@ -977,15 +977,15 @@ public class sdt3d extends SdtApplication
 		 */
 		boolean initializeConfiguration()
 		{
-			File configDir = new File(configDirName);
-			String propertiesFileName = configDirName + System.getProperty("file.separator") + sdtPropertiesFile;
+			File configDir = new File(CONFIG_DIR_NAME);
+			String propertiesFileName = CONFIG_DIR_NAME + System.getProperty("file.separator") + sdtPropertiesFile;
 
 			if (!configDir.exists())
 			{
 				System.out.println("Creating directory " + configDir);
-				if (!(new File(configDirName)).mkdirs())
+				if (!(new File(CONFIG_DIR_NAME)).mkdirs())
 				{
-					System.out.println("Creation of " + configDirName + " failed!");
+					System.out.println("Creation of " + CONFIG_DIR_NAME + " failed!");
 					return false;
 				}
 				File propertiesFile = new File(propertiesFileName);
@@ -1049,7 +1049,7 @@ public class sdt3d extends SdtApplication
 		void loadUserPreferencesFile()
 		{
 			// First look in config directory
-			String fileName = findFile(configDirName + System.getProperty("file.separator") + userPreferencesFile);
+			String fileName = findFile(CONFIG_DIR_NAME + System.getProperty("file.separator") + userPreferencesFile);
 
 			// If file not found, follow normal file lookup rules
 			if (fileName == null)
@@ -1085,7 +1085,7 @@ public class sdt3d extends SdtApplication
 			}
 
 			// First look in config directory
-			String fileName = findFile(configDirName + System.getProperty("file.separator") + val);
+			String fileName = findFile(CONFIG_DIR_NAME + System.getProperty("file.separator") + val);
 			if (fileName != null)
 			{
 				currentConfigFile = fileName;
@@ -1914,8 +1914,7 @@ public class sdt3d extends SdtApplication
 				
 				
 				//startStopScenarioRecording("off");
-
-				
+    			setTitle("sdt-3D");
 				
 				// shutdown any socket threads, recreate menu item
 				if (udpSocketThread != null && !udpSocketThread.stopped())
@@ -2307,7 +2306,7 @@ public class sdt3d extends SdtApplication
 			else if (event.getSource() == loadDefaultBookmarksItem)
 			{
 
-				File configDir = new File(configDirName);
+				File configDir = new File(CONFIG_DIR_NAME);
 
 				File[] files = configDir.listFiles();
 				for (int fileInList = 0; fileInList < files.length; fileInList++)
@@ -2331,7 +2330,7 @@ public class sdt3d extends SdtApplication
 			{
 
 				File bookmarkFile = null;
-				File configDir = new File(configDirName);
+				File configDir = new File(CONFIG_DIR_NAME);
 				fc.setCurrentDirectory(configDir);
 				// fc.setCurrentDirectory(openFile);
 				String[] viewName = null;
@@ -2382,7 +2381,7 @@ public class sdt3d extends SdtApplication
 				// Save view to disk
 				if (ret == 1)
 				{
-					File configDir = new File(configDirName);
+					File configDir = new File(CONFIG_DIR_NAME);
 					fc.setCurrentDirectory(configDir);
 
 					int returnVal = fc.showSaveDialog(this);
@@ -6330,7 +6329,7 @@ public class sdt3d extends SdtApplication
 
 			// else look for file in config directory
 			if (fileName == null)
-				fileName = findFile(configDirName + System.getProperty("file.separator") + val);
+				fileName = findFile(CONFIG_DIR_NAME + System.getProperty("file.separator") + val);
 
 			if (fileName == null)
 			{
@@ -7450,7 +7449,7 @@ public class sdt3d extends SdtApplication
 		    		   				scenarioThread.stopThread();
 		    					}
 		    					scenarioController.stopRecording();
-		    					scenarioThread = null;
+		    					//scenarioThread = null;
 		    					recordScenario = false;
 		    					playbackOnly = true;
 		            		}
@@ -7492,21 +7491,35 @@ public class sdt3d extends SdtApplication
 			                }
 
 		                if (event.getPropertyName().equals(ScenarioController.START_SCENARIO_PLAYBACK))
-		                {
-		                		
-		                		// This is causing threads to hang?? sycnrhonize?
-		                		//scenarioController.appendBufferModel();
-		            			
-		                		// oldValue: sliderStartTime, newValue: scenarioStartTime
-		                		startScenarioThread((Long) event.getNewValue());
-		                		System.out.println("START_SCENARIO_PLAYBACK sdt3d event newValue>" + event.getNewValue() );
+		                {		
+		                	if (scenarioThread != null)
+		                	{
+		                		try {
+									scenarioThread.pauseThread();
+			                		scenarioController.appendBufferModel();
+			                		scenarioThread.resumeThread();
 
-	                			playbackScenario = true;	  
-	                			playbackStopped = false;
-	                			if (scenarioThread != null)
-	                			{
-	                				scenarioThread.resumeThread();
-	                			}
+								} catch (InterruptedException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+		                	}
+		                	else
+		                	{
+		                		scenarioController.appendBufferModel();
+		                	}
+		                	playbackScenario = true;	 
+		                	playbackStopped = false;
+	
+
+		                	// oldValue: sliderStartTime, newValue: scenarioStartTime
+		                	startScenarioThread((Long) event.getNewValue());
+		                	System.out.println("START_SCENARIO_PLAYBACK sdt3d event newValue>" + event.getNewValue() );
+
+		                	if (scenarioThread != null)
+		                	{
+		                		scenarioThread.resumeThread();
+		                	}
 						}
 		                if (event.getPropertyName().equals(ScenarioController.SKIP_FORWARD))
 		                {
@@ -7523,6 +7536,7 @@ public class sdt3d extends SdtApplication
 								}
 		                		playbackStopped = false;
 		                		scenarioThread.setScenarioStartTime((Long) event.getNewValue());
+		      
 		                		scenarioThread.resumeThread();		                		
 			                }
 		                }
@@ -7534,17 +7548,33 @@ public class sdt3d extends SdtApplication
 		                	if (scenarioThread != null)
 		                	{
 		                		playbackStopped = false;
+		                		scenarioThread.setScenarioStartTime((Long) event.getNewValue());
 		                		scenarioThread.restartPlayback((Long) event.getNewValue());
 		                	}
 		                	
 		                }
 		                if (event.getPropertyName().equals(ScenarioController.RESUME_LIVE_PLAY))
 		                {
-		                		System.out.println("RESUME_LIVE_PLAY sdt3d\n");
-		                		// TODO: Need to playback what is in the buffer prior to resuming play
-		                		scenarioController.appendBufferModel();
-		                		playbackScenario = false;
+		                	System.out.println("RESUME_LIVE_PLAY sdt3d\n");
+		                	// TODO: Need to playback what is in the buffer prior to resuming play
+		                	scenarioController.appendBufferModel();
+		                	playbackScenario = false;
+		                	playbackStopped = false;
+		                }
+		                if (event.getPropertyName().equals(ScenarioController.SET_REPLAY_SPEED))
+		                {
+		                	if (scenarioThread != null)
+		                	{
+		                		try {
+		                			scenarioThread.pauseThread();
+		                		} catch (InterruptedException e) {
+		                			// TODO Auto-generated catch block
+		                			e.printStackTrace();
+		                		}
 		                		playbackStopped = false;
+		                		scenarioThread.setSpeedFactor((Float)event.getNewValue());
+		                		scenarioThread.resumeThread();
+		                	}
 		                }
 		            }
 		        });

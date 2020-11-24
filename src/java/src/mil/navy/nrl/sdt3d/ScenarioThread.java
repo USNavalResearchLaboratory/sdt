@@ -33,6 +33,8 @@ public class ScenarioThread extends SocketThread
 	
 	private Long scenarioPlaybackStartTime;
 	
+	private Float speedFactor;
+	
 	SdtCmdParser parser = null;
 	
 	Long lastTime = new Long(0);	
@@ -98,8 +100,7 @@ public class ScenarioThread extends SocketThread
 		String value = null;
 		parser = new SdtCmdParser(theApp);
 		StringBuilder sb = new StringBuilder();
-		Float speedFactor = scenarioController.getView().getSpeedFactorValue();
-
+		speedFactor = scenarioController.getView().getSpeedFactorValue();
 		
 		synchronized(scenarioModel.getSynSdtCommandMap()) {
 			
@@ -172,8 +173,20 @@ public class ScenarioThread extends SocketThread
 							waitTime = (long) 0;
 						}
 						
-						sleep(waitTime);
+						// If wait time > 1 second increment scenario slider
+						int increment = scenarioController.getScenarioSecsFromRealTime(lastTime);
 
+						int sliderVal = scenarioController.getView().getSliderValue();
+						
+						long secs = waitTime / 1000;
+						while (secs > 1)
+						{
+							sleep(1000);
+							scenarioController.getView().updateScenarioTime(sliderVal++);
+							secs = secs - 1;
+							waitTime = (long) 0;
+						} 
+						sleep(waitTime);
 					}
 				}
 				catch (InterruptedException e)
@@ -190,6 +203,8 @@ public class ScenarioThread extends SocketThread
 				(!pendingCmd.equalsIgnoreCase("listen")))
 			{
 				scenarioController.updatePlaybackTime(lastTime);
+				// TODO: ljt do both??
+				scenarioController.updateScenarioTime(lastTime);
 				sb.append(value, 0, value.length());
 				parseString(sb, parser);	
 			}
@@ -280,46 +295,6 @@ public class ScenarioThread extends SocketThread
 		parseString(sb, parser);
 	}
 
-	/*
-	 * Not currently used
-	 */
-	void playbackBufferedCommands()
-	{
-		String value = null;
-		//final SdtCmdParser 
-		parser = new SdtCmdParser(theApp);
-		StringBuilder sb = new StringBuilder();
-
-		synchronized(getScenarioModel().getSynSdtBufferCommandMap()) {
-		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getSynSdtBufferCommandMap().entrySet().iterator();		
-		while (!stopFlag && itr.hasNext())
-		{
-			Entry<Long, Map<Integer,String>> entry = itr.next();
-			
-			Map<Integer, String> cmdMap = entry.getValue();
-			int key = 0; 
-			value = null;
-			String pendingCmd = null;
-			for (Map.Entry<Integer, String> cmdEntry: cmdMap.entrySet())
-			{
-				key = (int) cmdEntry.getKey();
-				pendingCmd = int2Cmd.get(key);
-				value = (String) cmdEntry.getValue();
-    		}			
-
-			value = " " + pendingCmd + " \"" + value + " \"\n";
-				
-			if ((!pendingCmd.equalsIgnoreCase("wait"))
-					&&
-				(!pendingCmd.equalsIgnoreCase("listen")))
-			{
-				sb.append(value, 0, value.length());
-				parseString(sb, parser);	
-			}
-		}
-		}
-	
-	}
 		
 	
 	private void checkForPaused() 
@@ -369,4 +344,57 @@ public class ScenarioThread extends SocketThread
 			GUI_MONITOR.notify();
 		}
 	}
+	
+	
+	public void setSpeedFactor(Float speedFactor)
+	{
+		synchronized (GUI_MONITOR) {
+			this.speedFactor = speedFactor;
+			pauseThreadFlag = false;
+			GUI_MONITOR.notify();
+		}
+	}
+	
+	
+	/*
+	 * Not currently used
+	 */
+	void playbackBufferedCommands()
+	{
+		String value = null;
+		//final SdtCmdParser 
+		parser = new SdtCmdParser(theApp);
+		StringBuilder sb = new StringBuilder();
+
+		synchronized(getScenarioModel().getSynSdtBufferCommandMap()) {
+		Iterator<Entry<Long, Map<Integer, String>>> itr = getScenarioModel().getSynSdtBufferCommandMap().entrySet().iterator();		
+		while (!stopFlag && itr.hasNext())
+		{
+			Entry<Long, Map<Integer,String>> entry = itr.next();
+			
+			Map<Integer, String> cmdMap = entry.getValue();
+			int key = 0; 
+			value = null;
+			String pendingCmd = null;
+			for (Map.Entry<Integer, String> cmdEntry: cmdMap.entrySet())
+			{
+				key = (int) cmdEntry.getKey();
+				pendingCmd = int2Cmd.get(key);
+				value = (String) cmdEntry.getValue();
+    		}			
+
+			value = " " + pendingCmd + " \"" + value + " \"\n";
+				
+			if ((!pendingCmd.equalsIgnoreCase("wait"))
+					&&
+				(!pendingCmd.equalsIgnoreCase("listen")))
+			{
+				sb.append(value, 0, value.length());
+				parseString(sb, parser);	
+			}
+		}
+		}
+	
+	}
+
 }

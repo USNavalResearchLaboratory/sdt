@@ -102,6 +102,7 @@ public class SdtCmdParser
 		"+showSdtControlPanel",
 		"+multiFrame",
 		"+modelJarFile",
+		"-nullCmd",
 		null
 	};
 	
@@ -214,7 +215,7 @@ public class SdtCmdParser
 
 		return true;
 	} // end OnCommand
-
+	
 	
 	void processCmd(String pendingCmd, String val, 
 			boolean scenarioCmd, boolean recordScenario, boolean playbackOnly,
@@ -328,6 +329,12 @@ public class SdtCmdParser
 
 	boolean doCmd(String pendingCmd, String val)
 	{
+		// Internal command used in scenarioRecording
+		if (pendingCmd.equalsIgnoreCase("nullCmd"))
+		{
+			return true;
+		}
+		
 		if (pendingCmd.equalsIgnoreCase("bgbounds"))
 			return sdt3dApp.setBackgroundBounds(val);
 		else if (pendingCmd.equalsIgnoreCase("flyto"))

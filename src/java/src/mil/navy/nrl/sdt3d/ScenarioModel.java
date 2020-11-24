@@ -69,17 +69,21 @@ public class ScenarioModel
 			LinkedHashMap<Long,Map<Integer,String>> sdtCommandMap = null; 
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			sdtCommandMap = (LinkedHashMap<Long, Map<Integer, String>>) ois.readObject();
-			System.out.println(sdtCommandMap);
+			//System.out.println(sdtCommandMap);
 			ois.close();
 			fis.close();
 
-			synSdtCommandMap = Collections.synchronizedMap(sdtCommandMap);
-
-			System.out.println("cmdMap> " + sdtCommandMap);
-			
 			Instant endTime = Instant.now();
-			Duration interval = Duration.between(startTime, endTime);
-			System.out.println("loadModelState() Execution time in seconds: " + interval.getSeconds());
+			Duration interval = Duration.between(startTime,  endTime);
+			System.out.println("loadRecording() sdtCommandMap loaded in> " + interval.getSeconds() + " seconds");
+
+			//System.out.println("cmdMap size> " + sdtCommandMap.size());
+
+			//System.out.println("cmdMap> " + sdtCommandMap);
+			synSdtCommandMap = Collections.synchronizedMap(sdtCommandMap);
+			endTime = Instant.now();
+			interval = Duration.between(startTime, endTime);
+			System.out.println("loadModelState() Created syncrhonized map Execution time in seconds: " + interval.getSeconds());
 			
 			// The buffered command map keeps track of commands received 
 			// while we are playing back a part of a scenario
@@ -88,7 +92,7 @@ public class ScenarioModel
 		
 			endTime = Instant.now();
 			interval = Duration.between(startTime, endTime);
-			System.out.println("loadRecording() Total execution time in seconds: " + interval.getSeconds());
+			System.out.println("loadRecording() Created bufferCommandMap Total execution time in seconds: " + interval.getSeconds());
 
 		} catch (IOException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -187,7 +191,7 @@ public class ScenarioModel
 				{
 					return;
 				}
-				//System.out.println("Appending synbuffer>" + synBufferMap.size());
+				System.out.println("Appending synbuffer>" + synSdtBufferCommandMap.size());
 				synSdtCommandMap.putAll(synSdtBufferCommandMap);
 				sdtBufferCommandMap = new LinkedHashMap<Long, Map<Integer,String>>();
 				synSdtBufferCommandMap = Collections.synchronizedMap(sdtBufferCommandMap);

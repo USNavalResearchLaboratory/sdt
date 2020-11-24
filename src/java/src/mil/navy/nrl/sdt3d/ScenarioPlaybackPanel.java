@@ -8,6 +8,7 @@ import java.awt.event.*;
 import java.beans.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
 import java.util.TimeZone;
 
 /**
@@ -67,14 +68,17 @@ public class ScenarioPlaybackPanel extends JPanel
     private int scenarioSecs = 0;
     // time when scenario is paused to determine if we should skip back/forward
     private int currentSecs = 0;
+    
+    private sdt3d.AppFrame listener = null;
 		 
-    public ScenarioPlaybackPanel()
+    public ScenarioPlaybackPanel(sdt3d.AppFrame listener)
     {
         initComponents();
         
         this.playPauseButton.setEnabled(true);
         this.playMode = START_RECORDING;
-  
+        this.listener = listener;
+ 
     }
     
     /*
@@ -96,20 +100,22 @@ public class ScenarioPlaybackPanel extends JPanel
     public void reset()
     {
 		// clean all this starting/stopping up!!
-		playPauseButton.setText("Start Recording");
-		startStopRecordingButton.setText("Stop Recording");
-		setPlayMode(CLEAR_RECORDING);
+		playPauseButton.setText("Play");
+		playPauseButton.setEnabled(false);
+		startStopRecordingButton.setText("Start Recording");
+		setPlayMode(PLAYING);
 		scenarioSlider.setValue(0);
 		if (player != null)
 		{
 			player.stop();
-    			player = null;
+    		player = null;
 		}
 		scenarioSecs = 0;
 		elapsedSecs = 0;
 		playbackOnly = false;
 		loadRecordingButton.setEnabled(true);
-    		
+		saveRecordingButton.setEnabled(false);
+		startStopRecordingButton.setEnabled(true);
     }
     
     /*
@@ -173,15 +179,15 @@ public class ScenarioPlaybackPanel extends JPanel
             positionControlPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
             {
                 //---- Position Spinner ----
-                this.scenarioSpinner = new JSpinner();
-                this.scenarioSpinner.setModel(new SpinnerNumberModel(0,0,maxSliderValue, 1));
+                scenarioSpinner = new JSpinner();
+                scenarioSpinner.setModel(new SpinnerNumberModel(0,0,maxSliderValue, 1));
                 		//new SpinnerListModel(new String[] {"   0"}));
-                this.scenarioSpinner.setEnabled(false);
+                scenarioSpinner.setEnabled(false);
                 Dimension size = new Dimension(50, this.scenarioSpinner.getPreferredSize().height);
-                this.scenarioSpinner.setMinimumSize(size);
-                this.scenarioSpinner.setPreferredSize(size);
-                this.scenarioSpinner.setMaximumSize(size);
-                this.scenarioSpinner.addChangeListener(new ChangeListener()
+                scenarioSpinner.setMinimumSize(size);
+                scenarioSpinner.setPreferredSize(size);
+                scenarioSpinner.setMaximumSize(size);
+                scenarioSpinner.addChangeListener(new ChangeListener()
                 {
                     public void stateChanged(ChangeEvent e)
                     {
@@ -192,10 +198,10 @@ public class ScenarioPlaybackPanel extends JPanel
                 positionControlPanel.add(Box.createHorizontalStrut(10));
 
                 //---- Position Slider ----
-                this.scenarioSlider = new JSlider();
-                this.scenarioSlider.setMaximum(maxSliderValue);
-                this.scenarioSlider.setValue(0);
-                this.scenarioSlider.setEnabled(false);
+                scenarioSlider = new JSlider();
+                scenarioSlider.setMaximum(maxSliderValue);
+                scenarioSlider.setValue(0);
+                scenarioSlider.setEnabled(false);
                 
                 this.scenarioSlider.addChangeListener(new ChangeListener()
                 {
@@ -218,7 +224,7 @@ public class ScenarioPlaybackPanel extends JPanel
                 //---- "<<" Button ----
                 this.fastReverseButton = new JButton();
                 this.fastReverseButton.setText("<<");
-                this.fastReverseButton.setEnabled(false);
+                this.fastReverseButton.setEnabled(true);
                 this.fastReverseButton.addActionListener(new ActionListener()
                 {
                     public void actionPerformed(ActionEvent e)
@@ -232,7 +238,7 @@ public class ScenarioPlaybackPanel extends JPanel
                 //---- "<" Button----
                 this.reverseButton = new JButton();
                 this.reverseButton.setText("<");
-                this.reverseButton.setEnabled(false);
+                this.reverseButton.setEnabled(true);
                 this.reverseButton.addActionListener(new ActionListener()
                 {
                     public void actionPerformed(ActionEvent e)
@@ -245,7 +251,7 @@ public class ScenarioPlaybackPanel extends JPanel
 
                 //---- "Stop" Button ----
                 this.playPauseButton = new JButton();
-                this.playPauseButton.setText("Start Recording");
+                this.playPauseButton.setText("Play");
                 this.playPauseButton.setEnabled(false);
                 this.playPauseButton.addActionListener(new ActionListener()
                 {
@@ -312,24 +318,34 @@ public class ScenarioPlaybackPanel extends JPanel
                 this.speedSpinner = new JSpinner();
                 this.speedSpinner.setModel(new SpinnerListModel(speedValues));
                 this.speedSpinner.setValue("200");
-                this.speedSpinner.setEnabled(false);
+                //this.speedSpinner.setEnabled(false);
+                this.speedSpinner.setEnabled(true);
                 Dimension size = new Dimension(60, this.speedSpinner.getPreferredSize().height);
                 this.speedSpinner.setMinimumSize(size);
                 this.speedSpinner.setPreferredSize(size);
                 this.speedSpinner.setMaximumSize(size);
-                speedPanel.add(this.speedSpinner);
-                speedPanel.add(Box.createHorizontalStrut(10));
+                //speedPanel.add(this.speedSpinner);
+                //speedPanel.add(Box.createHorizontalStrut(10));
 
                 //---- Speed Multiplier Spinner ----
-                this.speedFactorSpinner = new JSpinner();
-                this.speedFactorSpinner.setModel(new SpinnerListModel(
+                speedFactorSpinner = new JSpinner();
+                speedFactorSpinner.setModel(new SpinnerListModel(
                     new String[] {"x.01", "x.12", "x.25", "x.50", "x.75", "x1", "x2", "x3", "x4", "x5", "x7", "x10"}));
-                this.speedFactorSpinner.setValue("x1");
-                this.speedFactorSpinner.setEnabled(false);
+                speedFactorSpinner.setValue("x1");
+                speedFactorSpinner.setEnabled(false);
                 size = new Dimension(60, this.speedFactorSpinner.getPreferredSize().height);
-                this.speedFactorSpinner.setMinimumSize(size);
-                this.speedFactorSpinner.setPreferredSize(size);
-                this.speedFactorSpinner.setMaximumSize(size);
+                speedFactorSpinner.setMinimumSize(size);
+                speedFactorSpinner.setPreferredSize(size);
+                speedFactorSpinner.setMaximumSize(size);
+                
+                speedFactorSpinner.addChangeListener(new ChangeListener() {
+                	@Override
+                	public void stateChanged(ChangeEvent e) {
+                		Float speedFactor = getSpeedFactorValue();
+                		firePropertyChange(ScenarioController.SET_REPLAY_SPEED, null, speedFactor);
+                	}
+                });
+                
                 speedPanel.add(this.speedFactorSpinner);
                 speedPanel.add(Box.createHorizontalGlue());
                 
@@ -340,13 +356,13 @@ public class ScenarioPlaybackPanel extends JPanel
                 statePanel.add(Box.createHorizontalGlue());
                 
                 startStopRecordingButton = new JButton();
-                startStopRecordingButton.setText("Stop Recording");
-                startStopRecordingButton.setEnabled(false);
+                startStopRecordingButton.setText("Start Recording");
+                startStopRecordingButton.setEnabled(true);
                 startStopRecordingButton.addActionListener(new ActionListener()
                 {
                     public void actionPerformed(ActionEvent e)
                     {
-                        stopRecordingButtonActionPerformed();
+                        startStopRecordingButtonActionPerformed();
                     }
                 });
  
@@ -356,19 +372,17 @@ public class ScenarioPlaybackPanel extends JPanel
  
                 saveRecordingButton = new JButton();
                 saveRecordingButton.setText("Save Recording");
-                saveRecordingButton.setEnabled(true);;
+                saveRecordingButton.setEnabled(false);
                 saveRecordingButton.addActionListener(new ActionListener()
+                {
+                	public void actionPerformed(ActionEvent e)
                 	{
-                		public void actionPerformed(ActionEvent e)
-                		{
-                			saveStateButtonActionPerformed();
-                		}
-                	});
+                		saveRecordingButtonActionPerformed();
+                	}
+                });
                 statePanel.add(saveRecordingButton);
                 statePanel.add(Box.createHorizontalStrut(3));
-                //statePanel.add(Box.createHorizontalGlue());
-            
-                
+                 
                 loadRecordingButton = new JButton();
                 loadRecordingButton.setText("Load Recording");
                 loadRecordingButton.setEnabled(true);
@@ -376,7 +390,7 @@ public class ScenarioPlaybackPanel extends JPanel
                 	{
                 		public void actionPerformed(ActionEvent e)
                 		{
-                			loadStateButtonActionPerformed();
+                			loadRecordingActionPerformed();
                 		}
                 	});
                 statePanel.add(loadRecordingButton);
@@ -389,12 +403,12 @@ public class ScenarioPlaybackPanel extends JPanel
                 
                 configureScenarioButton = new JButton();
                 configureScenarioButton.setText("Settings");
-                configureScenarioButton.setEnabled(true);
+                configureScenarioButton.setEnabled(false);
                 configureScenarioButton.addActionListener(new ActionListener()
                 {
                 	public void actionPerformed(ActionEvent e)
                 	{
-                		configureScenarioButtonActionPerformed();
+                		//configureScenarioButtonActionPerformed();
                 	}
                 });
  
@@ -421,12 +435,7 @@ public class ScenarioPlaybackPanel extends JPanel
 
 	}
 	
-
-    JSlider getScenarioSlider()
-    {
-    		return scenarioSlider;
-    }
-        
+	
     // Spinner not yet implemented
     private void setPositionSpinnerNumber(int n)
     {
@@ -435,19 +444,20 @@ public class ScenarioPlaybackPanel extends JPanel
     }
 
     
-    private void updateEnabledState(boolean state)
+    void updateEnabledState(boolean state)
     {
         scenarioSpinner.setEnabled(state);
         scenarioSlider.setEnabled(state);
         scenarioTime.setEnabled(state);
         elapsedScenarioTime.setEnabled(state);
-        fastReverseButton.setEnabled(false);
-        reverseButton.setEnabled(false);
+        fastReverseButton.setEnabled(state);
+        reverseButton.setEnabled(state);
         forwardButton.setEnabled(state);
-        fastForwardButton.setEnabled(false);
+        fastForwardButton.setEnabled(state);
         speedLabel.setEnabled(state);
-        speedSpinner.setEnabled(false);
-        speedFactorSpinner.setEnabled(false);
+        //speedSpinner.setEnabled(state);
+        speedFactorSpinner.setEnabled(state);
+        //speedFactorSpinner.setEnabled(false);
     }
 
     
@@ -501,11 +511,11 @@ public class ScenarioPlaybackPanel extends JPanel
     // Spinner not yet implemented
     private void setTimeDelta(int positionNumber, double positionDelta)
     {
-    		setPositionSpinnerNumber(positionNumber);
-    		int min = this.scenarioSlider.getMinimum();
-    		int max = this.scenarioSlider.getMaximum();
-    		int value = (int) (min + (double) (max - min) * positionDelta);
-    		this.scenarioSlider.setValue(value);
+    	setPositionSpinnerNumber(positionNumber);
+    	int min = this.scenarioSlider.getMinimum();
+    	int max = this.scenarioSlider.getMaximum();
+    	int value = (int) (min + (double) (max - min) * positionDelta);
+    	this.scenarioSlider.setValue(value);
     }
 
     
@@ -524,8 +534,10 @@ public class ScenarioPlaybackPanel extends JPanel
     
     
     void updateScenarioTime(int currentScenarioValue)
-    {
+    {    	
      	// If we've gone beyond our initial scenario time increase the slider
+    	
+    	// TODO: Only if playmode == recording
     	if (currentScenarioValue > maxSliderValue)
     	{
     		// TODO: Optimize this
@@ -536,6 +548,7 @@ public class ScenarioPlaybackPanel extends JPanel
      	scenarioSlider.setValue(currentScenarioValue);
         elapsedScenarioTimeValue.setText(String.valueOf(currentScenarioValue)); 
 
+        
      	//updateReadout(currentScenarioValue);
     }
     
@@ -558,58 +571,82 @@ public class ScenarioPlaybackPanel extends JPanel
     {
 		setPlayMode(PLAY_PAUSED);   
 		playPauseButton.setText("Play");
-		speedFactorSpinner.setEnabled(false);
      }
     
     
-    private void stopRecordingButtonActionPerformed()
+    private void startStopRecordingButtonActionPerformed()
     {
-    		startStopRecordingButton.setEnabled(false);
-    		//startStopRecordingButton.setText("Playback Only Mode");
-    		// if playback mode only already set do nothing
-    		firePropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
+    	if (playMode == RECORDING)
+    	{
+    		playMode = PLAY_PAUSED;
+     		startStopRecordingButton.setText("Start Recording");
+     		saveRecordingButton.setEnabled(true);
+     		firePropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
+    	}
+    	else
+    	{
+    		playMode = RECORDING;
+    		startStopRecordingButton.setText("Stop Recording");
+    		loadRecordingButton.setEnabled(false);
+    		firePropertyChange(ScenarioController.RECORDING_STARTED, null, null);
+    	}    	
     }
     
     
-    private void saveStateButtonActionPerformed()
-    {
-       	configureScenarioButtonActionPerformed();
+    private void saveRecordingButtonActionPerformed()
+    {    	
+		Optional<String> fileName = new ScenarioSettingsDialog(listener).show(ScenarioController.SCENARIO_FILENAME);
+
+       	if (!fileName.isPresent())
+       	{
+       		reset();
+       		return;
+       	}
+       	String scenarioName = fileName.get();
+       	ScenarioController.SCENARIO_FILENAME = scenarioName.replace(".cmdMap", "");
+
        	saveRecordingButton.setEnabled(false);
+       	loadRecordingButton.setEnabled(true);
        	firePropertyChange(ScenarioController.SAVE_RECORDING, null, null);
     }
  
     
-    private void loadStateButtonActionPerformed()
+    private void loadRecordingActionPerformed()
     {
-    	
-    	configureScenarioButtonActionPerformed();
     	loadRecordingButton.setEnabled(false);
-		playPauseButton.setText("Start Recording");
+    	startStopRecordingButton.setEnabled(false);
     	playPauseButton.setEnabled(false);
-    	initPlayback();
-    	//setPlayMode(PLAYING);
-    	playbackOnly = true;
-    	//updateEnabledState(true);
+    	scenarioSlider.setValue(1);
+     	playbackOnly = true;
+       	initPlayback();
+       	
+		Optional<String> fileName = new ScenarioSettingsDialog(listener).show(ScenarioController.SCENARIO_FILENAME);
+
+       	if (!fileName.isPresent())
+       	{
+       		reset();
+       		return;
+       	}
+       	
+    	playPauseButton.setText("Loading...");
+
+       	String scenarioName = fileName.get();
+       	ScenarioController.SCENARIO_FILENAME = scenarioName.replace(".cmdMap", "");
+       	
     	firePropertyChange(ScenarioController.LOAD_RECORDING, null, null);
     }
- 
+     
     
-    private void configureScenarioButtonActionPerformed()
+    int getSliderValue()
     {
-    	//loadStateButton.setEnabled(false);
-    	//initPlayback();
-    	//setPlayMode(PLAYING);
-    	//playbackOnly = true;
-    	//updateEnabledState(true);
-    	playPauseButton.setEnabled(false);
-    	playPauseButton.setText("Loading Recording");
-    	firePropertyChange(ScenarioController.CONFIGURE_SCENARIO, null, null);
+    	return scenarioSlider.getValue();
     }
-    
+
     
     void startStopButtonActionPerformed()
     {
     	// TODO: ljt switch statement?
+    	/*
     	if (playMode == START_RECORDING || playMode == CLEAR_RECORDING)
     	{
     		playPauseButton.setText("Pause");
@@ -629,11 +666,11 @@ public class ScenarioPlaybackPanel extends JPanel
     		firePropertyChange(ScenarioController.RECORDING_STARTED, null, scenarioSecs);
     		return;
     	}
-    	
+    	*/
     	if (playMode == PLAY_PAUSED)
     	{   			
     		playPauseButton.setText("Pause");
-    		speedFactorSpinner.setEnabled(false);
+    		//speedFactorSpinner.setEnabled(false);
     		scenarioSecs = scenarioSlider.getValue();
     		setScenarioTime(scenarioSecs);
     		System.out.println("PLAYING scenarioSecs> " + scenarioSecs);
@@ -668,29 +705,44 @@ public class ScenarioPlaybackPanel extends JPanel
     	}
     }
     
-    // not yet implemented
-    private void fastReverseButtonActionPerformed()
-    {
-        if (this.getCurrentPositionNumber() > 0)
-            setPositionSpinnerNumber(this.getCurrentPositionNumber() - 1);
-    }
 
     // not yet implemented
     private void reverseButtonActionPerformed()
     {
-    		if (scenarioSlider.getValue() != 0)
-    		{
-    			updateScenarioTime(scenarioSlider.getValue() - 1);
-    		}
-    		firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
+	//	if (scenarioSlider.getValue() != 0)
+	//	{
+	//		updateScenarioTime(scenarioSlider.getValue() - 1);
+	//	}
+	//	firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
+		
+		updateScenarioTime(scenarioSlider.getValue() - 1);
+		//scenarioSlider.setValue(scenarioSlider.getValue() -1);
+		firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
+
     }
 
     // not yet implemented
+    private void fastReverseButtonActionPerformed()
+    {
+        //if (this.getCurrentPositionNumber() > 0)
+        //    setPositionSpinnerNumber(this.getCurrentPositionNumber() - 1);
+	//	if (scenarioSlider.getValue() != 0)
+	//	{
+	//		updateScenarioTime(scenarioSlider.getValue() - 10);
+	//	}
+		
+		updateScenarioTime(scenarioSlider.getValue() - 10);
+		//scenarioSlider.setValue(scenarioSlider.getValue() -10);
+		firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
+
+    }
+
+    
     private void forwardButtonActionPerformed()
     {    
 		// TODO: Check for end of scenario
-		updateScenarioTime(scenarioSlider.getValue() + 10);
-		scenarioSlider.setValue(scenarioSlider.getValue() + 10);
+		updateScenarioTime(scenarioSlider.getValue() + 1);
+		//scenarioSlider.setValue(scenarioSlider.getValue() + 1);
 		firePropertyChange(ScenarioController.SKIP_FORWARD, null, scenarioSlider.getValue());
     }
 
@@ -699,21 +751,31 @@ public class ScenarioPlaybackPanel extends JPanel
     {
     		//if (!isLastPosition(this.getCurrentPositionNumber()))
     		//	setPositionSpinnerNumber(this.getCurrentPositionNumber() + 1);
+		// TODO: Check for end of scenario
+		updateScenarioTime(scenarioSlider.getValue() + 10);
+		//scenarioSlider.setValue(scenarioSlider.getValue() + 10);
+		firePropertyChange(ScenarioController.SKIP_FORWARD, null, scenarioSlider.getValue());
+
     }
     
     
     void setScenarioTime(int scenarioSecs)
     {   
-    		this.scenarioSecs = scenarioSecs;
+    	this.scenarioSecs = scenarioSecs;
+    	
     }
     
     
-    void setElapsedSecs(Integer elapsedSecs) 
+    /*
+     * Update slider max for loaded scenario.
+     */
+    void setScenarioElapsedSecs(Integer elapsedSecs) 
     {
-    		this.elapsedSecs = elapsedSecs;
-    		
-    		maxSliderValue = this.elapsedSecs;
-    		
+    	this.elapsedSecs = elapsedSecs;
+    	maxSliderValue = elapsedSecs;
+    	scenarioSpinner.setModel(new SpinnerNumberModel(0,0,maxSliderValue, 1));
+    	scenarioSlider.setMaximum(maxSliderValue);
+    	//scenarioSlider.setValue(0);    		
     }
     
     private void initPlayer()
@@ -738,17 +800,23 @@ public class ScenarioPlaybackPanel extends JPanel
             	if (playMode == RECORDING && !playbackOnly)
             	{
             		updateScenarioTime(elapsedSecs);
-            	}
+            		
+            		// Update our model every second with a dummy command to keep
+            		// track of model time.  Otherwise playback controls don't work
+            		// quite right at this point.
+            		firePropertyChange(ScenarioController.UPDATE_MODEL, null, elapsedSecs);
+             	}
             		            		
             	if (playMode == PLAYING)
             	{
-            		scenarioSecs++;
-            		updateScenarioTime(scenarioSecs);
+            		// LJT - have playback set scenario secs & update scenario time??
+            		//scenarioSecs++;
+            		//†updateScenarioTime(scenarioSecs);
             	}
             		
             	if (playMode == PLAY_PAUSED)
             	{
-            		updateScenarioTime(scenarioSlider.getValue());
+            		//updateScenarioTime(scenarioSlider.getValue());
             	}
             }
         });
