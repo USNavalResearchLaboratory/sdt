@@ -510,7 +510,12 @@ public class SdtLink
 
 
 	public boolean makeMarker()
-	{
+	{		
+		if (node2.getPosition() == null)
+		{
+			System.out.println("SdtLink::makeMarker() Warning node2 position is null");
+			return false;
+		}
 		BasicMarkerAttributes markerAttributes = new BasicMarkerAttributes(new Material(lineColor), BasicMarkerShape.ORIENTED_SPHERE, 1d, 5, 2.5);
 		markerAttributes.setHeadingMaterial(new Material(lineColor));
 		double node2Heading = node2.getHeading();
