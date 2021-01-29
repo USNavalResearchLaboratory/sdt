@@ -41,9 +41,12 @@ package mil.navy.nrl.sdt3d;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -51,6 +54,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
@@ -377,10 +381,40 @@ public class SdtLayerPanel extends JPanel
 
 			index = index + 1;
 		}
-
+		
 		return true;
 	}
 
+	
+    private void insertNodeInAlphabeticalOrder(
+            DefaultMutableTreeNode childNode,
+            DefaultMutableTreeNode parentNode, 
+            DefaultTreeModel model) 
+    {
+        Enumeration<DefaultMutableTreeNode> children = 
+        		parentNode.children();
+
+        String nodeName = childNode.toString();
+        int index = 0;
+
+        if (children.hasMoreElements()) 
+        {
+            while (children.hasMoreElements()) 
+            {
+                String displayString = children.nextElement().toString();
+                if (nodeName.compareToIgnoreCase(displayString) < 1) 
+                {
+                    break;
+                }
+                index++;
+            }
+            model.insertNodeInto(childNode, parentNode, index);
+        } else 
+        {
+            model.insertNodeInto(childNode, parentNode, 0);
+        }
+    }
+    
 
 	public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parent,
 			String child, boolean selected)
@@ -389,9 +423,13 @@ public class SdtLayerPanel extends JPanel
 		SdtLayerAction action = new SdtLayerAction(child, wwd, selected);
 		SdtCheckboxNode childNode = new SdtCheckboxNode(action, child);
 
-		((DefaultTreeModel) layerTree.getModel()).insertNodeInto(childNode, parent,
-			parent.getChildCount());
+		insertNodeInAlphabeticalOrder(
+				childNode, 
+				parent,
+				(DefaultTreeModel) layerTree.getModel()
+				);
 
+		
 		childNode.setSelected(selected);
 		// Tell the toggle function we're adding a new node
 		((SdtCheckboxCellRenderer) layerTree.getCellRenderer()).toggleCheckbox(getPath(childNode), true);
