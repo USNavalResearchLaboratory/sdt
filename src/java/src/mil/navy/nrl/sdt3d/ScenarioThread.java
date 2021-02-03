@@ -90,8 +90,6 @@ public class ScenarioThread extends SocketThread
 		// format date
 		String formatted = formatter.format(date);
 
-		
-		System.out.println("New scenariostarttime value> " + formatted + " newTime> " + newTime);
 	}
 	
 	
@@ -322,7 +320,11 @@ public class ScenarioThread extends SocketThread
 	
 	public void pauseThread() throws InterruptedException 
 	{
-		pauseThreadFlag = true;
+		synchronized (GUI_MONITOR) {
+			pauseThreadFlag = true;
+			GUI_MONITOR.notify();
+		}
+		
 	}
 	
 	
@@ -348,11 +350,7 @@ public class ScenarioThread extends SocketThread
 	
 	public void setSpeedFactor(Float speedFactor)
 	{
-		synchronized (GUI_MONITOR) {
-			this.speedFactor = speedFactor;
-			pauseThreadFlag = false;
-			GUI_MONITOR.notify();
-		}
+		this.speedFactor = speedFactor;
 	}
 	
 	

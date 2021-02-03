@@ -7431,7 +7431,7 @@ public class sdt3d extends SdtApplication
 		            				scenarioName = scenarioName.substring(++sepPos);
 		            			}
 
-		            			System.out.println("RECORDING_STARTED sdt3d\n");
+		            			//System.out.println("RECORDING_STARTED sdt3d\n");
 		            			setTitle("Recording Scenario (" + scenarioName + ")");
 		            			recordScenario = true;
 		            			playbackOnly = false;
@@ -7441,7 +7441,7 @@ public class sdt3d extends SdtApplication
 		            		{
 		            			// The user stopped recording, keep the data model available
 		            			// and don't reset controller	            			
-		            			System.out.println("RECORDING_STOPPED sdt3d\n");
+		            			//System.out.println("RECORDING_STOPPED sdt3d\n");
 		            			setTitle("sdt-3D");
 
 		    					if (scenarioThread != null) 
@@ -7475,7 +7475,7 @@ public class sdt3d extends SdtApplication
 		            		
 			                if (event.getPropertyName().equals(ScenarioController.STOP_SCENARIO_PLAYBACK))
 			                {	
-			                		System.out.println("STOP_SCENARIO_PLAYBACK sdt3d\n");
+			                		//System.out.println("STOP_SCENARIO_PLAYBACK sdt3d\n");
 			                		playbackScenario = true;
 			                		playbackStopped = true;		
 			                		try {
@@ -7492,6 +7492,7 @@ public class sdt3d extends SdtApplication
 
 		                if (event.getPropertyName().equals(ScenarioController.START_SCENARIO_PLAYBACK))
 		                {		
+		                	//System.out.println("START_SCENARIO_PLAYBACK sdt3d");
 		                	if (scenarioThread != null)
 		                	{
 		                		try {
@@ -7514,16 +7515,44 @@ public class sdt3d extends SdtApplication
 
 		                	// oldValue: sliderStartTime, newValue: scenarioStartTime
 		                	startScenarioThread((Long) event.getNewValue());
-		                	System.out.println("START_SCENARIO_PLAYBACK sdt3d event newValue>" + event.getNewValue() );
+		                	//System.out.println("START_SCENARIO_PLAYBACK sdt3d event newValue>" + event.getNewValue() );
 
 		                	if (scenarioThread != null)
 		                	{
 		                		scenarioThread.resumeThread();
 		                	}
 						}
+		                if (event.getPropertyName().equals(ScenarioController.RESUME_PLAYBACK))
+		                {		
+		                	//System.out.println("RESUME_PLAYBACK sdt3d");
+		                	if (scenarioThread != null)
+		                	{
+		                		try {
+									scenarioThread.pauseThread();
+
+								} catch (InterruptedException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+			                	scenarioThread.setScenarioStartTime((Long) event.getNewValue());
+			                	scenarioThread.resumeThread();
+
+		                	}
+		                	else
+		                	{
+		                		// oldValue: sliderStartTime, newValue: scenarioStartTime
+		                		startScenarioThread((Long) event.getNewValue());
+		                		//System.out.println("RESUME_PLAYBACK sdt3d event newValue>" + event.getNewValue() );
+		                	}
+	                		// ljt using this??
+	                		playbackStopped = false;
+	                		playbackScenario = true;	 
+
+						}
+
 		                if (event.getPropertyName().equals(ScenarioController.SKIP_FORWARD))
 		                {
-	                		System.out.println("SKIP_FORWARD sdt3d\n");
+	                		//System.out.println("SKIP_FORWARD sdt3d\n");
 
 		                	if (scenarioThread != null)
 		                	{
@@ -7539,9 +7568,19 @@ public class sdt3d extends SdtApplication
 		      
 		                		scenarioThread.resumeThread();		                		
 			                }
+		                	else
+		                	{
+		                		// oldValue: sliderStartTime, newValue: scenarioStartTime
+		                		startScenarioThread((Long) event.getNewValue());
+		                		//System.out.println("SKIP_FORWARD sdt3d event newValue>" + event.getNewValue() );
+		                	}
+
 		                }
 		                if (event.getPropertyName().equals(ScenarioController.SKIP_BACK))
 		                {
+	                		//System.out.println("SKIP_BACK sdt3d\n");
+
+
 		                	// Until we get scenario playback working just reset the thread
 		                	// and play back the whole scenario from the beginning until
 		                	// we implement state dumps
@@ -7555,7 +7594,7 @@ public class sdt3d extends SdtApplication
 		                }
 		                if (event.getPropertyName().equals(ScenarioController.RESUME_LIVE_PLAY))
 		                {
-		                	System.out.println("RESUME_LIVE_PLAY sdt3d\n");
+		                	//System.out.println("RESUME_LIVE_PLAY sdt3d\n");
 		                	// TODO: Need to playback what is in the buffer prior to resuming play
 		                	scenarioController.appendBufferModel();
 		                	playbackScenario = false;
@@ -7563,6 +7602,14 @@ public class sdt3d extends SdtApplication
 		                }
 		                if (event.getPropertyName().equals(ScenarioController.SET_REPLAY_SPEED))
 		                {
+	                		//System.out.println("SET_REPLAY_SPEED sdt3d\n");
+
+	                		if (scenarioThread != null)
+	                		{
+	                			scenarioThread.setSpeedFactor((Float)event.getNewValue());
+	                		}
+
+	                		/*
 		                	if (scenarioThread != null)
 		                	{
 		                		try {
@@ -7571,10 +7618,11 @@ public class sdt3d extends SdtApplication
 		                			// TODO Auto-generated catch block
 		                			e.printStackTrace();
 		                		}
-		                		playbackStopped = false;
 		                		scenarioThread.setSpeedFactor((Float)event.getNewValue());
+		                		playbackStopped = false;
 		                		scenarioThread.resumeThread();
 		                	}
+		                	*/
 		                }
 		            }
 		        });

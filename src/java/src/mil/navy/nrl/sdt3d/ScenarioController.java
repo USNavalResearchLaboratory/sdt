@@ -30,8 +30,9 @@ public class ScenarioController implements PropertyChangeListener
 	static final String RECORDING_STOPPED = "recordingStopped";
 	static final String SAVE_RECORDING = "saveState";
 	static final String LOAD_RECORDING = "loadState";
-	// TODO: Not yet implemented
+	// TODO: RESUME_LIVE_PLAY not fully implemented
 	static final String RESUME_LIVE_PLAY = "resumeLivePlay";
+	static final String RESUME_PLAYBACK = "resumePlayback";
 	
 	static final String UPDATE_MODEL = "updateModel";
 	static final String SKIP_BACK = "skipBack";
@@ -166,7 +167,7 @@ public class ScenarioController implements PropertyChangeListener
 		
 	private void startRecording()
 	{
-		getView().initPlayback();
+		getView().initRecording();
 		
 		startCommandMapTimer();
 		
@@ -260,8 +261,8 @@ public class ScenarioController implements PropertyChangeListener
 		}
 		
 		Integer elapsedSecs = getElapsedSecs();
-		System.out.println("elapsedSecs> " + elapsedSecs);
-				
+       	getView().initPlayback();
+
 		getView().setScenarioElapsedSecs(elapsedSecs);
 	}
 	
@@ -348,10 +349,22 @@ public class ScenarioController implements PropertyChangeListener
 			listener.modelPropertyChange(ScenarioController.RESUME_LIVE_PLAY, null, null);
 		}
 		
+		if (event.getPropertyName().equals(RESUME_PLAYBACK))
+		{
+			int sliderStartTime = (int) event.getNewValue();
+			
+			Long scenarioPlaybackStartTime = (long) sliderStartTime;
+			if (sliderStartTime != 0)
+			{
+				scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
+			}
+
+			listener.modelPropertyChange(ScenarioController.RESUME_PLAYBACK, sliderStartTime, scenarioPlaybackStartTime);
+		}
+		
 		if (event.getPropertyName().equals(SKIP_FORWARD))
 		{
 			int sliderStartTime = (int) event.getNewValue();
-						
 			Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
 
 			listener.modelPropertyChange(ScenarioController.SKIP_FORWARD, sliderStartTime, scenarioPlaybackStartTime);		
