@@ -11,7 +11,7 @@ import java.util.TimeZone;
 
 /**
  * This class listens for SDT commands from a ScenarioController
- * and passes them to the "sdt3dApp"
+ * and passes them to the "sdt3d App"
  * 
  * @author Laurie Thompson
  * @since Aug 23, 2019
@@ -56,6 +56,7 @@ public class ScenarioThread extends SocketThread
 		isScenarioThread = true;
 	}
 
+	
 	private void initialize_cmd_map()
 	{
 		int x = 0;
@@ -82,14 +83,14 @@ public class ScenarioThread extends SocketThread
 	{
 		lastTime = scenarioPlaybackStartTime = newTime;
 		
-		// ljt remove below
+		/*
 		Date date = new Date(scenarioPlaybackStartTime);
 		// use correct format ('S' for milliseconds)
 		SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
 		formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 		// format date
 		String formatted = formatter.format(date);
-
+		 */
 	}
 	
 	
@@ -151,7 +152,6 @@ public class ScenarioThread extends SocketThread
 			if (lastTime <= scenarioPlaybackStartTime)
 			{
 				value = " " + pendingCmd + " \"" + value + " \"\n";	
-
 			}
 			else
 			{
@@ -180,7 +180,7 @@ public class ScenarioThread extends SocketThread
 						while (secs > 1)
 						{
 							sleep(1000);
-							scenarioController.getView().updateScenarioTime(sliderVal++);
+							scenarioController.getView().updateScenarioSecs(sliderVal++);
 							secs = secs - 1;
 							waitTime = (long) 0;
 						} 
@@ -201,8 +201,8 @@ public class ScenarioThread extends SocketThread
 				(!pendingCmd.equalsIgnoreCase("listen")))
 			{
 				scenarioController.updatePlaybackTime(lastTime);
-				// TODO: ljt do both??
-				scenarioController.updateScenarioTime(lastTime);
+				// TODO: ljt combine?
+				scenarioController.updateScenarioSecs(lastTime);
 				sb.append(value, 0, value.length());
 				parseString(sb, parser);	
 			}

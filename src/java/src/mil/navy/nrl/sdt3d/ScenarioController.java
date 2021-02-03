@@ -129,23 +129,17 @@ public class ScenarioController implements PropertyChangeListener
 
 	int getScenarioSecsFromRealTime(Long realScenarioTime)
 	{
-		// TODO:  Fix/Optimize!
-		//commandMapTimer.stop();
 		int sliderTime = 0;
 		for (Map.Entry<Integer, Long> entry: scenarioSliderTimeMap.entrySet())
 		{
 			if (entry.getValue() >= realScenarioTime) 
 			{
-			
-				//Date theTime = new Date(realScenarioTime);
-			
 				sliderTime = entry.getKey();
 				break;
 			}
 			// If no key is greater than realScenarioTime return last time in our slider
 			sliderTime = entry.getKey();
 		}
-		//commandMapTimer.start();
 		return sliderTime;
 	}
 	
@@ -154,14 +148,9 @@ public class ScenarioController implements PropertyChangeListener
 	 * Called by the scenario thread to set slider to
 	 * scenario playback time
 	 */
-	//public void setScenarioTime(Long scenarioTime)
-	public void updateScenarioTime(Long scenarioTime)
+	public void updateScenarioSecs(Long scenarioTime)
 	{
-		// TODO: Implement
-		//getView().setScenarioTime(getScenarioSecsFromRealTime(scenarioTime));
-		// LJT TESTING 09/15
-		
-		getView().updateScenarioTime(getScenarioSecsFromRealTime(scenarioTime));
+		getView().updateScenarioSecs(getScenarioSecsFromRealTime(scenarioTime));
 	} 
 
 		
@@ -185,11 +174,9 @@ public class ScenarioController implements PropertyChangeListener
 	}
 	
 	/*
-	 * Reset stops all recording and clears the data model
-	 * Called by a hard system reset.
-	 */
-	
-	//not uesd?? delete
+	 * Reset stops all recording and clears the data model.
+	 * Called by a sdt3d system reset.
+	 */	
 	public void reset()
 	{
 		getView().reset();
@@ -199,8 +186,8 @@ public class ScenarioController implements PropertyChangeListener
 		scenarioSliderTimeMap = new LinkedHashMap<Integer,Long>();
 		commandMapTimer = null;
 		scenarioModel.clearModelState();
-	
 	}
+	
 	
 	private void saveState()
 	{
@@ -221,7 +208,7 @@ public class ScenarioController implements PropertyChangeListener
 		}		
 	}
 	
-	// LJT TODO: Delete me?
+	
 	void configureScenarioState()
 	{
 		Optional<String> fileName = new ScenarioSettingsDialog(listener).show(SCENARIO_FILENAME);
@@ -267,7 +254,7 @@ public class ScenarioController implements PropertyChangeListener
 	}
 	
 	
-	Integer  getElapsedSecs()
+	Integer getElapsedSecs()
 	{
 		//Map.Entry<Integer, Long> entry = (Entry<Integer, Long>) scenarioSliderTimeMap.entrySet().toArray()[scenarioSliderTimeMap.size()];
 		//Integer.valueOf(scenarioSliderTimeMap.entrySet().toArray()[scenarioSliderTimeMap.size()]);
@@ -278,6 +265,7 @@ public class ScenarioController implements PropertyChangeListener
 		}		
 		return key;  
 	}
+	
 	
 	/*
 	 * Stop recording is called when the user stops recording.
@@ -290,6 +278,7 @@ public class ScenarioController implements PropertyChangeListener
 		stopCommandMapTimer();
 		commandMapTimer = null;
 	}
+	
 	
 	@Override
 	public void propertyChange(PropertyChangeEvent event)
@@ -396,6 +385,8 @@ public class ScenarioController implements PropertyChangeListener
 			listener.modelPropertyChange(ScenarioController.SET_REPLAY_SPEED, 0, event.getNewValue());
 		}	
 	}
+	
+	
 	/*
 	 * Timer to control updating the scenario scrollbar once a second as
 	 * new scenario commands are received
@@ -405,19 +396,19 @@ public class ScenarioController implements PropertyChangeListener
 		// TODO: Should we do this in playback player?
 		final int POLL_INTERVAL = 1000;
 		commandMapTimer = new Timer(POLL_INTERVAL, new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
 			{
-				@Override
-				public void actionPerformed(ActionEvent e)
-				{
-					// Take a snapshot of time at slider time
-					long currentTime = Time.increasingTimeMillis();
-					scenarioSliderTimeMap.put(getView().getElapsedSecs(), currentTime); 
-				}
-			});
+				// Take a snapshot of time at slider time
+				long currentTime = Time.increasingTimeMillis();
+				scenarioSliderTimeMap.put(getView().getElapsedSecs(), currentTime); 
+			}
+		});
 		
 		commandMapTimer.start();
-
 	}
+	
 	
 	private void stopCommandMapTimer()
 	{
