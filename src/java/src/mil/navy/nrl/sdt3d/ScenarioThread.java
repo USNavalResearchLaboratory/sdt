@@ -172,7 +172,7 @@ public class ScenarioThread extends SocketThread
 						}
 						
 						// If wait time > 1 second increment scenario slider
-						int increment = scenarioController.getScenarioSecsFromRealTime(lastTime);
+						//int increment = scenarioController.getScenarioSecsFromRealTime(lastTime);
 
 						int sliderVal = scenarioController.getView().getSliderValue();
 						
@@ -203,6 +203,7 @@ public class ScenarioThread extends SocketThread
 				scenarioController.updatePlaybackTime(lastTime);
 				// TODO: ljt combine?
 				scenarioController.updateScenarioSecs(lastTime);
+				
 				sb.append(value, 0, value.length());
 				parseString(sb, parser);	
 			}

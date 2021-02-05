@@ -61,7 +61,9 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -70,6 +72,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimerTask;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -7543,29 +7546,118 @@ public class sdt3d extends SdtApplication
 		            	playbackScenario = true;	 
 					}
 
+		            if (event.getPropertyName().equals(ScenarioController.FAST_FORWARD))
+		            {
+		            	System.out.println("FAST_FORWARD sdt3d\n");
+
+		            	if (scenarioThread != null)
+		            	{
+							// LJT: set playback stopped in pause&resume thread?
+			            	playbackStopped = false;		
+
+							class Reminder {
+								java.util.Timer timer;
+								
+								public Reminder(int seconds) 
+								{
+									timer = new java.util.Timer();
+									scenarioThread.resumeThread();
+
+									timer.schedule(new RemindTask(), (seconds * 1000));
+								}
+								
+								class RemindTask extends TimerTask {
+									public void run() {
+										timer.cancel();
+										try {
+											scenarioThread.pauseThread();
+											playbackStopped = true;
+										} catch (InterruptedException e) {
+											e.printStackTrace();
+										}
+									}
+								}
+							}
+							System.out.println("old> " + event.getOldValue() + " new> " + event.getNewValue());
+		            		scenarioThread.setScenarioStartTime((Long) event.getOldValue());
+
+							//new Reminder((int) event.getNewValue());
+		            		new Reminder(1);
+
+		            	}
+		            }
+		            
+		            
+		            if (event.getPropertyName().equals(ScenarioController.REWIND))
+		            {
+		            	System.out.println("REWIND sdt3d\n");
+
+		            	if (scenarioThread != null)
+		            	{
+							// LJT: set playback stopped in pause&resume thread?
+			            	playbackStopped = false;		
+
+							class Reminder {
+								java.util.Timer timer;
+								
+								public Reminder(int seconds) 
+								{
+									timer = new java.util.Timer();
+									scenarioThread.resumeThread();
+
+									timer.schedule(new RemindTask(), (seconds * 1000));
+								}
+								
+								class RemindTask extends TimerTask {
+									public void run() {
+										timer.cancel();
+										try {
+											scenarioThread.pauseThread();
+											playbackStopped = true;
+										} catch (InterruptedException e) {
+											e.printStackTrace();
+										}
+									}
+								}
+							}
+							//int seconds = (int) event.getNewValue();
+							//Long secs = Long.valueOf(seconds);
+							//scenarioThread.setScenarioStartTime(secs);
+							//seconds = (int) event.getOldValue();
+							//secs = Long.valueOf(seconds);
+
+							scenarioThread.restartPlayback((Long) event.getNewValue());
+
+							System.out.println("old> " + event.getOldValue() + " new> " + event.getNewValue());
+
+							//new Reminder((int) event.getNewValue());
+		            		new Reminder(5);
+
+		            	}
+		            }
+
 		            if (event.getPropertyName().equals(ScenarioController.SKIP_FORWARD))
 		            {
-		            	//System.out.println("SKIP_FORWARD sdt3d\n");
-
+		            	System.out.println("SKIP_FORWARD sdt3d");
 		            	if (scenarioThread != null)
 		            	{
 		            		try {
 		            			scenarioThread.pauseThread();
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
+		            		}
+		            		catch (InterruptedException e) {
+		            			e.printStackTrace();
+		            		}
+		            	
 		            		playbackStopped = false;
-		            		scenarioThread.setScenarioStartTime((Long) event.getNewValue());		      
-		            		scenarioThread.resumeThread();		                		
-			             }
+		            		scenarioThread.setScenarioStartTime((Long) event.getNewValue());
+		            		scenarioThread.resumeThread();
+		            	}
 		            	else
 		            	{
 		            		// oldValue: sliderStartTime, newValue: scenarioStartTime
 		            		startScenarioThread((Long) event.getNewValue());
-		                }
+		            	}
 		            }
-		            
 		            
 		            if (event.getPropertyName().equals(ScenarioController.SKIP_BACK))
 		            {
@@ -7637,6 +7729,7 @@ public class sdt3d extends SdtApplication
 		 */
 		public synchronized boolean onInput(String str, SdtCmdParser parser, boolean scenarioCmd)
 		{
+			//System.out.println("onInput");
 			currentNode = parser.currentNode;
 			currentSprite = parser.currentSprite;
 			currentRegion = parser.currentRegion;
