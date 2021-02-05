@@ -655,34 +655,42 @@ public class ScenarioPlaybackPanel extends JPanel
     
 
     private void reverseButtonActionPerformed()
-    {		
-		updateScenarioSecs(scenarioSlider.getValue() - 1);
-		//firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
-
+    {	
+    	// error checking beginning of scenario
+    	scenarioSecs = scenarioSlider.getValue() - 1;
+		updateScenarioSecs(scenarioSecs);
+		firePropertyChange(ScenarioController.REWIND, 0, scenarioSecs);
     }
 
 
     private void fastReverseButtonActionPerformed()
     {		
-		updateScenarioSecs(scenarioSlider.getValue() - 10);
-		//firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
+    	scenarioSecs = scenarioSlider.getValue() - 10;
+		updateScenarioSecs(scenarioSecs);
+		firePropertyChange(ScenarioController.REWIND, 0, scenarioSecs);
 
     }
 
     
     private void forwardButtonActionPerformed()
     {    
+   		scenarioSecs = scenarioSlider.getValue() + 1;
+
 		// TODO: Check for end of scenario
-		updateScenarioSecs(scenarioSlider.getValue() + 1);
-		//firePropertyChange(ScenarioController.SKIP_FORWARD, null, scenarioSlider.getValue());
+		updateScenarioSecs(scenarioSecs);
+		// need new skip forward action for other use
+		firePropertyChange(ScenarioController.FAST_FORWARD, scenarioSecs, 1);
+
     }
 
     
     private void fastForwardButtonActionPerformed()
     {
+   		scenarioSecs = scenarioSlider.getValue() + 10;
+
 		// TODO: Check for end of scenario
-		updateScenarioSecs(scenarioSlider.getValue() + 10);
-		//firePropertyChange(ScenarioController.SKIP_FORWARD, null, scenarioSlider.getValue());
+		updateScenarioSecs(scenarioSecs);
+		firePropertyChange(ScenarioController.FAST_FORWARD, scenarioSecs, 10);
 
     }
     

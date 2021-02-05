@@ -176,6 +176,7 @@ public class SdtCmdParser
 			boolean playbackScenario, ScenarioController scenarioController,
 			boolean playbackStopped)
 	{
+		//System.out.println("Parser oncommand");
 		str = str.trim();
 
 		if (null == pending_cmd)
@@ -329,6 +330,7 @@ public class SdtCmdParser
 
 	boolean doCmd(String pendingCmd, String val)
 	{
+		//System.out.println("doCmd> " + pendingCmd + " " + val);
 		// Internal command used in scenarioRecording
 		if (pendingCmd.equalsIgnoreCase("nullCmd"))
 		{
