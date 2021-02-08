@@ -467,7 +467,10 @@ public class ScenarioPlaybackPanel extends JPanel
     	}
     		
     	elapsedScenarioTimeValue.setText(String.valueOf(scenarioSlider.getValue()));
+    	
     	scenarioSpinner.setValue(scenarioSlider.getValue());
+		firePropertyChange(ScenarioController.UPDATE_TIME, null, scenarioSlider.getValue());
+
      }
 
         

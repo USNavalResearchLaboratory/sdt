@@ -39,6 +39,7 @@ public class ScenarioController implements PropertyChangeListener
 	static final String SKIP_FORWARD = "skipForward";
 	static final String FAST_FORWARD = "fastForward";
 	static final String REWIND = "rewind";
+	static final String UPDATE_TIME = "updateTime";
 	static final String SET_REPLAY_SPEED = "setReplaySpeed";
 	
 	boolean recording = false;
@@ -372,6 +373,19 @@ public class ScenarioController implements PropertyChangeListener
 
 			listener.modelPropertyChange(ScenarioController.SKIP_FORWARD, sliderStartTime, scenarioPlaybackStartTime);		
 		}
+		
+		if (event.getPropertyName().equals(UPDATE_TIME))
+		{
+			int sliderStartTime = (int) event.getNewValue();
+			Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
+
+			// No scenario loaded yet
+			if (scenarioPlaybackStartTime != null)
+			{
+				updatePlaybackTime(scenarioPlaybackStartTime);
+			}
+		}
+
 		
 		if (event.getPropertyName().equals(SKIP_BACK))
 		{
