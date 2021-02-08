@@ -467,7 +467,10 @@ public class ScenarioPlaybackPanel extends JPanel
     	}
     		
     	elapsedScenarioTimeValue.setText(String.valueOf(scenarioSlider.getValue()));
+    	
     	scenarioSpinner.setValue(scenarioSlider.getValue());
+		firePropertyChange(ScenarioController.UPDATE_TIME, null, scenarioSlider.getValue());
+
      }
 
         
@@ -490,7 +493,7 @@ public class ScenarioPlaybackPanel extends JPanel
     	int value = (int) (min + (double) (max - min) * positionDelta);
     	this.scenarioSlider.setValue(value);
     }
-
+    
     
     void updatePlaybackTime(Long time)
     {
@@ -515,10 +518,9 @@ public class ScenarioPlaybackPanel extends JPanel
     		maxSliderValue = currentScenarioValue + maxSliderValue/2;
     		scenarioSlider.setMaximum(maxSliderValue);
      	}
-    	
      	scenarioSlider.setValue(currentScenarioValue);
         elapsedScenarioTimeValue.setText(String.valueOf(currentScenarioValue)); 
-    }
+     }
     
     
     // TODO: Resume not yet fully implemented - eventually call this from scenario thread

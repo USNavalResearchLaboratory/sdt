@@ -1,5 +1,6 @@
 package mil.navy.nrl.sdt3d;
 
+import java.awt.Cursor;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -41,6 +42,9 @@ public class ScenarioThread extends SocketThread
 	
 	private final HashMap<Integer, String> int2Cmd = new HashMap<>();
 
+	Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
+	
+	Cursor waitCursor = new Cursor(Cursor.WAIT_CURSOR);
 
 	public ScenarioThread(sdt3d.AppFrame theApp, ScenarioController scenarioController, 
 			Long scenarioPlaybackStartTime)
@@ -93,6 +97,18 @@ public class ScenarioThread extends SocketThread
 		 */
 	}
 	
+	
+	public void sleepAtLeast(long millis) throws InterruptedException 
+	{
+		  long t0 = System.currentTimeMillis();
+		  long millisLeft = millis;
+		  while (millisLeft > 0) 
+		  {
+			  Thread.sleep(millisLeft);
+			  long t1 = System.currentTimeMillis();
+			  millisLeft = millis - (t1 - t0);
+		  }
+	}
 	
 	private void iterate()
 	{
@@ -149,12 +165,25 @@ public class ScenarioThread extends SocketThread
 			Long waitTime = entry.getKey() - lastTime;
 			lastTime = entry.getKey();
 										
+			
 			if (lastTime <= scenarioPlaybackStartTime)
 			{
+				if (theApp.getCursor().getType() != Cursor.WAIT_CURSOR)
+				{
+					theApp.setCursor(waitCursor);
+				}
 				value = " " + pendingCmd + " \"" + value + " \"\n";	
+				sb.append(value, 0, value.length());
+				parseString(sb, parser);	
+
 			}
 			else
-			{
+			{	
+				if (theApp.getCursor().getType() != Cursor.DEFAULT_CURSOR)
+				{
+					theApp.setCursor(defaultCursor);
+				}
+			
 				value = pendingCmd + " \"" + value + " \"\n";
 				try
 				{	
@@ -163,50 +192,43 @@ public class ScenarioThread extends SocketThread
 					// will be correct.
 					if (!stopFlag)
 					{
-						waitTime = (long) (waitTime * speedFactor);
-						
 						if (waitTime < 0)
 						{
 							System.out.println("Timeout value is negative!");
 							waitTime = (long) 0;
 						}
 						
-						// If wait time > 1 second increment scenario slider
-						//int increment = scenarioController.getScenarioSecsFromRealTime(lastTime);
-
-						int sliderVal = scenarioController.getView().getSliderValue();
-						
+						// We want our slider to keep incrementing so if our 
+						// wait time is > 1 second, fake it
+						int sliderVal = scenarioController.getView().getSliderValue();					
 						long secs = waitTime / 1000;
+
 						while (secs > 1)
 						{
-							sleep(1000);
+							sleep((long) (1000 * speedFactor));  
 							scenarioController.getView().updateScenarioSecs(sliderVal++);
 							secs = secs - 1;
-							waitTime = (long) 0;
+							waitTime = waitTime - 1000;
 						} 
-						sleep(waitTime);
+						sleep((long) (waitTime * speedFactor));
 					}
+					if ((!pendingCmd.equalsIgnoreCase("wait"))
+							&&
+						(!pendingCmd.equalsIgnoreCase("listen")))
+					{
+						scenarioController.updateScenarioSecs(lastTime);
+						sb.append(value, 0, value.length());
+						parseString(sb, parser);	
+					}
+
 				}
 				catch (InterruptedException e)
 				{
 					// TODO Auto-generated catch block
-					e.printStackTrace();
-					
-					System.out.println("ScenarioThread::Iterate() We were interrupted while sleeping, let's resume!  Or do we want to stop ...");
+					e.printStackTrace();					
 				}
 			}
 
-			if ((!pendingCmd.equalsIgnoreCase("wait"))
-					&&
-				(!pendingCmd.equalsIgnoreCase("listen")))
-			{
-				scenarioController.updatePlaybackTime(lastTime);
-				// TODO: ljt combine?
-				scenarioController.updateScenarioSecs(lastTime);
-				
-				sb.append(value, 0, value.length());
-				parseString(sb, parser);	
-			}
 		} // end while
 		
 		// reset our iterator since we can't currently go to a specifc place

@@ -1,5 +1,6 @@
 package mil.navy.nrl.sdt3d;
 
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
@@ -39,6 +40,7 @@ public class ScenarioController implements PropertyChangeListener
 	static final String SKIP_FORWARD = "skipForward";
 	static final String FAST_FORWARD = "fastForward";
 	static final String REWIND = "rewind";
+	static final String UPDATE_TIME = "updateTime";
 	static final String SET_REPLAY_SPEED = "setReplaySpeed";
 	
 	boolean recording = false;
@@ -152,6 +154,7 @@ public class ScenarioController implements PropertyChangeListener
 	 */
 	public void updateScenarioSecs(Long scenarioTime)
 	{
+		getView().updatePlaybackTime(scenarioTime);
 		getView().updateScenarioSecs(getScenarioSecsFromRealTime(scenarioTime));
 	} 
 
@@ -231,6 +234,7 @@ public class ScenarioController implements PropertyChangeListener
 		
 	void loadRecording()
 	{
+		listener.setCursor(new Cursor(Cursor.WAIT_CURSOR));
 		// Load scenario commands
 		getScenarioModel().loadRecording(SCENARIO_FILENAME + ".cmdMap");
 		
@@ -253,6 +257,10 @@ public class ScenarioController implements PropertyChangeListener
        	getView().initPlayback();
 
 		getView().setScenarioElapsedSecs(elapsedSecs);
+		listener.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+		
+		getView().startStopButtonActionPerformed();
+
 	}
 	
 	
@@ -372,6 +380,20 @@ public class ScenarioController implements PropertyChangeListener
 
 			listener.modelPropertyChange(ScenarioController.SKIP_FORWARD, sliderStartTime, scenarioPlaybackStartTime);		
 		}
+		
+		
+		if (event.getPropertyName().equals(UPDATE_TIME))
+		{
+			int sliderStartTime = (int) event.getNewValue();
+			Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
+
+			// No scenario loaded yet
+			if (scenarioPlaybackStartTime != null)
+			{
+				updatePlaybackTime(scenarioPlaybackStartTime);
+			}
+		}
+
 		
 		if (event.getPropertyName().equals(SKIP_BACK))
 		{

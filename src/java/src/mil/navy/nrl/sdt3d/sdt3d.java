@@ -7624,7 +7624,7 @@ public class sdt3d extends SdtApplication
 
 							scenarioThread.restartPlayback((Long) event.getNewValue());
 
-							System.out.println("old> " + event.getOldValue() + " new> " + event.getNewValue());
+							//System.out.println("old> " + event.getOldValue() + " new> " + event.getNewValue());
 
 							//new Reminder((int) event.getNewValue());
 		            		new Reminder(5);
@@ -7634,7 +7634,7 @@ public class sdt3d extends SdtApplication
 
 		            if (event.getPropertyName().equals(ScenarioController.SKIP_FORWARD))
 		            {
-		            	System.out.println("SKIP_FORWARD sdt3d");
+		            	//System.out.println("SKIP_FORWARD sdt3d");
 		            	if (scenarioThread != null)
 		            	{
 		            		try {
