@@ -7549,7 +7549,6 @@ public class sdt3d extends SdtApplication
 		            if (event.getPropertyName().equals(ScenarioController.FAST_FORWARD))
 		            {
 		            	//System.out.println("FAST_FORWARD sdt3d\n");
-
 		            	if (scenarioThread != null)
 		            	{
 							// LJT: set playback stopped in pause&resume thread?
@@ -7589,8 +7588,6 @@ public class sdt3d extends SdtApplication
 		            
 		            if (event.getPropertyName().equals(ScenarioController.REWIND))
 		            {
-		            	//System.out.println("REWIND sdt3d\n");
-
 		            	if (scenarioThread != null)
 		            	{
 							// LJT: set playback stopped in pause&resume thread?
@@ -7691,7 +7688,7 @@ public class sdt3d extends SdtApplication
 		            	if (scenarioThread != null)
 		            	{
 		            		scenarioThread.setSpeedFactor((Float)event.getNewValue());
-	                	}
+		            	}
 
 		            }
 		    	}
