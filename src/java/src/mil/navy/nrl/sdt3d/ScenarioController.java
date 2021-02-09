@@ -381,7 +381,6 @@ public class ScenarioController implements PropertyChangeListener
 			listener.modelPropertyChange(ScenarioController.SKIP_FORWARD, sliderStartTime, scenarioPlaybackStartTime);		
 		}
 		
-		
 		if (event.getPropertyName().equals(UPDATE_TIME))
 		{
 			int sliderStartTime = (int) event.getNewValue();
