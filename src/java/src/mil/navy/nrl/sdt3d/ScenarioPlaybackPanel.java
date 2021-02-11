@@ -26,8 +26,6 @@ public class ScenarioPlaybackPanel extends JPanel
     private JLabel elapsedScenarioTimeValue;
     private JSpinner scenarioSpinner;
     private JSlider scenarioSlider;
-    private JButton fastReverseButton;
-    private JButton reverseButton;
     private JButton playPauseButton;
     private JButton startStopRecordingButton;
     private JButton saveRecordingButton;
@@ -35,6 +33,10 @@ public class ScenarioPlaybackPanel extends JPanel
     private JButton configureScenarioButton;
     private JButton forwardButton;
     private JButton fastForwardButton;
+    private JButton fastFastForwardButton;
+    private JButton reverseButton;
+    private JButton fastReverseButton;
+    private JButton fastFastReverseButton;
     private JLabel speedLabel;
     private JSpinner speedSpinner;
     private JSpinner speedFactorSpinner;
@@ -172,7 +174,7 @@ public class ScenarioPlaybackPanel extends JPanel
                 readoutPanel.add(time);
             }
             positionPanel.add(readoutPanel);
-            positionPanel.add(Box.createVerticalStrut(16));
+            positionPanel.add(Box.createVerticalStrut(8));
 
             //======== Position Spinner, Slider ========
             Box positionControlPanel = Box.createHorizontalBox();
@@ -210,13 +212,26 @@ public class ScenarioPlaybackPanel extends JPanel
                 positionControlPanel.add(this.scenarioSlider, BorderLayout.CENTER);
             }
             positionPanel.add(positionControlPanel);
-            positionPanel.add(Box.createVerticalStrut(16));
+            positionPanel.add(Box.createVerticalStrut(8));
 
             //======== "VCR" Panel ========
             Box vcrPanel = Box.createHorizontalBox();
             vcrPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
             {
                 vcrPanel.add(Box.createHorizontalGlue());
+                //---- "<<<" Button ----
+                fastFastReverseButton = new JButton();
+                fastFastReverseButton.setText("<<<");
+                fastFastReverseButton.addActionListener(new ActionListener()
+                {
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        fastFastReverseButtonActionPerformed();
+                    }
+                });
+                vcrPanel.add(this.fastFastReverseButton);
+                vcrPanel.add(Box.createHorizontalStrut(3));
+
                 //---- "<<" Button ----
                 fastReverseButton = new JButton();
                 fastReverseButton.setText("<<");
@@ -282,6 +297,18 @@ public class ScenarioPlaybackPanel extends JPanel
                     }
                 });
                 vcrPanel.add(this.fastForwardButton);
+
+                //---- ">>>" Button ----
+                fastFastForwardButton = new JButton();
+                fastFastForwardButton.setText(">>>");
+                fastFastForwardButton.addActionListener(new ActionListener()
+                {
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        fastFastForwardButtonActionPerformed();
+                    }
+                });
+                vcrPanel.add(this.fastFastForwardButton);
 
                 //--------
                 vcrPanel.add(Box.createHorizontalGlue());
@@ -425,18 +452,11 @@ public class ScenarioPlaybackPanel extends JPanel
     	scenarioSpinner.setValue(n);
     }
 
-    /*
-     * For now, vcr controls etc only enabled when
-     * scenario is paused.
-     */
+    
     void updateEnabledState(boolean state)
     {
         scenarioSpinner.setEnabled(state);
         scenarioSlider.setEnabled(state);
-        fastReverseButton.setEnabled(state);
-        reverseButton.setEnabled(state);
-        forwardButton.setEnabled(state);
-        fastForwardButton.setEnabled(state);
         speedLabel.setEnabled(state);
         speedSpinner.setEnabled(state);
         speedFactorSpinner.setEnabled(state);
@@ -613,11 +633,22 @@ public class ScenarioPlaybackPanel extends JPanel
     }
 
     
+    // After ff/rew resume original playback state
+    // by default we are in PLAYING mode
+    void resumePlayback()
+    {
+    	if (playMode == PLAY_PAUSED)
+    	{
+    		firePropertyChange(ScenarioController.PAUSE_THREAD,null,null);
+    	}
+    }
+    
+    
     void startStopButtonActionPerformed()
     {
  
     	if (playMode == PLAY_PAUSED)
-    	{   			
+    	{   		
     		playPauseButton.setText("Pause");
        		updateEnabledState(false);
 
@@ -644,7 +675,7 @@ public class ScenarioPlaybackPanel extends JPanel
     	   	}
     	}
     	else
-    	{
+    	{       			 
     		playPauseButton.setText("Play");    			
     		updateEnabledState(true);
     			
@@ -660,29 +691,51 @@ public class ScenarioPlaybackPanel extends JPanel
     {	
     	// error checking beginning of scenario
     	scenarioSecs = scenarioSlider.getValue() - 1;
-		updateScenarioSecs(scenarioSecs);
-		firePropertyChange(ScenarioController.REWIND, 0, scenarioSecs);
+    	
+    	if (scenarioSecs < 0)
+    	{
+    		scenarioSecs = 1;
+    	}
+    	updateScenarioSecs(scenarioSecs);
+    	firePropertyChange(ScenarioController.REWIND, 0, scenarioSecs);
     }
 
 
     private void fastReverseButtonActionPerformed()
     {		
     	scenarioSecs = scenarioSlider.getValue() - 10;
-		updateScenarioSecs(scenarioSecs);
-		firePropertyChange(ScenarioController.REWIND, 0, scenarioSecs);
-
+    	
+    	if (scenarioSecs < 0)
+    	{
+    		scenarioSecs = 1;
+    	}
+    	updateScenarioSecs(scenarioSecs);
+    	firePropertyChange(ScenarioController.REWIND, 0, scenarioSecs);
     }
 
+    
+    private void fastFastReverseButtonActionPerformed()
+    {		
+    	scenarioSecs = scenarioSlider.getValue() - 60;
+    	
+    	if (scenarioSecs < 0)
+    	{
+    		scenarioSecs = 1;    
+    	}
+    	updateScenarioSecs(scenarioSecs);
+    	firePropertyChange(ScenarioController.REWIND, 0, scenarioSecs);
+    }
+    
     
     private void forwardButtonActionPerformed()
     {    
    		scenarioSecs = scenarioSlider.getValue() + 1;
 
-		// TODO: Check for end of scenario
-		updateScenarioSecs(scenarioSecs);
-		// need new skip forward action for other use
-		firePropertyChange(ScenarioController.FAST_FORWARD, scenarioSecs, 1);
-
+   		if (scenarioSecs < maxSliderValue)
+   		{
+   			updateScenarioSecs(scenarioSecs);
+   			firePropertyChange(ScenarioController.FAST_FORWARD, 0, scenarioSecs);
+   		}
     }
 
     
@@ -690,12 +743,24 @@ public class ScenarioPlaybackPanel extends JPanel
     {
    		scenarioSecs = scenarioSlider.getValue() + 10;
 
-		// TODO: Check for end of scenario
-		updateScenarioSecs(scenarioSecs);
-		firePropertyChange(ScenarioController.FAST_FORWARD, scenarioSecs, 10);
-
+   		if (scenarioSecs < maxSliderValue)
+   		{
+   			updateScenarioSecs(scenarioSecs);
+   			firePropertyChange(ScenarioController.FAST_FORWARD, 0, scenarioSecs);
+   		}
     }
     
+    
+    private void fastFastForwardButtonActionPerformed()
+    {
+   		scenarioSecs = scenarioSlider.getValue() + 60;
+
+   		if (scenarioSecs < maxSliderValue)
+   		{
+   			updateScenarioSecs(scenarioSecs);
+   			firePropertyChange(ScenarioController.FAST_FORWARD, 0, scenarioSecs);
+   		}
+    }
     
     void setScenarioTime(int scenarioSecs)
     {   

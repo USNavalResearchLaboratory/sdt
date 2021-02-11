@@ -7546,6 +7546,18 @@ public class sdt3d extends SdtApplication
 		            	playbackScenario = true;	 
 					}
 
+		            if (event.getPropertyName().equals(ScenarioController.PAUSE_THREAD))
+		            {
+		            	if (scenarioThread != null)
+		            	{
+		            		try {
+								scenarioThread.pauseThread();
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+		            	}
+		            }
+		            
 		            if (event.getPropertyName().equals(ScenarioController.FAST_FORWARD))
 		            {
 		            	//System.out.println("FAST_FORWARD sdt3d\n");
@@ -7562,7 +7574,7 @@ public class sdt3d extends SdtApplication
 									timer = new java.util.Timer();
 									scenarioThread.resumeThread();
 
-									timer.schedule(new RemindTask(), (seconds * 1000));
+									//timer.schedule(new RemindTask(), (seconds * 1000));
 								}
 								
 								class RemindTask extends TimerTask {
@@ -7577,9 +7589,8 @@ public class sdt3d extends SdtApplication
 									}
 								}
 							}
-		            		scenarioThread.setScenarioStartTime((Long) event.getOldValue());
+		            		scenarioThread.setScenarioStartTime((Long) event.getNewValue());
 
-							//new Reminder((int) event.getNewValue());
 		            		new Reminder(1);
 
 		            	}
@@ -7601,7 +7612,7 @@ public class sdt3d extends SdtApplication
 									timer = new java.util.Timer();
 									scenarioThread.resumeThread();
 
-									timer.schedule(new RemindTask(), (seconds * 1000));
+									//timer.schedule(new RemindTask(), (seconds * 1000));
 								}
 								
 								class RemindTask extends TimerTask {
@@ -7616,18 +7627,8 @@ public class sdt3d extends SdtApplication
 									}
 								}
 							}
-							//int seconds = (int) event.getNewValue();
-							//Long secs = Long.valueOf(seconds);
-							//scenarioThread.setScenarioStartTime(secs);
-							//seconds = (int) event.getOldValue();
-							//secs = Long.valueOf(seconds);
-
 							scenarioThread.restartPlayback((Long) event.getNewValue());
-
-							//System.out.println("old> " + event.getOldValue() + " new> " + event.getNewValue());
-
-							//new Reminder((int) event.getNewValue());
-		            		new Reminder(5);
+		            		new Reminder(1);
 
 		            	}
 		            }

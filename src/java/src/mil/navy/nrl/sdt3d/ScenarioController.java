@@ -34,6 +34,7 @@ public class ScenarioController implements PropertyChangeListener
 	// TODO: RESUME_LIVE_PLAY not fully implemented
 	static final String RESUME_LIVE_PLAY = "resumeLivePlay";
 	static final String RESUME_PLAYBACK = "resumePlayback";
+	static final String PAUSE_THREAD = "pauseThread";
 	
 	static final String UPDATE_MODEL = "updateModel";
 	static final String SKIP_BACK = "skipBack";
@@ -258,8 +259,8 @@ public class ScenarioController implements PropertyChangeListener
 
 		getView().setScenarioElapsedSecs(elapsedSecs);
 		listener.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-		
 		getView().startStopButtonActionPerformed();
+		
 
 	}
 	
@@ -361,10 +362,15 @@ public class ScenarioController implements PropertyChangeListener
 			listener.modelPropertyChange(ScenarioController.RESUME_PLAYBACK, sliderStartTime, scenarioPlaybackStartTime);
 		}
 		
+		if (event.getPropertyName().equals(PAUSE_THREAD))
+		{
+			listener.modelPropertyChange(ScenarioController.PAUSE_THREAD, null, null);
+		}
+		
 		if (event.getPropertyName().equals(FAST_FORWARD))
 		{
-			Long scenarioPlaybackEndTime = scenarioSliderTimeMap.get((int)event.getOldValue());
-			listener.modelPropertyChange(ScenarioController.FAST_FORWARD, scenarioPlaybackEndTime, event.getNewValue());		
+			Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get((int)event.getNewValue());
+			listener.modelPropertyChange(ScenarioController.FAST_FORWARD, 0, scenarioPlaybackStartTime);		
 		}
 
 		if (event.getPropertyName().equals(REWIND))

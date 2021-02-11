@@ -181,7 +181,10 @@ public class ScenarioThread extends SocketThread
 			{	
 				if (theApp.getCursor().getType() != Cursor.DEFAULT_CURSOR)
 				{
+					// recording loaded 
 					theApp.setCursor(defaultCursor);
+					scenarioController.getView().resumePlayback();
+
 				}
 			
 				value = pendingCmd + " \"" + value + " \"\n";
