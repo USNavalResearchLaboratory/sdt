@@ -236,7 +236,7 @@ public class ScenarioThread extends SocketThread
 		
 		// reset our iterator since we can't currently go to a specifc place
 		// in our command map.  Tell our controller that we are paused and
-		// waiting for user control.
+		// waiting for user control.  
 		// implement get first
 		Iterator<Entry<Long, Map<Integer, String>>> titr = getScenarioModel().getSynSdtCommandMap().entrySet().iterator();
 		if (titr.hasNext()) 
@@ -245,7 +245,8 @@ public class ScenarioThread extends SocketThread
 		}
 		itr = getScenarioModel().getSynSdtCommandMap().entrySet().iterator();		
 
-		scenarioController.getView().stopScenarioPlayback();
+		scenarioController.getView().startStopButtonActionPerformed();
+		
 		try {
 			pauseThread();
 		} catch (InterruptedException e) {
@@ -346,6 +347,7 @@ public class ScenarioThread extends SocketThread
 	
 	public void pauseThread() throws InterruptedException 
 	{
+		//System.out.println("ScenarioThread::pauseThread()");
 		synchronized (GUI_MONITOR) {
 			pauseThreadFlag = true;
 			GUI_MONITOR.notify();
@@ -356,6 +358,7 @@ public class ScenarioThread extends SocketThread
 	
 	public void resumeThread() 
 	{
+		//System.out.println("ScenarioThread:resumeThread()");
 		synchronized (GUI_MONITOR) {
 			pauseThreadFlag = false;
 			GUI_MONITOR.notify();
@@ -365,6 +368,7 @@ public class ScenarioThread extends SocketThread
 	
 	public void restartPlayback(Long time)
 	{
+		//System.out.println("ScenarioThread:restartPlayback()");
 		synchronized (GUI_MONITOR) {
 			scenarioPlaybackStartTime = time;
 			restartPlaybackFlag = true;

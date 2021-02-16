@@ -649,10 +649,17 @@ public class ScenarioPlaybackPanel extends JPanel
  
     	if (playMode == PLAY_PAUSED)
     	{   		
+    		
+    		scenarioSecs = scenarioSlider.getValue();
+    		if (scenarioSecs == elapsedSecs)
+    		{
+    			// Force user to choose where to restart
+    			return;
+    		}
+    		
     		playPauseButton.setText("Pause");
        		updateEnabledState(false);
 
-    		scenarioSecs = scenarioSlider.getValue();
     		setScenarioTime(scenarioSecs);
     		setPlayMode(PLAYING);   			
 
