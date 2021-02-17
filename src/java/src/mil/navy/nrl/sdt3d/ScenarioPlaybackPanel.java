@@ -459,7 +459,6 @@ public class ScenarioPlaybackPanel extends JPanel
         scenarioSlider.setEnabled(state);
         speedLabel.setEnabled(state);
         speedSpinner.setEnabled(state);
-        speedFactorSpinner.setEnabled(state);
     }
 
     
