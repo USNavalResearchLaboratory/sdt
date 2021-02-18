@@ -52,7 +52,7 @@ public class ScenarioPlaybackPanel extends JPanel
     // Consolidate these and use enums 
     private static final int PLAY_PAUSED = 0;
     static final int PLAYING = 2;
-    private static final int RECORDING = 3;
+    static final int RECORDING = 3;
     private static final int STOP_RECORDING = 4;
     private static final int START_RECORDING = 5; 
     
@@ -564,7 +564,7 @@ public class ScenarioPlaybackPanel extends JPanel
      }
     
     
-    private void startStopRecordingButtonActionPerformed()
+    void startStopRecordingButtonActionPerformed()
     {
     	if (playMode == RECORDING)
     	{
@@ -834,6 +834,11 @@ public class ScenarioPlaybackPanel extends JPanel
     }
     
     
+    int getPlayMode()
+    {
+    	return playMode;
+    }
+    
     void setPlayMode(int mode)
     {    	
     	// If we stopped recording and now want to replay restart our player
@@ -857,5 +862,6 @@ public class ScenarioPlaybackPanel extends JPanel
 	public Integer getElapsedSecs() 
 	{
 		return this.elapsedSecs;
-	}  
+	}
+
 }

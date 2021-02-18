@@ -102,6 +102,7 @@ public class SdtCmdParser
 		"+showSdtControlPanel",
 		"+multiFrame",
 		"+modelJarFile",
+		"+record",
 		"-nullCmd",
 		null
 	};
@@ -564,6 +565,10 @@ public class SdtCmdParser
 		else if (pendingCmd.equalsIgnoreCase("showSdtControlPanel"))
 		{
 			return sdt3dApp.setShowSdtControlPanel(val);
+		}
+		else if (pendingCmd.equalsIgnoreCase("record"))
+		{
+			return sdt3dApp.setRecord(val);
 		}
 		else
 			return false;

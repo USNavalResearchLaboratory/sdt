@@ -97,6 +97,11 @@ public class ScenarioController implements PropertyChangeListener
 		return this.scenarioModel;
 	}
 
+	
+	String getScenarioFilename()
+	{
+		return SCENARIO_FILENAME;
+	}
 
 	ScenarioPlaybackPanel getView()
 	{

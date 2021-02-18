@@ -3722,7 +3722,59 @@ public class sdt3d extends SdtApplication
 
 		} // setShowSdtViewControls
 
+		boolean setRecord(String val)
+		{
+			if (0 == val.length())
+			{
+				System.out.println("setRecord() error invalid value\n");
+				return false;
+			}
+			String[] file = val.split(",");
 
+			if (file[0].equalsIgnoreCase("on"))
+			{
+				// if no filename use default
+				if (file.length > 1)
+				{
+					// TODO: error handling
+					if (file.length > 0)
+					{
+						String filename = CONFIG_DIR_NAME 
+								+ File.separator + file[1];
+						File theFile = new File(filename);
+
+						if (theFile.exists() && theFile.isFile())
+						{
+							System.out.println("scenario named " 
+									+ filename + " already exists");
+							return false;
+						}
+						//scenarioController.setScenarioName(filename);
+					}
+				}
+					
+				if (scenarioController.getView().getPlayMode()
+						!= ScenarioPlaybackPanel.RECORDING)
+				{
+					scenarioController.getView().startStopRecordingButtonActionPerformed();
+				}
+				return true;
+			}
+			if (val.equalsIgnoreCase("off"))
+			{
+				if (scenarioController.getView().getPlayMode() 
+						== ScenarioPlaybackPanel.RECORDING)
+				{
+					scenarioController.getView().startStopRecordingButtonActionPerformed();
+				}
+				return true;
+			}
+			System.out.println("setRecord() error invalid value\n");
+			return false;
+
+		} // setRecord
+
+		
 		boolean setLogDebugOutput(String val)
 		{
 			if (0 == val.length())
@@ -7426,7 +7478,7 @@ public class sdt3d extends SdtApplication
 
 		    			// Put an dummy entry in our model so we track when recording
 		    			// is actually started.  Change sdt3d title.
-		    			String scenarioName = ScenarioController.SCENARIO_FILENAME;
+		    			String scenarioName = scenarioController.getScenarioFilename();
 		    			int sepPos = scenarioName.lastIndexOf("/");
 		    			if (sepPos != -1)
 		    			{
@@ -7565,34 +7617,8 @@ public class sdt3d extends SdtApplication
 		            	{
 							// LJT: set playback stopped in pause&resume thread?
 			            	playbackStopped = false;		
-
-							class Reminder {
-								java.util.Timer timer;
-								
-								public Reminder(int seconds) 
-								{
-									timer = new java.util.Timer();
-									scenarioThread.resumeThread();
-
-									//timer.schedule(new RemindTask(), (seconds * 1000));
-								}
-								
-								class RemindTask extends TimerTask {
-									public void run() {
-										timer.cancel();
-										try {
-											scenarioThread.pauseThread();
-											playbackStopped = true;
-										} catch (InterruptedException e) {
-											e.printStackTrace();
-										}
-									}
-								}
-							}
-		            		scenarioThread.setScenarioStartTime((Long) event.getNewValue());
-
-		            		new Reminder(1);
-
+			            	scenarioThread.resumeThread();
+			            	scenarioThread.setScenarioStartTime((Long) event.getNewValue());
 		            	}
 		            }
 		            
@@ -7603,33 +7629,8 @@ public class sdt3d extends SdtApplication
 		            	{
 							// LJT: set playback stopped in pause&resume thread?
 			            	playbackStopped = false;		
-
-							class Reminder {
-								java.util.Timer timer;
-								
-								public Reminder(int seconds) 
-								{
-									timer = new java.util.Timer();
-									scenarioThread.resumeThread();
-
-									//timer.schedule(new RemindTask(), (seconds * 1000));
-								}
-								
-								class RemindTask extends TimerTask {
-									public void run() {
-										timer.cancel();
-										try {
-											scenarioThread.pauseThread();
-											playbackStopped = true;
-										} catch (InterruptedException e) {
-											e.printStackTrace();
-										}
-									}
-								}
-							}
+			            	scenarioThread.resumeThread();
 							scenarioThread.restartPlayback((Long) event.getNewValue());
-		            		new Reminder(1);
-
 		            	}
 		            }
 
