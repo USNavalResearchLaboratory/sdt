@@ -27,6 +27,8 @@ public class ScenarioController implements PropertyChangeListener
 {
 	static final String START_SCENARIO_PLAYBACK = "scenarioPlayback";
 	static final String STOP_SCENARIO_PLAYBACK = "scenarioPlaybackStopped";
+	static final String START_SCRIPT_PLAYBACK = "startScriptPlayback";
+
 	static final String RECORDING_STARTED = "recordingStarted"; 
 	static final String RECORDING_STOPPED = "recordingStopped";
 	static final String SAVE_RECORDING = "saveState";
@@ -41,7 +43,6 @@ public class ScenarioController implements PropertyChangeListener
 	static final String SKIP_FORWARD = "skipForward";
 	static final String FAST_FORWARD = "fastForward";
 	static final String REWIND = "rewind";
-	static final String UPDATE_TIME = "updateTime";
 	static final String SET_REPLAY_SPEED = "setReplaySpeed";
 	
 	boolean recording = false;
@@ -92,6 +93,7 @@ public class ScenarioController implements PropertyChangeListener
 		}
 	}
 	
+	
 	ScenarioModel getScenarioModel()
 	{
 		return this.scenarioModel;
@@ -103,15 +105,21 @@ public class ScenarioController implements PropertyChangeListener
 		return SCENARIO_FILENAME;
 	}
 
+	
 	ScenarioPlaybackPanel getView()
 	{
 		return this.scenarioPlaybackPanel;
 	}
 	
 
-	void updateModel(int pendingCmd, String val)
+	void updateModel(int pendingCmd, String val, long currentTime, int secs)
 	{
-		scenarioModel.updateModel(pendingCmd, val);
+		scenarioModel.updateModel(pendingCmd, val, currentTime);
+
+		if (secs > 0)
+		{
+			scenarioSliderTimeMap.put(secs, currentTime); 
+		}
 	}
 	
 	
@@ -126,15 +134,6 @@ public class ScenarioController implements PropertyChangeListener
 		scenarioModel.appendBufferModel();
 	}
 	
-
-	/*
-	 * Called by the scenario thread to update the HH:MM:SS field
-	 * time is the current time saved in the command map.
-	 */
-	void updatePlaybackTime(Long time)
-	{
-		scenarioPlaybackPanel.updatePlaybackTime(time);
-	}
 	
 
 	int getScenarioSecsFromRealTime(Long realScenarioTime)
@@ -181,7 +180,7 @@ public class ScenarioController implements PropertyChangeListener
 		{
 			scenarioName = SCENARIO_FILENAME.substring(++sepPos);
 		}
-		updateModel(cmd2Int.get("title"), "Scenario Playback (" + scenarioName + ")");
+		updateModel(cmd2Int.get("title"), "Scenario Playback (" + scenarioName + ")", Time.increasingTimeMillis(), 1);
 	}
 	
 	/*
@@ -269,6 +268,17 @@ public class ScenarioController implements PropertyChangeListener
 
 	}
 	
+	/*
+	 * Get scenario elapsed seconds from our time map
+	 * built from wait commands when we are recording
+	 * script files.
+	 */
+	void startScriptPlayback()
+	{
+		getView().setScenarioElapsedSecs(getElapsedSecs());
+		getView().startScriptPlayback();
+	}
+	
 	
 	Integer getElapsedSecs()
 	{
@@ -299,137 +309,145 @@ public class ScenarioController implements PropertyChangeListener
 	@Override
 	public void propertyChange(PropertyChangeEvent event)
 	{	
-		// TODO: Switch statement
-		if (event.getPropertyName().equals(RECORDING_STARTED))
+		if (event.getPropertyName().equals("Frame.active")) return;
+
+		switch (event.getPropertyName())
 		{
-			if (!recording)
+			case FAST_FORWARD:
 			{
-				startRecording();
+				Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get((int)event.getNewValue());
+				listener.modelPropertyChange(ScenarioController.FAST_FORWARD, 0, scenarioPlaybackStartTime);		
+				break;
 			}
-			listener.modelPropertyChange(ScenarioController.RECORDING_STARTED, null, null);		
 
-		}
-
-		if (event.getPropertyName().equals(RECORDING_STOPPED))
-		{
-			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
-		}
-		
-		if (event.getPropertyName().equals(SAVE_RECORDING))
-		{
-			// Stop recording and save state
-			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
-			saveState();
-		}
-
-		if (event.getPropertyName().equals(LOAD_RECORDING))
-		{
-			listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
-			loadRecording();
-			listener.modelPropertyChange(ScenarioController.LOAD_RECORDING, null, null);
-		}
-
-		
-		if (event.getPropertyName().equals(STOP_SCENARIO_PLAYBACK))
-		{	                		
-			listener.modelPropertyChange(ScenarioController.STOP_SCENARIO_PLAYBACK, null, event.getNewValue());
+			case LOAD_RECORDING:
+			{
+				listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
+				loadRecording();
+				listener.modelPropertyChange(ScenarioController.LOAD_RECORDING, null, null);
+				break;
+			}
 			
-		}
+			case PAUSE_THREAD:
+			{
+				listener.modelPropertyChange(ScenarioController.PAUSE_THREAD, null, null);
+				break;
+			}
+
+			case RECORDING_STARTED:
+			{
+				if (!recording)
+				{
+					startRecording();
+				}
+				listener.modelPropertyChange(RECORDING_STARTED, null, null);
+				break;
+			}
+
+			case RECORDING_STOPPED:
+			{
+				listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
+				break;
+			}
+
+			case RESUME_LIVE_PLAY:
+			{
+				listener.modelPropertyChange(ScenarioController.RESUME_LIVE_PLAY, null, null);
+				break;
+			}
 		
-		if (event.getPropertyName().equals(START_SCENARIO_PLAYBACK))
-		{	                		
-			int sliderStartTime = (int) event.getNewValue();
+			case RESUME_PLAYBACK:
+			{
+				int sliderStartTime = (int) event.getNewValue();
+				Long scenarioPlaybackStartTime = (long) 0;
+				if (sliderStartTime != 0)
+				{
+					scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
+					// timer map not loaded yet - loadScript?
+					if (scenarioPlaybackStartTime == null)
+						scenarioPlaybackStartTime = (long) 0;
+				}
+				listener.modelPropertyChange(ScenarioController.RESUME_PLAYBACK, 
+						sliderStartTime, 
+						scenarioPlaybackStartTime);
+				break;
+			}
 			
-			Long scenarioPlaybackStartTime = (long) sliderStartTime;
-			if (sliderStartTime != 0)
+			case REWIND:
 			{
-				scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
+				Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(event.getNewValue());	
+				listener.modelPropertyChange(ScenarioController.REWIND, 0, scenarioPlaybackStartTime);		
+				break;
 			}
-			listener.modelPropertyChange(ScenarioController.START_SCENARIO_PLAYBACK, sliderStartTime, scenarioPlaybackStartTime);		
-
-		}
 		
-		if (event.getPropertyName().equals(RESUME_LIVE_PLAY))
-		{
-			listener.modelPropertyChange(ScenarioController.RESUME_LIVE_PLAY, null, null);
-		}
-		
-		if (event.getPropertyName().equals(RESUME_PLAYBACK))
-		{
-			int sliderStartTime = (int) event.getNewValue();
-			// combine these tow
-			Long scenarioPlaybackStartTime = (long) sliderStartTime;
-			if (sliderStartTime != 0)
+			case SAVE_RECORDING:
 			{
-				scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
+				// Stop recording and save state
+				listener.modelPropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
+				saveState();
+				break;
 			}
 
-			listener.modelPropertyChange(ScenarioController.RESUME_PLAYBACK, sliderStartTime, scenarioPlaybackStartTime);
-		}
-		
-		if (event.getPropertyName().equals(PAUSE_THREAD))
-		{
-			listener.modelPropertyChange(ScenarioController.PAUSE_THREAD, null, null);
-		}
-		
-		if (event.getPropertyName().equals(FAST_FORWARD))
-		{
-			Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get((int)event.getNewValue());
-			listener.modelPropertyChange(ScenarioController.FAST_FORWARD, 0, scenarioPlaybackStartTime);		
-		}
-
-		if (event.getPropertyName().equals(REWIND))
-		{
-			Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(event.getNewValue());	
-			listener.modelPropertyChange(ScenarioController.REWIND, 0, scenarioPlaybackStartTime);		
-		}
-		
-		if (event.getPropertyName().equals(SKIP_FORWARD))
-		{
-			int sliderStartTime = (int) event.getNewValue();
-			Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
-
-			listener.modelPropertyChange(ScenarioController.SKIP_FORWARD, sliderStartTime, scenarioPlaybackStartTime);		
-		}
-		
-		if (event.getPropertyName().equals(UPDATE_TIME))
-		{
-			int sliderStartTime = (int) event.getNewValue();
-			Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
-
-			// No scenario loaded yet
-			if (scenarioPlaybackStartTime != null)
+			case SET_REPLAY_SPEED:
 			{
-				updatePlaybackTime(scenarioPlaybackStartTime);
+				listener.modelPropertyChange(ScenarioController.SET_REPLAY_SPEED, 0, event.getNewValue());
+				break;
 			}
-		}
-
-		
-		if (event.getPropertyName().equals(SKIP_BACK))
-		{
-			Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(event.getNewValue());
-
-			if (scenarioPlaybackStartTime == null)
+			
+			case SKIP_BACK:
 			{
-				scenarioPlaybackStartTime = (long) 0;
+				Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(event.getNewValue());
+
+				if (scenarioPlaybackStartTime == null)
+				{
+					scenarioPlaybackStartTime = (long) 0;
+				}
+				listener.modelPropertyChange(ScenarioController.SKIP_BACK, 0, scenarioPlaybackStartTime);		
+				break;
 			}
-			listener.modelPropertyChange(ScenarioController.SKIP_BACK, 0, scenarioPlaybackStartTime);		
-		}
 
-		if (event.getPropertyName().equals(UPDATE_MODEL))
-		{
-			/*
-			 * Logs a dummy command to keep track of elapsed scenario time
-			 * so playback is smooth
-			 */
+			case SKIP_FORWARD:
+			{
+				int sliderStartTime = (int) event.getNewValue();
+				Long scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
 
-			updateModel(cmd2Int.get("nullCmd".toLowerCase()), "");
-		}
+				listener.modelPropertyChange(ScenarioController.SKIP_FORWARD, sliderStartTime, scenarioPlaybackStartTime);		
+				break;
+			}
 		
-		if (event.getPropertyName().equals(SET_REPLAY_SPEED))
-		{
-			listener.modelPropertyChange(ScenarioController.SET_REPLAY_SPEED, 0, event.getNewValue());
-		}	
+
+			case START_SCENARIO_PLAYBACK:
+			{	                		
+				int sliderStartTime = (int) event.getNewValue();
+			
+				Long scenarioPlaybackStartTime = (long) sliderStartTime;
+				if (sliderStartTime != 0)
+				{
+					scenarioPlaybackStartTime = scenarioSliderTimeMap.get(sliderStartTime);
+				}
+				listener.modelPropertyChange(ScenarioController.START_SCENARIO_PLAYBACK, sliderStartTime, scenarioPlaybackStartTime);		
+				break;
+			}
+
+			case STOP_SCENARIO_PLAYBACK:
+			{	                		
+				listener.modelPropertyChange(ScenarioController.STOP_SCENARIO_PLAYBACK, null, event.getNewValue());
+				break;
+			}
+				
+			case UPDATE_MODEL:
+			{
+				/*
+				 * Logs a dummy command to keep track of elapsed scenario time
+				 * so playback is smooth
+				 */
+				updateModel(cmd2Int.get("nullCmd".toLowerCase()), "", Time.increasingTimeMillis(),0);
+				break;
+			}
+		
+			default:
+				System.out.println("ScenarioController::propertyChange() event not found.");
+		}
 	}
 	
 	

@@ -38,6 +38,7 @@
 
 package mil.navy.nrl.sdt3d;
 
+import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -107,9 +108,12 @@ public class FileThread extends SocketThread
 	}
 
 
-	public FileThread(sdt3d.AppFrame theApp, String fileName, boolean pipeCmd)
+	public FileThread(sdt3d.AppFrame theApp, 
+			String fileName, 
+			boolean pipeCmd,
+			boolean loadScript)
 	{
-		super(theApp, 0);
+		super(theApp, 0, loadScript);
 
 		try
 		{
@@ -259,7 +263,7 @@ public class FileThread extends SocketThread
 	@Override
 	public void run()
 	{
-		final SdtCmdParser parser = new SdtCmdParser(theApp);
+		final SdtCmdParser parser = new SdtCmdParser(theApp, loadScript);
 
 		StringBuilder sb = new StringBuilder();
 
@@ -276,7 +280,21 @@ public class FileThread extends SocketThread
 					sb.append(record, 0, record.length());
 					// parse string
 					parseString(sb, parser);
-				} // end processing file stack								
+				} // end processing file stack	
+				
+				if (loadScript)
+				{		
+					// We want all the message parsing before we start
+					// script playback
+					EventQueue.invokeLater(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							theApp.modelPropertyChange(ScenarioController.START_SCRIPT_PLAYBACK, null, null);
+						}
+					});
+				}
 				popFile();				
 			}
 

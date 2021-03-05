@@ -5,12 +5,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TimeZone;
+
 import mil.navy.nrl.sdt3d.sdt3d.AppFrame.Time;
 
 /**
@@ -78,7 +82,7 @@ public class ScenarioModel
 					interval.getSeconds() + " seconds " + 
 					"sdtCommandMap.size()> " + sdtCommandMap.size());
 
-			
+			//System.out.println("cmd> " + sdtCommandMap);
 			startTime = Instant.now();
 			synSdtCommandMap = Collections.synchronizedMap(sdtCommandMap);
 			endTime = Instant.now();
@@ -149,10 +153,8 @@ public class ScenarioModel
 	/*
 	 * Called from the app when taping the scenario.  
 	 */
-	void updateModel(int pendingCmd, String val)
+	void updateModel(int pendingCmd, String val, long currentTime)
 	{
-		long currentTime = Time.increasingTimeMillis();
-		
 		/*
 		Date wdate = new Date(currentTime);
 		SimpleDateFormat wformatter = new SimpleDateFormat("HH:mm:ss.SSSSSS");

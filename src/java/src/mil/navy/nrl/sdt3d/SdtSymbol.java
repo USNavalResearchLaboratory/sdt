@@ -651,7 +651,7 @@ public class SdtSymbol implements Renderable
 		{
 			return getMaxDimension() / 2;
 		}
-
+		
 		Vec4 loc = dc.getGlobe().computePointFromPosition(getPosition());
 		double d = loc.distanceTo3(dc.getView().getEyePoint());
 		
@@ -775,6 +775,12 @@ public class SdtSymbol implements Renderable
 	void updateSymbolCoordinates(DrawContext dc)
 	{
 		Position pos = getPosition();
+		
+		if (pos == null)
+		{
+			//System.out.println("SdtSymbol::updateSymbolCoordinates() position == null");
+			return;
+		}
 		
 		// If we've changed attributes we might not have reinitialized yet...
 		if (!isInitialized())

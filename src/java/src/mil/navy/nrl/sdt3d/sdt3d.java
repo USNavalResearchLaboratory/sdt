@@ -93,6 +93,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.TitledBorder;
@@ -333,7 +334,8 @@ public class sdt3d extends SdtApplication
 				resetItem, resetPerspectiveItem, screenItem, listenUdpItem, listenTcpItem, 
 				exitItem, sdtLayersItem, backgroundColorItem, showLayersItem, removeUDLayersItem, 
 				bookmarkItem, loadBookmarkItem, clearSpriteTableItem, debugItem,
-				loadDefaultBookmarksItem, loadKMLFileItem, loadKMLUrlItem, loadCacheItem;
+				loadDefaultBookmarksItem, loadKMLFileItem, loadKMLUrlItem, loadCacheItem,
+				loadScriptItem;
 
 		private JCheckBoxMenuItem showStatusItem, showScenarioPlaybackItem, elevationItem, 
 				globeItem, mercatorItem, sinusoidalItem, showWmsItem,
@@ -467,7 +469,7 @@ public class sdt3d extends SdtApplication
 
 		protected BalloonController balloonController;
 		
-		private ScenarioController scenarioController;
+		ScenarioController scenarioController;
 		
 		private String defaultSprite = null;
 
@@ -502,7 +504,7 @@ public class sdt3d extends SdtApplication
 		private RenderableLayer layer;
 		
 		private SdtCmdParser parser;
-
+		
 		public AppFrame(String[] args) 
 		{
 			// Our main frame is not shared
@@ -510,7 +512,7 @@ public class sdt3d extends SdtApplication
 			
 			initialize();
 
-			parser = new SdtCmdParser(this);
+			parser = new SdtCmdParser(this, false);
 
 			for (int i = 0; i < args.length; i++)
 			{
@@ -1057,12 +1059,12 @@ public class sdt3d extends SdtApplication
 			// If file not found, follow normal file lookup rules
 			if (fileName == null)
 			{
-				loadInputFile(userPreferencesFile, false);
+				loadInputFile(userPreferencesFile, false, false);
 			}
 			else
 			{
 				// Otherwise load the file found in the user config directory
-				loadInputFile(fileName, false);
+				loadInputFile(fileName, false, false);
 			}
 
 			// Reset the lastTime a command was processed so we don't have
@@ -1092,14 +1094,14 @@ public class sdt3d extends SdtApplication
 			if (fileName != null)
 			{
 				currentConfigFile = fileName;
-				loadInputFile(fileName, false);
+				loadInputFile(fileName, false, false);
 				lastTime = 0;
 				return true;
 			}
 
 			// If file not found, follow normal file lookup rules
 			currentConfigFile = val;
-			loadInputFile(val, false);
+			loadInputFile(val, false, false);
 
 			// Reset the lastTime a command was processed so we don't have
 			// huge wait times in our debug file.
@@ -1322,6 +1324,7 @@ public class sdt3d extends SdtApplication
 			fileMenu = new JMenu("File");
 			openItem = new JMenuItem("Open file...");
 			appendItem = new JMenuItem("Append file...");
+			loadScriptItem = new JMenuItem("Load Script...");
 			resetItem = new JMenuItem("Reset");
 			hardResetItem = new JMenuItem("Hard Reset");
 			resetPerspectiveItem = new JMenuItem("Reset Perspective");
@@ -1336,6 +1339,7 @@ public class sdt3d extends SdtApplication
 			exitItem = new JMenuItem("Exit");
 			openItem.addActionListener(this);
 			appendItem.addActionListener(this);
+			loadScriptItem.addActionListener(this);
 			resetItem.addActionListener(this);
 			hardResetItem.addActionListener(this);
 			resetPerspectiveItem.addActionListener(this);
@@ -1365,6 +1369,7 @@ public class sdt3d extends SdtApplication
 
 			fileMenu.add(openItem);
 			fileMenu.add(appendItem);
+			fileMenu.add(loadScriptItem);
 			fileMenu.add(resetItem);
 			fileMenu.add(hardResetItem);
 			fileMenu.add(resetPerspectiveItem);
@@ -1677,7 +1682,7 @@ public class sdt3d extends SdtApplication
 		}
 		
 		
-		private void startScenarioThread(Long scenarioPlaybackStartTime)
+		void startScenarioThread(Long scenarioPlaybackStartTime)
 		{
 			if (scenarioThread == null)
 			{
@@ -2015,7 +2020,7 @@ public class sdt3d extends SdtApplication
 				clearAllRenderables();
 				this.elevationBuilder.clear();
 				setStatus("");
-				loadInputFile(currentConfigFile, false);
+				loadInputFile(currentConfigFile, false, false);
 			}
 
 
@@ -2091,7 +2096,7 @@ public class sdt3d extends SdtApplication
 					// Make the current config file the last one selected
 					currentConfigFile = fileName;
 
-					fileThread = new FileThread(this, fileName, false);
+					fileThread = new FileThread(this, fileName, false, false);
 					fileThread.start();
 				}
 				else
@@ -2123,7 +2128,7 @@ public class sdt3d extends SdtApplication
 					// Do a hard system reset
 					resetSystemState(false);
 
-					loadInputFile(fileName, true);
+					loadInputFile(fileName, true, false);
 
 				}
 				else
@@ -2182,11 +2187,31 @@ public class sdt3d extends SdtApplication
 					String fileName = appendFile.getAbsolutePath();
 					// Pretend we're a pipe command so the file is appended to the
 					// file list - probably should add append file option
-					loadInputFile(fileName, true);
+					loadInputFile(fileName, true, false);
 				}
 				else
 				{
 					System.out.println("Append command cancelled by user.");
+				}
+			}
+			else if (event.getSource() == loadScriptItem)
+			{
+				// Load a sdt script so it is available for playback
+				int returnVal = fc.showOpenDialog(this);
+				if (returnVal == JFileChooser.APPROVE_OPTION)
+				{
+					openFile = fc.getSelectedFile();
+					String fileName = openFile.getAbsolutePath();
+					// Do a hard system reset
+					resetSystemState(false);
+	    			recordScenario = true;
+	    			playbackOnly = false;	
+	    			
+					loadInputFile(fileName, false, true);
+				}
+				else
+				{
+					System.out.println("Load script cancelled by user.");
 				}
 			}
 			else if (event.getSource() == resetItem)
@@ -7246,7 +7271,9 @@ public class sdt3d extends SdtApplication
 		}
 
 
-		boolean loadInputFile(String val, boolean forceAppend)
+		boolean loadInputFile(String val, 
+				boolean forceAppend, 
+				boolean loadScript)
 		{
 			// The pipeCmd flag tells us that we are processing an input file
 			// received over the command pipe - in this case we don't want to
@@ -7267,12 +7294,12 @@ public class sdt3d extends SdtApplication
 			// immediately
 			if (fileThread == null)
 			{
-				fileThread = new FileThread(this, fileName, pipeCmd);
+				fileThread = new FileThread(this, fileName, pipeCmd, loadScript);
 				fileThread.start(); // calls the run method for us
 			}
 			else if (!fileThread.isRunning())
 			{
-				fileThread = new FileThread(this, fileName, pipeCmd);
+				fileThread = new FileThread(this, fileName, pipeCmd, loadScript);
 				fileThread.start();
 			}
 			else
@@ -7472,227 +7499,258 @@ public class sdt3d extends SdtApplication
 		    {
 		    	public void propertyChange(PropertyChangeEvent event)
 		    	{	
-		    		if (event.getPropertyName().equals(ScenarioController.RECORDING_STARTED))
-		    		{     
-		    			//System.out.println("RECORDING_STARTED sdt3d\n");
-
-		    			// Put an dummy entry in our model so we track when recording
-		    			// is actually started.  Change sdt3d title.
-		    			String scenarioName = scenarioController.getScenarioFilename();
-		    			int sepPos = scenarioName.lastIndexOf("/");
-		    			if (sepPos != -1)
+		    		switch (event.getPropertyName())
+		    		{
+		    			case ScenarioController.FAST_FORWARD:
 		    			{
-		    				scenarioName = scenarioName.substring(++sepPos);
-		            	}
+		    				//System.out.println("FAST_FORWARD sdt3d\n");
+		    				if (scenarioThread != null)
+		    				{
+		    					// LJT: set playback stopped in pause&resume thread?
+		    					playbackStopped = false;		
+		    					scenarioThread.resumeThread();
+		    					scenarioThread.setScenarioStartTime((Long) event.getNewValue());
+		    				}
+		    				else
+		    				{
+		    					startScenarioThread((Long) event.getNewValue());
+		    				}
+		    				break;
+		    			}
 
-		    			setTitle("Recording Scenario (" + scenarioName + ")");
-		    			recordScenario = true;
-		    			playbackOnly = false;		
-		            }
+		    			case ScenarioController.LOAD_RECORDING:
+		    			{
+		    				//System.out.println("LOAD_RECORDING sdt3d (resetting system state)\n");
+	            			
+		    				String scenarioName = ScenarioController.SCENARIO_FILENAME;
+		    				int sepPos = scenarioName.lastIndexOf("/");
+		    				if (sepPos != -1)
+		    				{
+		    					scenarioName = scenarioName.substring(++sepPos);
+		    				}
+	            			
+		    				setTitle("Scenario Playback (" + scenarioName + ")");
+	            			
+		    				resetSystemState(false);
+		    				break;
+		    			}
+		    			
+		    			case ScenarioController.PAUSE_THREAD:
+		    			{
+		    				if (scenarioThread != null)
+		    				{
+		    					try {
+		    						scenarioThread.pauseThread();
+		    					} catch (InterruptedException e) {
+		    						e.printStackTrace();
+		    					}
+		    				}
+		    				break;
+		    			}
+
+		    			case ScenarioController.RECORDING_STARTED:
+		    			{     
+		    				//System.out.println("RECORDING_STARTED sdt3d\n");
+
+		    				// Put an dummy entry in our model so we track when recording
+		    				// is actually started.  Change sdt3d title.
+		    				String scenarioName = scenarioController.getScenarioFilename();
+		    				int sepPos = scenarioName.lastIndexOf("/");
+		    				if (sepPos != -1)
+		    				{
+		    					scenarioName = scenarioName.substring(++sepPos);
+		    				}
+
+		    				setTitle("Recording Scenario (" + scenarioName + ")");
+		    				recordScenario = true;
+		    				playbackOnly = false;	
+		    				break;
+		    			}
 		    		
-		            if (event.getPropertyName().equals(ScenarioController.RECORDING_STOPPED))
-		            {
-		            	//System.out.println("RECORDING_STOPPED sdt3d\n");
-		            	
-		            	// The user stopped recording, keep the data model available
-		            	// and don't reset controller	            			
-		            	setTitle("sdt-3D");
+		    			case ScenarioController.RECORDING_STOPPED:
+		    			{
+		    				//System.out.println("RECORDING_STOPPED sdt3d\n");
 
-		            	if (scenarioThread != null) 
-		            	{ 
-		            		scenarioThread.stopThread();
-		            	}
-		            	scenarioController.stopRecording();
-		            	recordScenario = false;
-		            	playbackOnly = true;
-		            }
+		    				// The user stopped recording, keep the data model available
+		    				// and don't reset controller	            			
+		    				setTitle("sdt-3D");
 
-		            if (event.getPropertyName().equals(ScenarioController.LOAD_RECORDING))
-		            {
-		            	//System.out.println("LOAD_RECORDING sdt3d (resetting system state)\n");
-		            			
-		            	String scenarioName = ScenarioController.SCENARIO_FILENAME;
-		            	int sepPos = scenarioName.lastIndexOf("/");
-		            	if (sepPos != -1)
-		            	{
-		            		scenarioName = scenarioName.substring(++sepPos);
-		            	}
-		            			
-		            	setTitle("Scenario Playback (" + scenarioName + ")");
-		            			
-		            	resetSystemState(false);
-		            }
-		            
-		            if (event.getPropertyName().equals(ScenarioController.STOP_SCENARIO_PLAYBACK))
-		            {	
-		            	//System.out.println("STOP_SCENARIO_PLAYBACK sdt3d\n");
-		            	
-		            	playbackScenario = true;
-		            	playbackStopped = true;		
-		            	try {
-		            		if (scenarioThread != null)
-		            		{
-		            			scenarioThread.pauseThread();
-		            		}
-		            	} catch (InterruptedException e) {
-		            		// TODO Auto-generated catch block
-		            		e.printStackTrace();
-		            	}
-		            }
-		            
-		            if (event.getPropertyName().equals(ScenarioController.START_SCENARIO_PLAYBACK))
-		            {		
-		            	//System.out.println("START_SCENARIO_PLAYBACK sdt3d event newValue>" + event.getNewValue());
+		    				if (scenarioThread != null) 
+		    				{ 
+		    					scenarioThread.stopThread();
+		    				}
+		    				scenarioController.stopRecording();
+		    				recordScenario = false;
+		    				playbackOnly = true;
+		    				break;
+		    			}
+			            
+		    			case ScenarioController.RESUME_LIVE_PLAY:
+		    			{
+		    				//System.out.println("RESUME_LIVE_PLAY sdt3d\n");
+		    				
+		    				// TODO: Need to playback what is in the buffer prior to resuming play
+		    				scenarioController.appendBufferModel();
+		    				playbackScenario = false;
+		    				playbackStopped = false;
+		    				break;
+		    			}
+
+		    			case ScenarioController.RESUME_PLAYBACK:
+		    			{		
+		    				//System.out.println("RESUME_PLAYBACK sdt3d");
 		                
-		            	if (scenarioThread != null)
-		            	{
-		            		try {
-		            			scenarioThread.pauseThread();
-		            			scenarioController.appendBufferModel();
-		            			scenarioThread.resumeThread();
-		            		} catch (InterruptedException e) {
-		            			// TODO Auto-generated catch block
-		            			e.printStackTrace();
-							}
-		                }
-		            	else
-		            	{
-		            		scenarioController.appendBufferModel();
-		                }
-		            	playbackScenario = true;	 
-		            	playbackStopped = false;
+		    				if (scenarioThread != null)
+		    				{
+		    					try {
+		    						scenarioThread.pauseThread();
+
+		    					} catch (InterruptedException e) {
+		    						// TODO Auto-generated catch block
+		    						e.printStackTrace();
+		    					}
+		    					scenarioThread.setScenarioStartTime((Long) event.getNewValue());
+		    					scenarioThread.resumeThread();
+		    				}
+		    				else
+		    				{
+		    					// oldValue: sliderStartTime, newValue: scenarioStartTime
+		    					startScenarioThread((Long) event.getNewValue());
+		    					//System.out.println("RESUME_PLAYBACK sdt3d event newValue>" + event.getNewValue() );
+		    				}
+		    				// ljt using this??  one boolean?
+		    				playbackStopped = false;
+		    				playbackScenario = true;	
+		    				break;
+		    			}
+
+				    	case ScenarioController.REWIND:
+				    	{
+				    		if (scenarioThread != null)
+				    		{
+				    			playbackStopped = false;		
+				    			scenarioThread.resumeThread();
+				    			scenarioThread.restartPlayback((Long) event.getNewValue());
+				    		}
+				    		else
+				    		{
+				    			startScenarioThread((Long) event.getNewValue());
+				    		}
+				    		break;
+				    	}
+				    	
+		    			case ScenarioController.SET_REPLAY_SPEED:
+			            {
+			            	//System.out.println("SET_REPLAY_SPEED sdt3d\n");
+		            	
+			            	if (scenarioThread != null)
+			            	{
+			            		scenarioThread.setSpeedFactor((Float)event.getNewValue());
+			            	}
+			            	break;
+			            }
+
+		    			case ScenarioController.SKIP_BACK:
+		    			{
+		    				//System.out.println("SKIP_BACK sdt3d\n");
+		            	
+		    				// Until we get scenario playback working just reset the thread
+		    				// and play back the whole scenario from the beginning until
+		    				// we implement state dumps
+		    				if (scenarioThread != null)
+		    				{
+		    					playbackStopped = false;
+		    					scenarioThread.setScenarioStartTime((Long) event.getNewValue());
+		    					scenarioThread.restartPlayback((Long) event.getNewValue());
+		    				}
+		    				else 
+		    				{
+		    					startScenarioThread((Long) event.getNewValue());
+		    				}   
+		    				break;
+		    			}
+
+		    			case ScenarioController.SKIP_FORWARD:
+		    			{
+		    				//System.out.println("SKIP_FORWARD sdt3d");
+		    				if (scenarioThread != null)
+		    				{
+		    					try {
+		    						scenarioThread.pauseThread();
+		    					}
+		    					catch (InterruptedException e) {
+		    						e.printStackTrace();
+		    					}
+		            	
+		    					playbackStopped = false;
+		    					scenarioThread.setScenarioStartTime((Long) event.getNewValue());
+		    					scenarioThread.resumeThread();
+		    				}
+		    				else
+		    				{
+		    					// oldValue: sliderStartTime, newValue: scenarioStartTime
+		    					startScenarioThread((Long) event.getNewValue());
+		    				}
+		    				break;
+		    			}
+		            
+
+		    			case ScenarioController.START_SCENARIO_PLAYBACK:
+		    			{		
+		    				//System.out.println("START_SCENARIO_PLAYBACK sdt3d event newValue>" + event.getNewValue());
+		                
+		    				if (scenarioThread != null)
+		    				{
+		    					try {
+		    						scenarioThread.pauseThread();
+		    						scenarioController.appendBufferModel();
+		    						scenarioThread.resumeThread();
+		    					} catch (InterruptedException e) {
+		    						// TODO Auto-generated catch block
+		    						e.printStackTrace();
+		    					}
+		    				}
+		    				else
+		    				{
+		    					scenarioController.appendBufferModel();
+		    				}
+		    				playbackScenario = true;	 
+		    				playbackStopped = false;
 	
-		            	// oldValue: sliderStartTime, newValue: scenarioStartTime
-		            	startScenarioThread((Long) event.getNewValue());
+		    				// oldValue: sliderStartTime, newValue: scenarioStartTime
+		    				startScenarioThread((Long) event.getNewValue());
 
-		            	if (scenarioThread != null)
-		            	{
-		            		scenarioThread.resumeThread();
-		                }
-					}
-		            
-		            if (event.getPropertyName().equals(ScenarioController.RESUME_PLAYBACK))
-		            {		
-		            	//System.out.println("RESUME_PLAYBACK sdt3d");
-		                
-		            	if (scenarioThread != null)
-		            	{
-		            		try {
-		            			scenarioThread.pauseThread();
+		    				if (scenarioThread != null)
+		    				{
+		    					scenarioThread.resumeThread();
+		    				}
+		    				break;
+		    			}
 
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-		            		scenarioThread.setScenarioStartTime((Long) event.getNewValue());
-		            		scenarioThread.resumeThread();
-		            	}
-		            	else
-		            	{
-		            		// oldValue: sliderStartTime, newValue: scenarioStartTime
-		            		startScenarioThread((Long) event.getNewValue());
-		            		//System.out.println("RESUME_PLAYBACK sdt3d event newValue>" + event.getNewValue() );
-		                }
-		            	// ljt using this??  one boolean?
-		            	playbackStopped = false;
-		            	playbackScenario = true;	 
-					}
-
-		            if (event.getPropertyName().equals(ScenarioController.PAUSE_THREAD))
-		            {
-		            	if (scenarioThread != null)
-		            	{
-		            		try {
-								scenarioThread.pauseThread();
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-		            	}
-		            }
-		            
-		            if (event.getPropertyName().equals(ScenarioController.FAST_FORWARD))
-		            {
-		            	//System.out.println("FAST_FORWARD sdt3d\n");
-		            	if (scenarioThread != null)
-		            	{
-							// LJT: set playback stopped in pause&resume thread?
-			            	playbackStopped = false;		
-			            	scenarioThread.resumeThread();
-			            	scenarioThread.setScenarioStartTime((Long) event.getNewValue());
-		            	}
-		            }
-		            
-		            
-		            if (event.getPropertyName().equals(ScenarioController.REWIND))
-		            {
-		            	if (scenarioThread != null)
-		            	{
-							// LJT: set playback stopped in pause&resume thread?
-			            	playbackStopped = false;		
-			            	scenarioThread.resumeThread();
-							scenarioThread.restartPlayback((Long) event.getNewValue());
-		            	}
-		            }
-
-		            if (event.getPropertyName().equals(ScenarioController.SKIP_FORWARD))
-		            {
-		            	//System.out.println("SKIP_FORWARD sdt3d");
-		            	if (scenarioThread != null)
-		            	{
-		            		try {
-		            			scenarioThread.pauseThread();
-		            		}
-		            		catch (InterruptedException e) {
-		            			e.printStackTrace();
-		            		}
-		            	
-		            		playbackStopped = false;
-		            		scenarioThread.setScenarioStartTime((Long) event.getNewValue());
-		            		scenarioThread.resumeThread();
-		            	}
-		            	else
-		            	{
-		            		// oldValue: sliderStartTime, newValue: scenarioStartTime
-		            		startScenarioThread((Long) event.getNewValue());
-		            	}
-		            }
-		            
-		            if (event.getPropertyName().equals(ScenarioController.SKIP_BACK))
-		            {
-		            	//System.out.println("SKIP_BACK sdt3d\n");
-
-		            	// Until we get scenario playback working just reset the thread
-		            	// and play back the whole scenario from the beginning until
-		            	// we implement state dumps
-		            	if (scenarioThread != null)
-		            	{
-		            		playbackStopped = false;
-		            		scenarioThread.setScenarioStartTime((Long) event.getNewValue());
-		            		scenarioThread.restartPlayback((Long) event.getNewValue());
-		                }
-		                	
-		            }
-		            
-		            if (event.getPropertyName().equals(ScenarioController.RESUME_LIVE_PLAY))
-		            {
-		            	//System.out.println("RESUME_LIVE_PLAY sdt3d\n");
-		                
-		            	// TODO: Need to playback what is in the buffer prior to resuming play
-		            	scenarioController.appendBufferModel();
-		            	playbackScenario = false;
-		            	playbackStopped = false;
-		            }
-		            
-		            if (event.getPropertyName().equals(ScenarioController.SET_REPLAY_SPEED))
-		            {
-		            	//System.out.println("SET_REPLAY_SPEED sdt3d\n");
-		            	
-		            	if (scenarioThread != null)
-		            	{
-		            		scenarioThread.setSpeedFactor((Float)event.getNewValue());
-		            	}
-
-		            }
+		    			case ScenarioController.START_SCRIPT_PLAYBACK:
+		    			{
+		    				scenarioController.startScriptPlayback();
+		    				break;
+		    			}
+		    		
+		    			case ScenarioController.STOP_SCENARIO_PLAYBACK:
+		    			{	
+		    				//System.out.println("STOP_SCENARIO_PLAYBACK sdt3d\n");
+		    				//System.out.println("sdt3d::STOP_SCENARIO_PLAYBACK model> " + scenarioController.getScenarioModel().getSynSdtCommandMap());
+		    				playbackScenario = true;
+		    				playbackStopped = true;		
+		    				try {
+		    					if (scenarioThread != null)
+		    					{
+		    						scenarioThread.pauseThread();
+		    					}
+		    				} catch (InterruptedException e) {
+		    					// TODO Auto-generated catch block
+		    					e.printStackTrace();
+		    				}
+		    				break;
+		    			}	            
+		    		}
 		    	}
 		    }); // end property change listener
 		}

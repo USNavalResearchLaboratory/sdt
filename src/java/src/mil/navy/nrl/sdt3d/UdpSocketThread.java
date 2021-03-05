@@ -67,7 +67,7 @@ public class UdpSocketThread extends SocketThread
 	public void run()
 	{
 		byte buffer[] = new byte[65535];
-		final SdtCmdParser parser = new SdtCmdParser(theApp);
+		final SdtCmdParser parser = new SdtCmdParser(theApp, false);
 		String inputLine = null;
 		DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 		StringBuilder sb = new StringBuilder();

@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 
@@ -130,6 +131,7 @@ public class ScenarioPlaybackPanel extends JPanel
 		setPlayMode(STOP_RECORDING);
 		playbackOnly = true;
 		startStopButtonActionPerformed();
+		playPauseButton.setEnabled(true);
 		
     }
     
@@ -488,8 +490,6 @@ public class ScenarioPlaybackPanel extends JPanel
     	elapsedScenarioTimeValue.setText(String.valueOf(scenarioSlider.getValue()));
     	
     	scenarioSpinner.setValue(scenarioSlider.getValue());
-		firePropertyChange(ScenarioController.UPDATE_TIME, null, scenarioSlider.getValue());
-
      }
 
         
@@ -510,19 +510,18 @@ public class ScenarioPlaybackPanel extends JPanel
     	int min = this.scenarioSlider.getMinimum();
     	int max = this.scenarioSlider.getMaximum();
     	int value = (int) (min + (double) (max - min) * positionDelta);
-    	this.scenarioSlider.setValue(value);
+    	scenarioSlider.setValue(value);
     }
     
     
     void updatePlaybackTime(Long time)
     {
 		Date date = new Date(time);
-		// SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss.SSSSSS");
 		SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
 		formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 		String formatted = formatter.format(date);
 
-        this.scenarioTimeValue.setText(formatted); 
+        scenarioTimeValue.setText(formatted); 
     }
     
     
@@ -571,8 +570,8 @@ public class ScenarioPlaybackPanel extends JPanel
     		playMode = PLAY_PAUSED;
      		startStopRecordingButton.setText("Start Recording");
      		saveRecordingButton.setEnabled(true);
-     		firePropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
-    	}
+      		firePropertyChange(ScenarioController.RECORDING_STOPPED, null, null);
+   	}
     	else
     	{
     		playMode = RECORDING;
@@ -595,6 +594,7 @@ public class ScenarioPlaybackPanel extends JPanel
        	String scenarioName = fileName.get();
        	ScenarioController.SCENARIO_FILENAME = scenarioName.replace(".cmdMap", "");
 
+       	startStopRecordingButton.setEnabled(false);
        	saveRecordingButton.setEnabled(false);
        	loadRecordingButton.setEnabled(true);
        	firePropertyChange(ScenarioController.SAVE_RECORDING, null, null);
@@ -607,7 +607,7 @@ public class ScenarioPlaybackPanel extends JPanel
     	startStopRecordingButton.setEnabled(false);
     	playPauseButton.setEnabled(false);
     	scenarioSlider.setValue(1);
-     	playbackOnly = true;
+     	//playbackOnly = true;
        	
 		Optional<String> fileName = new ScenarioSettingsDialog(listener).show(ScenarioController.SCENARIO_FILENAME);
 
@@ -642,6 +642,20 @@ public class ScenarioPlaybackPanel extends JPanel
     	}
     }
     
+
+	
+    void startScriptPlayback()
+    {
+       	loadRecordingButton.setEnabled(false);
+       	saveRecordingButton.setEnabled(true);
+    	startStopRecordingButton.setEnabled(false);
+    	playPauseButton.setEnabled(true);
+    	playMode = PLAY_PAUSED;
+     	playbackOnly = true;   
+     	// consolidate all the enabling
+     	scenarioSlider.setEnabled(true);
+    }
+    
     
     void startStopButtonActionPerformed()
     {
@@ -650,12 +664,19 @@ public class ScenarioPlaybackPanel extends JPanel
     	{   		
     		
     		scenarioSecs = scenarioSlider.getValue();
+    		// fix for end of scenario
     		if (scenarioSecs == elapsedSecs)
     		{
-    			// Force user to choose where to restart
+    			//Force user to choose where to restart
+    			currentSecs = elapsedSecs;
     			return;
     		}
     		
+    		if (scenarioSecs == maxSliderValue)
+    		{
+				return;	
+    		}
+
     		playPauseButton.setText("Pause");
        		updateEnabledState(false);
 
@@ -676,7 +697,8 @@ public class ScenarioPlaybackPanel extends JPanel
     			{
     				// appending the buffer was hanging 
      	   			//firePropertyChange(ScenarioController.START_SCENARIO_PLAYBACK, null, scenarioSecs);
-    				firePropertyChange(ScenarioController.RESUME_PLAYBACK, null, scenarioSecs);
+ 
+      				firePropertyChange(ScenarioController.RESUME_PLAYBACK, null, scenarioSecs);
     			}
     	   	}
     	}
@@ -780,10 +802,11 @@ public class ScenarioPlaybackPanel extends JPanel
      */
     void setScenarioElapsedSecs(Integer elapsedSecs) 
     {
-    	this.elapsedSecs = elapsedSecs;
+     	this.elapsedSecs = elapsedSecs;
     	maxSliderValue = elapsedSecs;
     	scenarioSpinner.setModel(new SpinnerNumberModel(0,0,maxSliderValue, 1));
     	scenarioSlider.setMaximum(maxSliderValue);
+    	scenarioSlider.setValue(elapsedSecs);
     }
     
     

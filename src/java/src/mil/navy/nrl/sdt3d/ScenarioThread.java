@@ -20,10 +20,6 @@ import java.util.TimeZone;
 
 public class ScenarioThread extends SocketThread 
 {	
-	private final Object GUI_MONITOR = new Object();
-	
-	private volatile boolean pauseThreadFlag = false;
-	
 	Iterator<Entry<Long, Map<Integer, String>>> itr = null;
 	
 	protected volatile boolean restartPlaybackFlag = false;
@@ -39,7 +35,7 @@ public class ScenarioThread extends SocketThread
 	SdtCmdParser parser = null;
 	
 	Long lastTime = new Long(0);	
-	
+		
 	private final HashMap<Integer, String> int2Cmd = new HashMap<>();
 
 	Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
@@ -113,7 +109,7 @@ public class ScenarioThread extends SocketThread
 	private void iterate()
 	{
 		String value = null;
-		parser = new SdtCmdParser(theApp);
+		parser = new SdtCmdParser(theApp, false);
 		StringBuilder sb = new StringBuilder();
 		speedFactor = scenarioController.getView().getSpeedFactorValue();
 		
@@ -160,18 +156,24 @@ public class ScenarioThread extends SocketThread
 				key = (int) cmdEntry.getKey();
 				pendingCmd = int2Cmd.get(key);
 				value = (String) cmdEntry.getValue();
-    		}			
+    		}		
 
 			Long waitTime = entry.getKey() - lastTime;
 			lastTime = entry.getKey();
-										
-			
+					
 			if (lastTime <= scenarioPlaybackStartTime)
 			{
+				if (pendingCmd.contains("wait"))
+				{
+					// no waiting if playing back as fast as possible
+					continue;
+				}
+
 				if (theApp.getCursor().getType() != Cursor.WAIT_CURSOR)
 				{
 					theApp.setCursor(waitCursor);
 				}
+				
 				value = " " + pendingCmd + " \"" + value + " \"\n";	
 				sb.append(value, 0, value.length());
 				parseString(sb, parser);	
@@ -217,11 +219,36 @@ public class ScenarioThread extends SocketThread
 					}
 					if ((!pendingCmd.equalsIgnoreCase("wait"))
 							&&
+							// remove listen?!
 						(!pendingCmd.equalsIgnoreCase("listen")))
 					{
 						scenarioController.updateScenarioSecs(lastTime);
 						sb.append(value, 0, value.length());
 						parseString(sb, parser);	
+					}
+					else
+					{
+						
+						// rewrite this...
+						
+						// If we embed the wait in the command map
+						// remove all this...
+						
+						// ljt don't do two sleeps fix this
+						value = value.replaceAll("\"", "");
+						// get sleep value
+						String[] tmp = value.split(" ");
+						// Strip off any precision for any poorly
+						// formed wait values
+
+						long sleepTime = Float.valueOf(tmp[1]).intValue();
+						sleep((long) (sleepTime * speedFactor));
+						
+						// If we are getting wait times in our command list 
+						// it means we are processing a script that has
+						// been loaded.  Keep a running time so our
+						// slider increases
+						scenarioController.updateScenarioSecs(lastTime + sleepTime);
 					}
 
 				}
@@ -297,7 +324,7 @@ public class ScenarioThread extends SocketThread
 	 */
 	private  void clearState()
 	{
-		final SdtCmdParser parser = new SdtCmdParser(theApp);
+		final SdtCmdParser parser = new SdtCmdParser(theApp, false);
 		StringBuilder sb = new StringBuilder();
 		
 		String value = " clear nodes \n";
@@ -322,48 +349,7 @@ public class ScenarioThread extends SocketThread
 
 		
 	
-	private void checkForPaused() 
-	{
-		synchronized (GUI_MONITOR) {
-			while(pauseThreadFlag) 
-			{
-				try 
-				{
-					GUI_MONITOR.wait();
-				}
-				catch (InterruptedException ix)
-				{
-					System.out.println("Interupted Exception ScenarioThread.checkForPaused()\n");
-				}
-				catch (Exception e)
-				{
-					System.out.println("Exception!  ScenarioThread.checkForPaused()\n");
-				}
 
-			}
-		}
-	}
-	
-	
-	public void pauseThread() throws InterruptedException 
-	{
-		//System.out.println("ScenarioThread::pauseThread()");
-		synchronized (GUI_MONITOR) {
-			pauseThreadFlag = true;
-			GUI_MONITOR.notify();
-		}
-		
-	}
-	
-	
-	public void resumeThread() 
-	{
-		//System.out.println("ScenarioThread:resumeThread()");
-		synchronized (GUI_MONITOR) {
-			pauseThreadFlag = false;
-			GUI_MONITOR.notify();
-		}
-	}
 	
 	
 	public void restartPlayback(Long time)
@@ -391,7 +377,8 @@ public class ScenarioThread extends SocketThread
 	{
 		String value = null;
 		//final SdtCmdParser 
-		parser = new SdtCmdParser(theApp);
+		// Check false or true?
+		parser = new SdtCmdParser(theApp, false);
 		StringBuilder sb = new StringBuilder();
 
 		synchronized(getScenarioModel().getSynSdtBufferCommandMap()) {

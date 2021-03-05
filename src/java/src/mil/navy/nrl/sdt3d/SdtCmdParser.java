@@ -139,12 +139,23 @@ public class SdtCmdParser
 
 	private sdt3d.AppFrame sdt3dApp = null;
 	
+	private long scenarioTime;
 
-	public SdtCmdParser(sdt3d.AppFrame theApp)
+	private long originalScenarioTime;
+	
+	private boolean loadScript;
+	
+	public SdtCmdParser(sdt3d.AppFrame theApp, boolean loadScript)
 	{
 		this.sdt3dApp = theApp;
 		
 		initialize_cmd_map();
+		
+		this.scenarioTime = Time.increasingTimeMillis();
+
+		this.originalScenarioTime = scenarioTime;
+
+		this.loadScript = loadScript;
 	}
 
 
@@ -233,10 +244,38 @@ public class SdtCmdParser
 		 */
 		if (recordScenario && !playbackOnly)
 		{
+			
 			if (!playbackScenario && !scenarioCmd) 
 			{
 				//System.out.println("Updating model..");
-				scenarioController.updateModel(cmd2Int.get(pendingCmd.toLowerCase()), val);
+				// If we are loading a script use wait time in 
+				// our slider time map, otherwise use increasing
+				// time millis.
+				if (loadScript)
+				{
+					if (pendingCmd.contains("wait"))
+					{
+						long sleepTime = Float.valueOf(val.trim()).intValue();
+
+						// LJT ADD THIS BACK ANC CHECK FOR LOAD SCRIPT
+						//scenarioTime = Time.increasingTimeMillis() + new Long(sleepTime);
+						scenarioTime = scenarioTime + new Long(sleepTime);
+					}
+					else
+					{
+						//scenarioTime = Time.increasingTimeMillis();
+						scenarioTime++;
+					}
+					// Wait time is milliseconds
+					int secs = (int) (scenarioTime - originalScenarioTime)/1000;
+					//System.out.println("pending> " + pendingCmd + " val> " + val + " scenarioTime> " + scenarioTime + " secs> " + secs);
+					scenarioController.updateModel(cmd2Int.get(pendingCmd.toLowerCase()), val, scenarioTime, secs);
+				}
+				else
+				{
+					scenarioTime = Time.increasingTimeMillis();
+					scenarioController.updateModel(cmd2Int.get(pendingCmd.toLowerCase()), val, scenarioTime, 0);
+				}
 			}
 			else
 			{
@@ -247,9 +286,9 @@ public class SdtCmdParser
 			}	
 		}
 		
-		if ((playbackScenario && !scenarioCmd)
-				||
-				playbackStopped)
+		if ((playbackScenario && !scenarioCmd))
+			//	||
+			//	playbackStopped)
 		{
 			
 			return;
@@ -435,7 +474,7 @@ public class SdtCmdParser
 			// immediately. Note that when an input command is recvd
 			// via the input pipe, the file will be appended - pipeCmd
 			// flag controls this.
-			return sdt3dApp.loadInputFile(val, false);
+			return sdt3dApp.loadInputFile(val, false, false);
 		else if (pendingCmd.equalsIgnoreCase("title"))
 			return sdt3dApp.setAppTitle(val);
 		else if (pendingCmd.equalsIgnoreCase("defaultAltitudeType"))

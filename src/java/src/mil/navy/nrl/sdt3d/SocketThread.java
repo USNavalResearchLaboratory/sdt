@@ -53,6 +53,10 @@ import java.io.StringReader;
 
 public class SocketThread extends Thread
 {
+	protected final Object GUI_MONITOR = new Object();
+	
+	protected volatile boolean pauseThreadFlag = false;
+	
 	protected boolean stopFlag = false;
 
 	protected final sdt3d.AppFrame theApp;
@@ -64,7 +68,7 @@ public class SocketThread extends Thread
 	// TODO: Change to thread enum
 	protected boolean isScenarioThread = false;
 
-
+	protected boolean loadScript = false;
 
 	public SocketThread(sdt3d.AppFrame theApp, int thePort)
 	{
@@ -72,7 +76,15 @@ public class SocketThread extends Thread
 		port = thePort;
 	}
 
+	
+	public SocketThread(sdt3d.AppFrame theApp, int thePort, boolean loadScript)
+	{
+		this.theApp = theApp;
+		this.port = thePort;
+		this.loadScript = loadScript;
+	}
 
+	
 	public boolean stopped()
 	{
 		return stopFlag;
@@ -162,17 +174,31 @@ public class SocketThread extends Thread
 						index = 0;
 						continue;
 					}
-					final String message = sb.substring(0, index);
+					String message = sb.substring(0, index);
 					if (message.contains("wait") && message.length() == 5)
 					{
 						waiting = true;
 						sb = sb.delete(0, index);
 						index = 0;
+						
+						// Send the wait command
+						if (loadScript)
+						{
+						EventQueue.invokeLater(new Runnable()
+						{
+							@Override
+							public void run()
+							{
+								theApp.onInput(message, parser, isScenarioThread);
+							}
+						});
+						}
 						continue;
 					}
 					if (waiting)
 					{
 						// Now we have the duration, let's wait
+						// strip out any embedded quotes
 						long sleepTime = Float.valueOf(message.trim()).intValue();
 
 						if (this.lastWaitTime > 0)
@@ -183,11 +209,14 @@ public class SocketThread extends Thread
 							if (sleepTime < 0)
 								sleepTime = 0;
 						}
-						// System.out.println("ElapsedTime>" + elapsedTime + " OriginalSleepTime>" +
-						// Float.valueOf(message.trim()).intValue() + " newSleepTime>" + sleepTime);
 						try
 						{
-							sleep(sleepTime);
+							// If we are loading the script for playback log the
+							// command and don't wait
+							if (!loadScript)
+							{
+								sleep(sleepTime);
+							}
 						}
 						catch (InterruptedException e)
 						{
@@ -198,7 +227,13 @@ public class SocketThread extends Thread
 						waiting = false;
 						sb = sb.delete(0, index);
 						index = 0;
-						continue;
+						
+						// Pass the wait command if we are loading (and thereby recording)
+						// the script.
+						if (!loadScript)
+						{
+							continue;
+						}
 					}
 
 					EventQueue.invokeLater(new Runnable()
@@ -225,5 +260,48 @@ public class SocketThread extends Thread
 			e.printStackTrace();
 		}
 
+	}
+	
+	protected void checkForPaused() 
+	{
+		synchronized (GUI_MONITOR) {
+			while(pauseThreadFlag) 
+			{
+				try 
+				{
+					GUI_MONITOR.wait();
+				}
+				catch (InterruptedException ix)
+				{
+					System.out.println("Interupted Exception SocketThread.checkForPaused()\n");
+				}
+				catch (Exception e)
+				{
+					System.out.println("Exception!  SocketThread.checkForPaused()\n");
+				}
+
+			}
+		}
+	}
+	
+	
+	public void pauseThread() throws InterruptedException 
+	{
+		//System.out.println("ScenarioThread::pauseThread()");
+		synchronized (GUI_MONITOR) {
+			pauseThreadFlag = true;
+			GUI_MONITOR.notify();
+		}
+		
+	}
+	
+	
+	public void resumeThread() 
+	{
+		//System.out.println("ScenarioThread:resumeThread()");
+		synchronized (GUI_MONITOR) {
+			pauseThreadFlag = false;
+			GUI_MONITOR.notify();
+		}
 	}
 }

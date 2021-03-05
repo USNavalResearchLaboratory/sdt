@@ -83,7 +83,7 @@ public class PipeThread extends SocketThread
 	@Override
 	public void run()
 	{
-		parser = new SdtCmdParser(theApp);
+		parser = new SdtCmdParser(theApp, false);
 		StringBuilder sb = new StringBuilder();
 		parser.setPipeCmd(true);
 		try

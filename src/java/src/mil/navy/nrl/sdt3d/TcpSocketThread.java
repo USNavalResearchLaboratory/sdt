@@ -126,7 +126,7 @@ public class TcpSocketThread extends SocketThread
 		@Override
 		public void run()
 		{
-			final SdtCmdParser parser = new SdtCmdParser(theApp);
+			final SdtCmdParser parser = new SdtCmdParser(theApp, false);
 			StringBuilder sb = new StringBuilder();
 
 			try
