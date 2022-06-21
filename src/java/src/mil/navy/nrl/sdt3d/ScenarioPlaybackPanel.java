@@ -490,6 +490,28 @@ public class ScenarioPlaybackPanel extends JPanel
     	elapsedScenarioTimeValue.setText(String.valueOf(scenarioSlider.getValue()));
     	
     	scenarioSpinner.setValue(scenarioSlider.getValue());
+    	
+    	/*if (playMode == PLAYING)
+    	{
+      		if (scenarioSlider.getValue() < currentSecs)
+    		{
+    			firePropertyChange(ScenarioController.SKIP_BACK, null, scenarioSlider.getValue());
+        	}
+    		else
+    	   	{
+    			if (scenarioSlider.getValue() > currentSecs)
+    			{
+    				firePropertyChange(ScenarioController.SKIP_FORWARD, null, scenarioSlider.getValue());
+     	   		}
+    			else
+    			{
+    				// appending the buffer was hanging 
+     	   			//firePropertyChange(ScenarioController.START_SCENARIO_PLAYBACK, null, scenarioSecs);
+ 
+      				firePropertyChange(ScenarioController.RESUME_PLAYBACK, null, scenarioSecs);
+    			}
+    	   	}
+    	}*/
      }
 
         
@@ -658,8 +680,7 @@ public class ScenarioPlaybackPanel extends JPanel
     
     
     void startStopButtonActionPerformed()
-    {
- 
+    { 
     	if (playMode == PLAY_PAUSED)
     	{   		
     		

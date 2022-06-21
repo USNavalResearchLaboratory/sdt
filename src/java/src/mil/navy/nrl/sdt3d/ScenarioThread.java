@@ -155,7 +155,7 @@ public class ScenarioThread extends SocketThread
 			{
 				key = (int) cmdEntry.getKey();
 				pendingCmd = int2Cmd.get(key);
-				value = (String) cmdEntry.getValue();
+				value = cmdEntry.getValue();
     		}		
 
 			Long waitTime = entry.getKey() - lastTime;
@@ -173,7 +173,6 @@ public class ScenarioThread extends SocketThread
 				{
 					theApp.setCursor(waitCursor);
 				}
-				
 				value = " " + pendingCmd + " \"" + value + " \"\n";	
 				sb.append(value, 0, value.length());
 				parseString(sb, parser);	
@@ -189,7 +188,7 @@ public class ScenarioThread extends SocketThread
 
 				}
 			
-				value = pendingCmd + " \"" + value + " \"\n";
+				value = pendingCmd + " " + value + "\n";
 				try
 				{	
 					// If we have stopped the playback before all played, play
@@ -395,10 +394,10 @@ public class ScenarioThread extends SocketThread
 			{
 				key = (int) cmdEntry.getKey();
 				pendingCmd = int2Cmd.get(key);
-				value = (String) cmdEntry.getValue();
+				value = cmdEntry.getValue();
     		}			
 
-			value = " " + pendingCmd + " \"" + value + " \"\n";
+			value = " " + pendingCmd + " " + value + " \n";
 				
 			if ((!pendingCmd.equalsIgnoreCase("wait"))
 					&&

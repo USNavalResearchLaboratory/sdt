@@ -121,15 +121,15 @@ public class SocketThread extends Thread
 			while ((ch = reader.read()) != -1)
 			{
 				index++;
-
 				if (ch == 92 || Character.toString((char) ch).equals("\\"))
 				{
 					// We're not allowing any escaped characters at this point
-					// System.out.println("We're skipping an escaped char");
+					System.out.println("We're skipping an escaped char");
 					ch = reader.read();
 					index++;
 					continue;
 				}
+				
 				// It's a comment, keep reading till end of line
 				if (ch == 35)
 				{
@@ -150,14 +150,14 @@ public class SocketThread extends Thread
 				}
 
 				// It's a quoted string, keep reading till end of quote
-				if (ch == 34 && !quoted)
+				if (((ch == 34) || (ch == 39)) && !quoted)
 				{
 					quoted = true;
 					continue;
 				}
 				if (quoted)
 				{
-					if (ch == 34)
+					if ((ch == 34) || (ch == 39))
 					{
 						quoted = false;
 					}
