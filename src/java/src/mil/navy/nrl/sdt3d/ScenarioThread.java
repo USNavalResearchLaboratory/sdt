@@ -173,7 +173,9 @@ public class ScenarioThread extends SocketThread
 				{
 					theApp.setCursor(waitCursor);
 				}
-				value = " " + pendingCmd + " \"" + value + " \"\n";	
+				//value = " " + pendingCmd + " \"" + value + " \"\n";	
+				value = " " + pendingCmd + " " + value + "\n";
+				System.out.println("scenario> %s" + value);
 				sb.append(value, 0, value.length());
 				parseString(sb, parser);	
 
