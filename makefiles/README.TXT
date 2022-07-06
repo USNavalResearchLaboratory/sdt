@@ -9,6 +9,9 @@ in .bashrc
 
 set JAVA_HOME="$(/usr/libexec/java_home -v 1.8"
 
+export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
+
+
 For java versions note:
 
 On certain OSX implementations there is some conflict after upgrading from
@@ -31,4 +34,19 @@ Make a symlink from 1.6 jdk include directory to jdk 1.7 include dir
 Finally be sure to compile against 1.6 jdk
 
 export JAVA_HOME=`/usr/libexec/java_home -v 1.6`
+
+or 1.8
+
+export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
+
+----------
+
+Under Ubuntu 20.04 until the distribution is fixed modify SdtLayerPanel.java:395 to compile with java 11
+
+(Enumaration<DefaultMultableTreeNode>)(Object)parentNode.children();
+
+w/sudo apt install openjdk-11-jdk got a linker mismatch
+
+Finally uninstalled openjdk-11 and installed openjdk-8 instead.
+
 

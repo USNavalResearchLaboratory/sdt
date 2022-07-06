@@ -103,7 +103,7 @@ public class SocketThread extends Thread
 	 */
 	protected void parseString(StringBuilder sb, final SdtCmdParser parser)
 	{
-		//System.out.println("ParseString " + sb);
+		System.out.println("ParseString " + sb);
 		long currentTime = 0;
 		long elapsedTime = 0;
 		int index = 0;
