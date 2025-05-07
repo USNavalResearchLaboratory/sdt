@@ -64,15 +64,28 @@ The scripts to download and patch the source files require that "git"
 (The "prep-dependencies-linux" helper script may be used to install
 linux dependencies via apt-get prior to running the makefile.)
 
-On certain Ubuntu distributions package libvecmath-java maybe required:
+a. vecmath.jar
+
+On certain distributions package vecmath.jar may need to be downloaded:
+
+On Ubuntu it is availablie via apt-get:
 
 apt-get install libvecmath-java
 
-On OSX Mavericks and above you will need to get vecmath.jar available at:
+If not available in your os's package library it is also available at:
 
+https://mvnrepository.com/artifact/javax.vecmath/vecmath/1.5.2
 http://jogamp.org/deployment/java3d/1.6.0-pre11/
 
-Place the jar in /System/Library/Java/Extensions prior to El Capitan.  Place in /Library/Java/Extensions in El Capitan.
+On redhat/rocky systems
+
+place vecmath.jar in /usr/shar/java
+
+On OSX Mavericks and above place the jar in:
+
+/System/Library/Java/Extensions (Place in /Library/Java/Extensions in El Capitan)
+
+b. set JAVA_HOME and PATH
 
 Under Ubuntu you may also need to set java home via update-alternatives, e.g.
 
@@ -81,17 +94,24 @@ update-alternatives --display java
 update-alternatives --display javac
 update-alternatives --display jar
 
-The pthread and netfilter-queue packages are required to build protolibd:
+Under rhel/rocky9 set JAVA_HOME and PATH to java-1.8.0-openjdk location:
+
+sudo yum search java | grep devel
+
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.452.b09-2.el9.x86_64
+export PATH=$JAVA_HOME/bin:$PATH
+
+c. The pthread and netfilter-queue packages are required to build protolibd:
 
 apt-get install libpcap-dev
 apt-get install libnetfilter-queue-dev
 
-Alternatively, you may download prepatched worldwind.zip and
+d. If build problems exists you may download of prepatched binaries:
+
+If build issues persist, you may download prepatched worldwind.zip and
 joglutils.zip and the latest protolib.tgz from sdt3d file release
-section on the protean forge website.
-	
-	https://pf.itd.nrl.navy.mil/sf/frs/do/viewSummary/projects.sdt/frs
-	
+section (Contact NRL for location of the prepatched files).
+
 Place in the sdt makefiles directory.  The makefile will unzip and
 process these files.  (Make sure the files are named "worldwind.zip",
 "joglutils.zip", and "protolib.tgz" after the download.)
@@ -102,13 +122,29 @@ You may need to add a javac command to the worldwind/build.xml file, e.g:
 	<javac srcdir="src" destdir="bin" />
     <description>
 
+e. prebuilt binaries available
+
+Prebuilt binaries for windows, osx, amd64 and win64 are also avaiable at git-hub.
+
+f. On minimim install systems ensure the following packages are installed:
+
+yum install ant, wget, git, zip, patch
+
+g. Under rhel/rocky9
+
+sudo dnf install libXxf86vm  (required by JOGL's native components) (on rhel 8.8 too)
+
+h. On osx, the sdt3d.sh file may need the startOnFirstThread option upon launch:
+
+-java -jar -Dsun.java2d.noddraw=true -Djava.library.path=${THISDIR}/build/sdt3d/lib -Xmx512m ${THISDIR}/build/sdt3d/jars/sdt3d.jar $@
++java -XstartOnFirstThread -jar -Dsun.java2d.noddraw=true -Djava.library.path=${THISDIR}/build/sdt3d/lib -Xmx512m ${THISDIR}/build/sdt3d/jars/sdt3d.jar $@
 
 2.  A Makefile is provided that will unpack the appropriate jar and
 source files and build a sdt3d application (including a sdt3d.jar):
 (Note that you must have JAVA_HOME defined and javac and jar available
 in your path)
 
-Java 7 is currently required.  Instructions available to build with
+Java 8 is currently required.  Instructions available to build with
 Java 6 available upon request.
 
 cd sdt/makefiles
