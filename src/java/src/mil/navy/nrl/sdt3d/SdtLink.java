@@ -75,6 +75,8 @@ import gov.nasa.worldwind.render.markers.Marker;
 public class SdtLink
 {
 	private SdtPath line = null;
+	
+	//private SdtPath line2 = null; // test
 
 	private SdtNode node1 = null;
 
@@ -256,6 +258,8 @@ public class SdtLink
 		if (line != null)
 		{
 			getLinkLayer().removeRenderable(line);
+			// LJT-LINE if (line2 != null) // ljt test collapsed
+			// LJT-LINE	getLinkLayer().removeRenderable(line2); 
 		}
 		if (getLabel() != null)
 		{
@@ -287,6 +291,8 @@ public class SdtLink
 			setDrawn(true);
 
 			getLinkLayer().addRenderable(line);
+			// LJT-LINE if (line2 != null) // ljt test collapsaed
+				// LJT-LINE  getLinkLayer().addRenderable(line2); // ok if null?
 			if (isDirectional())
 			{
 				if (marker == null)
@@ -296,8 +302,7 @@ public class SdtLink
 				getMarkers().add(getMarker());
 				getMarkerLayer().setMarkers(getMarkers());
 			}
-			if (showLabel() && hasPosition() && !sdt3d.AppFrame.collapseLinks) // ljt we don't add labels for collapsed
-																				// links??
+			if (showLabel() && hasPosition()) //)&& !sdt3d.AppFrame.collapseLinks()) // LJT-LINKS remove collapse check
 			{
 				GlobeAnnotation label = getLabel();
 				if (label != null)
@@ -582,6 +587,188 @@ public class SdtLink
 
 		return line;
 	}
+	
+	double getLabelOffset(int totalLabels, int n) 
+	{
+	    int step = (n + 1) / 2; // 1,1,2,2,3,3,...
+	    
+	    // Base offset scales inversely with number of labels
+	    double baseOffset = 0.5 / totalLabels;
+	    double offset = step * baseOffset;
+
+	    if (n % 2 == 1) {
+	        return 0.5 - offset; // odd: subtract
+	    } else {
+	        return 0.5 + offset; // even: add
+	    }
+	}
+
+	/*
+	 * Draws uncollapsed links
+	 */
+	public void drawLinks(DrawContext dc, int linkNum, int totalLinks)
+	{
+		Globe globe = dc.getGlobe();
+		double distance = LatLon.ellipsoidalDistance(getSrcNode().getPosition(), getDstNode().getPosition(),
+				globe.getEquatorialRadius(), globe.getPolarRadius());
+		ArrayList<Position> lp = new ArrayList<Position>();
+		lp.add(node1.getPosition());
+
+		// initialAngle is the angle degree used to offset links around a circle (was 20.0)
+		double interval, radius, angle = 0, initialAngle = 20.0; // 10.0;
+
+		// TODO: We ~could~ tie initial angle to total visible
+		// links but the 10 degree offset seems to work fine and
+		// we can't really visualize much below 5.0
+		if (totalLinks > 18)
+		{
+			initialAngle = 10.0;
+		}
+
+		if (totalLinks > 36)
+		{
+			initialAngle = 5.0;
+		}
+
+		// toggle the links around the radius
+		if (linkNum % 2 == 0) // even link #
+		{
+			angle = Math.PI * ((-initialAngle * linkNum) / 180.0);
+		}
+		else
+		{
+			angle = Math.PI * ((initialAngle * linkNum) / 180.0);
+		}
+
+		
+		if (totalLinks > 1)
+		{
+			// Number of segments per "parabolic" half of link
+			int numSegments = 10;
+
+			for (double i = 0, x = -1.0, stepSize = 1.0 / numSegments; x <= 1.0; i++, x += stepSize)
+			{
+				// This gets a pt for each segment along a straight line between the two nodes
+				interval = (Double.valueOf(i).doubleValue()) / (numSegments * 2);
+				Position pos = Position.interpolate(interval, getSrcNode().getPosition(), getDstNode().getPosition());
+
+				double alpha = 0.01;
+				double beta = 1.0;
+				double distanceOffset = alpha * (Math.log(beta * distance));
+				radius = distance * (distanceOffset * (1.0 - (x * x)));
+
+				// Convert pos into radians and apply offset
+				Vec4 pt = globe.computePointFromPosition(pos);
+				Vec4 newPt = new Vec4(pt.getX() + radius * Math.sin(angle), pt.getY() + radius * Math.cos(angle), pt.getZ());
+				Position newPos = globe.computePositionFromPoint(newPt);
+
+				// If we are below sea level and not following the terrain, don't add
+				// the link point (otherwise links disappear below the ocean surface)
+
+				// Note that if the nodes are near the ocean surface, and we have more than
+				// four links, some links may be obscured by others. As we don't expect this
+				// many links in the near future, let this go for now. Maybe wwj will be fixed...
+				if (newPos.getElevation() < 0)
+				{
+					newPos = new Position(newPos, 0);
+				}
+
+				if ((!(newPos.getElevation() < 0) ||
+					(0.0 == node1.getAltitude()) && (0.0 == node2.getAltitude())))
+				{
+					lp.add(newPos);
+				}
+
+				// If the link has a label reset its position to midpoint of link
+				if (getLabel() != null && i == numSegments)
+				{
+					getLabel().setPosition(newPos);
+				}
+			}
+		}
+		else // put label in middle of link
+		{
+			// TODO: Clean up this show / has label stuff everywhere!
+			// will we even get here if linkNum == 0? we shouldn't
+			// why are we dont this here and not above
+			if (showLabel() && hasLabel() && totalLinks == 1)
+			{
+				getLabel().setPosition(Position.interpolate(.5, getSrcNode().getPosition(), getDstNode().getPosition()));
+			}
+		}
+
+		lp.add(node2.getPosition());
+
+		line.setPositions(lp);
+		//if (line2 != null)
+		//	line2 = null;
+		
+	}
+
+	public void drawCollapsedLinks(DrawContext dc, int linkNum, int totalLinks)
+	{
+		Globe globe = dc.getGlobe();
+		double distance = LatLon.ellipsoidalDistance(getSrcNode().getPosition(), getDstNode().getPosition(),
+				globe.getEquatorialRadius(), globe.getPolarRadius());
+		ArrayList<Position> lp = new ArrayList<Position>();
+
+		// TODO: do we need this?
+		if (showLabel() && hasLabel())  
+		{
+			if (totalLinks == 1)
+			{
+				getLabel().setPosition(Position.interpolate(.5, getSrcNode().getPosition(), getDstNode().getPosition()));
+			}
+			else
+			{
+				// else position link lable at offset around link midpoint
+				getLabel().setPosition(Position.interpolate(getLabelOffset(totalLinks, linkNum), getSrcNode().getPosition(), 
+							getDstNode().getPosition()));
+			}
+		}
+
+		
+		/*
+		 Position midpoint = Position.interpolate(.5, getSrcNode().getPosition(), getDstNode().getPosition());
+		// Get two links working for starters
+		if (linkNum == 1)
+		{
+			System.out.println("node1 " + node1.getName() + " linkNum 1" + midpoint + "nod 1 pos " + node1.getPosition());
+			lp.add(node1.getPosition());
+			// Terminate first link at midpoint
+			lp.add(midpoint);
+			line.setPositions(lp);
+		}
+		if (linkNum == 2)
+		{
+			System.out.println("node2 " + node2.getName() + " linkNum 2" + midpoint + "nod 2 pos " + node2.getPosition());
+			SdtPath line2 = new SdtPath();
+			
+			// TStart second link at midpoint
+			lp.add(node2.getPosition());  // second link has diff node1
+			lp.add(midpoint);
+
+			line2.setPositions(lp);
+			
+			
+			//set elevation & follow terrain and all that
+			
+			ShapeAttributes attrs = new BasicShapeAttributes();
+			attrs.setOutlineWidth(lineWidth);
+			attrs.setOutlineStipplePattern(getStipplePattern());
+			attrs.setOutlineStippleFactor(getStippleFactor());
+			attrs.setInteriorMaterial(new Material(lineColor));
+			attrs.setOutlineMaterial(new Material(lineColor));
+			attrs.setInteriorOpacity(getOpacity());
+			attrs.setOutlineOpacity(getOpacity());
+			line2.setPathType(AVKey.GREAT_CIRCLE);
+			line2.setNumSubsegments(1);
+			line2.setAttributes(attrs);
+			
+		}*/
+		
+	}
+
 
 
 	/**
@@ -603,33 +790,6 @@ public class SdtLink
 			ArrayList<Position> lp = new ArrayList<Position>();
 			lp.add(node1.getPosition());
 
-			double distance = LatLon.ellipsoidalDistance(getSrcNode().getPosition(), getDstNode().getPosition(),
-				globe.getEquatorialRadius(), globe.getPolarRadius());
-			// initialAngle is the angle degree used to offset links around a circle (was 20.0)
-			double angle, radius, interval = 0, initialAngle = 20.0; // 10.0;
-
-			// TODO: We ~could~ tie initial angle to total visible
-			// links but the 10 degree offset seems to work fine and
-			// we can't really visualize much below 5.0
-			if (totalLinks > 18)
-			{
-				initialAngle = 10.0;
-			}
-
-			if (totalLinks > 36)
-			{
-				initialAngle = 5.0;
-			}
-
-			// toggle the links around the radius
-			if (linkNum % 2 == 0) // even link #
-			{
-				angle = Math.PI * ((-initialAngle * linkNum) / 180.0);
-			}
-			else
-			{
-				angle = Math.PI * ((initialAngle * linkNum) / 180.0);
-			}
 
 			if ((0.0 == node1.getAltitude()) &&
 				(0.0 == node2.getAltitude()))
@@ -643,61 +803,21 @@ public class SdtLink
 				line.setAltitudeMode(WorldWind.RELATIVE_TO_GROUND);
 			}
 
-			if (!sdt3d.AppFrame.collapseLinks && totalLinks > 1)
+			if (sdt3d.AppFrame.collapseLinks)
 			{
-				// Number of segments per "parabolic" half of link
-				int numSegments = 10;
-
-				for (double i = 0, x = -1.0, stepSize = 1.0 / numSegments; x <= 1.0 && !sdt3d.AppFrame.collapseLinks; i++, x += stepSize)
-				{
-					// This gets a pt for each segment along a straight line between the two nodes
-					interval = (Double.valueOf(i).doubleValue()) / (numSegments * 2);
-					Position pos = Position.interpolate(interval, getSrcNode().getPosition(), getDstNode().getPosition());
-
-					double alpha = 0.01;
-					double beta = 1.0;
-					double distanceOffset = alpha * (Math.log(beta * distance));
-					radius = distance * (distanceOffset * (1.0 - (x * x)));
-
-					// Convert pos into radians and apply offset
-					Vec4 pt = globe.computePointFromPosition(pos);
-					Vec4 newPt = new Vec4(pt.getX() + radius * Math.sin(angle), pt.getY() + radius * Math.cos(angle), pt.getZ());
-					Position newPos = globe.computePositionFromPoint(newPt);
-
-					// If we are below sea level and not following the terrain, don't add
-					// the link point (otherwise links disappear below the ocean surface)
-
-					// Note that if the nodes are near the ocean surface, and we have more than
-					// four links, some links may be obscured by others. As we don't expect this
-					// many links in the near future, let this go for now. Maybe wwj will be fixed...
-					if (newPos.getElevation() < 0)
-					{
-						newPos = new Position(newPos, 0);
-					}
-
-					if ((!(newPos.getElevation() < 0) ||
-						(0.0 == node1.getAltitude()) && (0.0 == node2.getAltitude())))
-					{
-						lp.add(newPos);
-					}
-
-					// If the link has a label reset its position to midpoint of link
-					if (getLabel() != null && i == numSegments)
-					{
-						getLabel().setPosition(newPos);
-					}
-				}
+				drawCollapsedLinks(dc, linkNum, totalLinks);
+				
+				// LJT ONLY FOR BUG FIX FOR MIKE
+				lp.add(node2.getPosition());
+				line.setPositions(lp);
 			}
 			else
 			{
-				if (showLabel() && hasLabel())
-					getLabel().setPosition(Position.interpolate(.5, getSrcNode().getPosition(), getDstNode().getPosition()));
-
+				drawLinks(dc, linkNum, totalLinks);
 			}
+			
+			
 
-			lp.add(node2.getPosition());
-
-			line.setPositions(lp);
 			if (isDirectional())
 			{
 				// If we've gotten here before making a marker, make one now
@@ -729,7 +849,7 @@ public class SdtLink
 		}
 	}
 
-
+	// ljt not for collapsed?
 	public void setStippleFactor(int stippleFactor)
 	{
 		this.stippleFactor = stippleFactor;

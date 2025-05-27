@@ -1025,13 +1025,31 @@ public class SdtNode implements Renderable
 
 	}
 
+	// Make accessible to sdtNode & sdtLink
+	double getLabelOffset(int totalLabels, int n) 
+	{
+	    int step = (n + 1) / 2; // 1,1,2,2,3,3,...
+	    
+	    // Base offset scales inversely with number of labels
+	    double baseOffset = 0.5 / totalLabels;
+	    double offset = step * baseOffset;
 
+	    if (n % 2 == 1) {
+	        return 0.5 - offset; // odd: subtract
+	    } else {
+	        return 0.5 + offset; // even: add
+	    }
+	}
+	
+	
+	
 	public void recreateLinkLabels(sdt3d.AppFrame theApp)
 	{
 		// TODO Make sure collapsing links works with layer code
 		Map<String, List<SdtLink>> linkTable = getLinkTable();
 		Set<Entry<String, List<SdtLink>>> set = linkTable.entrySet();
 		java.util.Iterator<Entry<String, List<SdtLink>>> it = set.iterator();
+
 		while (it.hasNext())
 		{
 			List<SdtLink> links = it.next().getValue();
@@ -1050,11 +1068,7 @@ public class SdtNode implements Renderable
 						// for each node in the link)
 						if (theLabel != null && theLink.isCollapsed())
 						{
-							// Remove any collapsed labels
-							if (theLabel.getText().equals("(collapsed)"))
-							{
-								theLink.getLinkLabelLayer().removeAnnotation(theLink.getLabel());
-							}
+							theLink.getLinkLabelLayer().removeAnnotation(theLink.getLabel());
 							theLabel.setText(theLink.getLabelText());
 							theLink.isCollapsed(false);
 							theLink.getLinkLabelLayer().addAnnotation(theLink.getLabel());
@@ -1062,7 +1076,6 @@ public class SdtNode implements Renderable
 					}
 					else if (sdt3d.AppFrame.collapseLinks && theLink.hasLabel())
 					{
-						theLink.getLinkLabelLayer().removeAnnotation(theLink.getLabel());
 						theLink.isCollapsed(true);
 					}
 
@@ -1071,19 +1084,20 @@ public class SdtNode implements Renderable
 				// if one exists
 				if (sdt3d.AppFrame.collapseLinks)
 				{
+					int linkNum = 0;
 					itr = links.iterator();
 					while (itr != null && itr.hasNext())
 					{
 						theLink = itr.next();
 						if (theLink.getLabel() != null)
 						{
-							theLink.getLabel().setText("(collapsed)");
+							linkNum++;
 
 							if (theLink.getSrcNode().getPosition() == null
 								|| theLink.getDstNode().getPosition() == null)
 								continue;
 
-							Position pos = Position.interpolate(.5, theLink.getSrcNode().getPosition(), theLink.getDstNode().getPosition());
+							Position pos = Position.interpolate(getLabelOffset(set.size(),linkNum), theLink.getSrcNode().getPosition(), theLink.getDstNode().getPosition());
 							theLink.getLabel().setPosition(pos);
 							theLink.getLinkLabelLayer().addAnnotation(theLink.getLabel());
 							break;
