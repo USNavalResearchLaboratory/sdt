@@ -2699,7 +2699,6 @@ public class sdt3d extends SdtApplication
 				// Only one call to i.next() allowed!
 				SdtNode theNode = i.next().getValue();
 				theNode.updateLinkPositions(getWwd().getSceneController().getDrawContext());
-				theNode.recreateLinkLabels(this);
 			}
 		}
 

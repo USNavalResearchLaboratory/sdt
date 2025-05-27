@@ -391,7 +391,11 @@ public class SdtLayerPanel extends JPanel
             DefaultMutableTreeNode parentNode, 
             DefaultTreeModel model) 
     {
-        Enumeration<DefaultMutableTreeNode> children = 
+        // Casting to DefaultMutableTreeNode works fine in makefile build
+    	// Unclear why we need to cast to TreeNode in eclipse.  Tested that
+    	// this cast works with makefile build.
+    	//Enumeration<DefaultMutableTreeNode> children = 
+        Enumeration<TreeNode> children=	
         		parentNode.children();
 
         String nodeName = childNode.toString();
