@@ -76,7 +76,7 @@ public class SdtLink
 {
 	private SdtPath line = null;
 	
-	//private SdtPath line2 = null; // test
+	private SdtPath line2 = null; // test
 
 	private SdtNode node1 = null;
 
@@ -258,8 +258,8 @@ public class SdtLink
 		if (line != null)
 		{
 			getLinkLayer().removeRenderable(line);
-			// LJT-LINE if (line2 != null) // ljt test collapsed
-			// LJT-LINE	getLinkLayer().removeRenderable(line2); 
+			if (line2 != null) // ljt test collapsed
+				getLinkLayer().removeRenderable(line2); 
 		}
 		if (getLabel() != null)
 		{
@@ -282,6 +282,7 @@ public class SdtLink
 		if (!getSrcNode().nodeInVisibleLayer() || !getDstNode().nodeInVisibleLayer())
 			if (!forceDraw)
 				return;
+		
 		if (!forceDraw && !linkInVisibleLayer())
 			return;
 
@@ -291,8 +292,9 @@ public class SdtLink
 			setDrawn(true);
 
 			getLinkLayer().addRenderable(line);
-			// LJT-LINE if (line2 != null) // ljt test collapsaed
-				// LJT-LINE  getLinkLayer().addRenderable(line2); // ok if null?
+			if (line2 != null) // ljt test collapsaed
+				getLinkLayer().addRenderable(line2); // ok if null?
+			
 			if (isDirectional())
 			{
 				if (marker == null)
@@ -530,7 +532,9 @@ public class SdtLink
 		return true;
 	}
 
-
+	/*
+	 * Gets lines for uncollapsed links
+	 */
 	public Path getLine()
 	{
 		if (null == line)
@@ -684,7 +688,6 @@ public class SdtLink
 		}
 
 		lp.add(node2.getPosition());
-
 		line.setPositions(lp);
 		//if (line2 != null)
 		//	line2 = null;
@@ -719,7 +722,30 @@ public class SdtLink
 			}
 			else
 			{
-				double fraction = linkNum/10.0;
+				/*
+				 * This covered up lable 5
+				double fraction = linkNum / 10.0;
+				double baseStart = 0.5;
+				if (linkNum < 5) 
+				{
+					fraction = baseStart + (linkNum / 10.0);
+				}
+				
+				this got a little crowded
+		        double fraction;
+		        double baseStart = 0.5; // The minimum value you want the fraction to be
+		        double inflectionPoint = 5.0; // LinkNum at which transition is centered
+		        double steepness = 1.0; // Higher value makes transition steeper
+
+		        fraction = (linkNum / 10.0) + (baseStart / (1 + Math.exp((linkNum - inflectionPoint) / steepness)));	
+				*/
+
+				// this puts too close together initially... 
+		        double baseStart = 0.1; //0.5; // The minimum value you want the fraction to be
+		        double scaleFactor = 5.0; // Adjust this to control the scaling
+		        double fraction = (linkNum / 10.0) + (baseStart * Math.exp(-linkNum / scaleFactor));
+
+		        
 				getLabel().setPosition(interpolateAlongPath(
 						getSrcNode().getPosition(), 
 						getDstNode().getPosition(),
