@@ -31,14 +31,14 @@ def main(argv):
     (options, args) = parser.parse_args()
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    except socket.error, msg:
-        print("[ERROR] %s\n" % msg[1])
+    except socket.error as msg:
+        print("[ERROR] %s\n" % msg)
         sys.exit(1)
 # 
     try:
         sock.connect((options.addr, options.port))
-    except socket.error, msg:
-        sys.stderr.write("[ERROR] %s\n" % msg[1])
+    except socket.error as msg:
+        sys.stderr.write("[ERROR] %s\n" % msg)
         sys.exit(2)
 
 
@@ -48,13 +48,16 @@ def main(argv):
 # Since all edges exist but with potentially very low quality filter the edges
 # H will be a version of graph with edges above a threshold
 #    print G.edges(data=True)    # this should show all possible edges
-    print "number of unfiltered edges :" + str(len(G.edges()))
+    print("number of unfiltered edges :" + str(len(G.edges())))
 # keep minimum of two directed edges
-    for n1,n2,d in G.edges_iter(data=True):
+    toRemove = []
+    for n1,n2,d in G.edges(data=True):
         if d['linkSuccessRate']<options.thresh:
-            G.remove_edge(n1,n2)
+            #G.remove_edge(n1,n2)
+            toRemove.append((n1,n2))
+    G.remove_edges_from(toRemove)
     G=G.to_undirected(reciprocal=True)
-    print "number of filtered edges :" + str(len(G.edges()))
+    print("number of filtered edges :" + str(len(G.edges())))
     H=G
     longitude = nx.get_node_attributes(H,'location_longitude').values()
     latitude = nx.get_node_attributes(H,'location_latitude').values()
@@ -63,7 +66,15 @@ def main(argv):
     a_scale = 100.0
     altitude = [(a * a_scale) for a in altitude]
 # put the pos data together
-    pos = zip(longitude,latitude,altitude)
+#Issue here. Nodes have string names which cannot be used as indicies
+#Remap node names to integers
+    mapping = {}
+    i = 0
+    for node in G.nodes():
+        mapping[node] = i
+        i += 1
+    H = nx.relabel_nodes(G, mapping)
+    pos = list(zip(longitude,latitude,altitude))
 # Because node names from dictionary maybe in different order we need to sort
     bc = []
 #    bc_dict = nx.current_flow_betweenness_centrality(H)
@@ -83,17 +94,17 @@ def main(argv):
         newbs.append(int(np.interp(val,[min(bc),max(bc)],[min_size,max_size])))
 
 # Setup layers and clear things in sdt    
-    sock.sendall('clear all ')
-    sock.sendall('layer "All Layers::Sdt,off" ')
-    sock.sendall('layer "Sdt::Node Symbols" ')
-    sock.sendall('layer "Sdt::Network Links" ')
-    sock.sendall('layer Worldwind,off ')
-    sock.sendall('layer "All Layers::Worldwind::Atmosphere" ')
-    sock.sendall('layer "All Layers::Worldwind::Blue Marble Image" ')
-    sock.sendall('layer "All Layers::Worldwind::MS Virtual Earth Aerial" ')
+    sock.sendall('clear all '.encode()) 
+    sock.sendall('layer "All Layers::Sdt,off" '.encode())
+    sock.sendall('layer "Sdt::Node Symbols" '.encode())
+    sock.sendall('layer "Sdt::Network Links" '.encode())
+    sock.sendall('layer Worldwind,off '.encode())
+    sock.sendall('layer "All Layers::Worldwind::Atmosphere" '.encode())
+    sock.sendall('layer "All Layers::Worldwind::Blue Marble Image" '.encode())
+    sock.sendall('layer "All Layers::Worldwind::MS Virtual Earth Aerial" '.encode())
 #    sock.sendall("follow all ")
 #    sock.sendall("flyto 102.51,-4.50,300000 ")
-    sock.sendall("lookAt 102.51,-4.50,300000,10,70 ")
+    sock.sendall("lookAt 102.51,-4.50,300000,10,70 ".encode())
    
     draw_sdt_nx(sock,H,pos,geoPos=True,
             node_color=newbc,
@@ -102,7 +113,7 @@ def main(argv):
             edge_color="white",
             linewidths=1,
             l_alpha=0.1)
-    sock.sendall('title "3D graphml test with centrality" ')  #    sock.close()
+    sock.sendall('title "3D graphml test with centrality" '.encode())  #    sock.close()
     
 
 if __name__ == '__main__':

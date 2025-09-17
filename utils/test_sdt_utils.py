@@ -29,14 +29,14 @@ def main(argv):
     (options, args) = parser.parse_args()
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    except socket.error, msg:
-        print("[ERROR] %s\n" % msg[1])
+    except socket.error as msg:
+        print("[ERROR] %s\n" % msg)
         sys.exit(1)
 # 
     try:
         sock.connect((options.addr, options.port))
-    except socket.error, msg:
-        sys.stderr.write("[ERROR] %s\n" % msg[1])
+    except socket.error as msg:
+        sys.stderr.write("[ERROR] %s\n" % msg)
         sys.exit(2)
     per = 5
 # Get some networkx graph
@@ -51,16 +51,16 @@ def main(argv):
     for val in bc:
         newbs.append(int(np.interp(val,[min(bc),max(bc)],[10,100])))
 #clear things    
-    sock.sendall('clear all ')
+    sock.sendall('clear all '.encode()) 
 #    sock.sendall('clear nodes ')    
-    sock.sendall('layer Worldwind,off ')
-    sock.sendall('layer Sdt::Kml,off ')
-    sock.sendall('layer "All Layers::Sdt::Node Labels,off" ')
-    sock.sendall('backgroundColor gray ')
-    sock.sendall('origin 0.0,0.0,0.0 ')
-    sock.sendall('center 0.0,0,0.0,0.0,c ')
+    sock.sendall('layer Worldwind,off '.encode())
+    sock.sendall('layer Sdt::Kml,off '.encode())
+    sock.sendall('layer "All Layers::Sdt::Node Labels,off" '.encode())
+    sock.sendall('backgroundColor gray '.encode())
+    sock.sendall('origin 0.0,0.0,0.0 '.encode())
+    sock.sendall('center 0.0,0,0.0,0.0,c '.encode())
 #    sock.sendall('flyto 0.005,0.005,3000.0 ')
-    sock.sendall('lookAt 0.005,0.005,3000.0 ')
+    sock.sendall('lookAt 0.005,0.005,3000.0 '.encode())
 #    sock.sendall("follow all,on ") 
 #    draw_sdt_nx(sock,G,node_size=20,alpha=0.7,edge_color="blue",width=0.3)
 #Try a colormap
@@ -72,12 +72,12 @@ def main(argv):
             linewidths=1,
             cmap=colormap)
     set_status(sock,"Erdos Circular Layout")
-    sock.sendall('title "Erdos-renyi Graph with Circular Layout" ')
+    sock.sendall('title "Erdos-renyi Graph with Circular Layout" '.encode())
 #DONE
     time.sleep(per)
 
 #clear things    
-    sock.sendall('clear all ')
+    sock.sendall('clear all '.encode())
     draw_sdt_nx(sock,G,
                 node_color=newbc,
                 node_size=newbs,
@@ -85,12 +85,12 @@ def main(argv):
                 edge_color="blue",
                 linewidths=1,
                 cmap=colormap)
-    set_status(sock,"Erdos Spring layout")
-    sock.sendall('title "Erdos-renyi Graph Spring Layout" ')
+    set_status(sock,"Erdos Spring layout") 
+    sock.sendall('title "Erdos-renyi Graph Spring Layout" '.encode())
     time.sleep(per)
 
 #clear things do a chemical network   
-    sock.sendall('clear all ')
+    sock.sendall('clear all '.encode())
     G=nx.Graph()
     G.add_nodes_from([1,2,3,4,5,6],size=100,color=0.9)
     G.add_nodes_from([7,8],size=300,color=0.5)
@@ -106,10 +106,10 @@ def main(argv):
                 linewidths=1,
                 cmap=colormap)
     set_status(sock,"Alcohol Molecule")
-    sock.sendall('title "Molecule - Alcohol" ')
+    sock.sendall('title "Molecule - Alcohol" '.encode())
     time.sleep(per)
-    sock.sendall('clear all ')
-    sock.sendall('backgroundColor black ')
+    sock.sendall('clear all '.encode())
+    sock.sendall('backgroundColor black '.encode())
     G = nx.barabasi_albert_graph(300,6)
     pos=nx.spring_layout(G,dim=3,iterations=100)
     bc = nx.betweenness_centrality(G).values()
@@ -130,9 +130,9 @@ def main(argv):
                 l_alpha=0.1,
                 cmap=colormap)
     set_status(sock,"Barabasi Graph")
-    sock.sendall('title "Barabasi Graph" ')
+    sock.sendall('title "Barabasi Graph" '.encode())
     time.sleep(per)
-    sock.sendall('clear all ')
+    sock.sendall('clear all '.encode())
 # Now do a random geometric graph in 3D
 # Get some networkx graph
     G = nx.random_geometric_graph(400,0.2,dim=3)
@@ -155,10 +155,10 @@ def main(argv):
                 l_alpha=0.3,
                 cmap=colormap)
 #    sock.sendall(sock,'title "Colormap Tests" ')
-    sock.sendall('follow all ')
+    sock.sendall('follow all '.encode())
     pan (sock, 0.005,0.005,3000.0, 0, 90,wait=0.1)
-    sock.sendall('clear all ')
-    sock.sendall('title "Colormap Tests" ')
+    sock.sendall('clear all '.encode())
+    sock.sendall('title "Colormap Tests" '.encode())
     colormaps=[cmx.hot,
                 cmx.afmhot,
                 cmx.autumn,

@@ -43,14 +43,14 @@ def pan(sock,x,y,z,start=0,end=90, wait= 1.0):
         heading = str(i*4)
         sdt_com = 'lookAt ' + str(x) + ',' + str(y) + ',' + str(z)
         sdt_com = sdt_com + ',' + heading + ',' + pitch + ' '
-        sock.sendall(sdt_com)
+        sock.sendall(sdt_com.encode())
         time.sleep(wait)
     for i in range(start,end):
         pitch = str(end-i)
         heading = str((end-i)*4)
         sdt_com = 'lookAt ' + str(x) + ',' + str(y) + ',' + str(z)
         sdt_com = sdt_com + ',' + heading + ',' + pitch + ' '
-        sock.sendall(sdt_com)
+        sock.sendall(sdt_com.encode())
         time.sleep(wait)
 
 from networkx.drawing.layout import shell_layout,\
@@ -195,12 +195,17 @@ Draw only specified nodes (default G.nodes())
     sdt_com=""
     for n,d in H.nodes(data=True):    
 #check for color array
-        if type(node_color) is types.ListType:
+        if type(node_color) is list:
             n_color=strRgb(node_color[i],0.0,1.0,cmap=cmap)
+        elif type(node_color) is not list and type(node_color) is not str:
+            n_color=strRgb(list(node_color)[i],0.0,1.0,cmap=cmap)
         else:
             n_color = node_color 
-        if type(node_size) is types.ListType:
+        if type(node_size) is list:
             n_size=str(node_size[i])
+        elif type(node_size) is not list and type(node_size) is not int:
+            n_size=str(list(node_size)[i])
+            print(n_size)
         else:
             n_size = str(node_size)       
         sdt_com = sdt_com + "node " + str(n)
@@ -223,19 +228,19 @@ Draw only specified nodes (default G.nodes())
         else:
             posz="0.0"
 # finish z test
-        sdt_com = sdt_com + "," + posz
+        sdt_com += "," + posz
         if not geoPos: 
-            sdt_com = sdt_com + ',c'
+            sdt_com += ',c'
         else:
-            sdt_com = sdt_com + ',g'
-        sdt_com = sdt_com + " symbol " + node_shape + "," 
-        sdt_com = sdt_com + n_color + ",3," + n_size + "," + n_size + "," + str(n_alpha)
+            sdt_com += ',g'
+        sdt_com += " symbol " + node_shape + "," 
+        sdt_com += n_color + ",3," + n_size + "," + n_size + "," + str(n_alpha)
         if nodeLayer:
             sdt_com = sdt_com + " nodeLayer " + str(nodeLayer)
-        sdt_com = sdt_com + " "
+        sdt_com += " "
 #    print sdt_com
         i = i + 1
-    sock.sendall(sdt_com)
+    sock.sendall(sdt_com.encode())
 #    print sdt_com
     return
 
@@ -291,13 +296,13 @@ way is tricky.
         return
 
     sdt_com=""    
-    for node,nbrsdict in H.adjacency_iter():
+    for node,nbrsdict in H.adjacency():
         for nbr,eattr in nbrsdict.items():
             sdt_com = sdt_com + "link " + str(node) + "," + str(nbr) + " line " + str(edge_color) + "," + str(linewidths) + "," + str(l_alpha) + " "
             if edgeLayer:
                 sdt_com = sdt_com + "linkLayer " + str(edgeLayer)
             sdt_com = sdt_com + " "
-    sock.sendall(sdt_com)
+    sock.sendall(sdt_com.encode()) 
 #    print sdt_com
     return
 
@@ -366,7 +371,7 @@ status = string to display in status field
 
 """
     sdt_com= 'status "' + status + '" '
-    sock.sendall(sdt_com)
+    sock.sendall(sdt_com.encode())
     return
 
 # Add code toggle layers and optionally pass in explicit edge labels
