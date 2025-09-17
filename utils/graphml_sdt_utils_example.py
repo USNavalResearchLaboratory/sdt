@@ -53,7 +53,6 @@ def main(argv):
     toRemove = []
     for n1,n2,d in G.edges(data=True):
         if d['linkSuccessRate']<options.thresh:
-            #G.remove_edge(n1,n2)
             toRemove.append((n1,n2))
     G.remove_edges_from(toRemove)
     G=G.to_undirected(reciprocal=True)
@@ -66,7 +65,6 @@ def main(argv):
     a_scale = 100.0
     altitude = [(a * a_scale) for a in altitude]
 # put the pos data together
-#Issue here. Nodes have string names which cannot be used as indicies
 #Remap node names to integers
     mapping = {}
     i = 0
