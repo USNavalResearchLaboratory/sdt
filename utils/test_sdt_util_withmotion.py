@@ -13,25 +13,25 @@ def main(argv):
 
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    except socket.error, msg:
-        print("[ERROR] %s\n" % msg[1])
+    except socket.error as msg:
+        print("[ERROR] %s\n" % msg)
         sys.exit(1)
 # 
     try:
         sock.connect(("127.0.0.1", 50000))
-    except socket.error, msg:
-        sys.stderr.write("[ERROR] %s\n" % msg[1])
+    except socket.error as msg:
+        sys.stderr.write("[ERROR] %s\n" % msg)
         sys.exit(2)
 
-    sock.sendall('clear all ')
+    sock.sendall('clear all '.encode()) 
 #    sock.sendall('clear nodes ')    
-    sock.sendall('layer Worldwind,off ')
-    sock.sendall('layer Sdt::Kml,off ')
-    sock.sendall('layer "All Layers::Sdt::Node Labels,off" ')
-    sock.sendall('backgroundColor gray ')
-    sock.sendall('origin 0.0,0.0,0.0 ')
-    sock.sendall('center 0.0,0,0.0,0.0,c ')
-    sock.sendall('flyto 0.005,0.005,3000.0 ')
+    sock.sendall('layer Worldwind,off '.encode())
+    sock.sendall('layer Sdt::Kml,off '.encode())
+    sock.sendall('layer "All Layers::Sdt::Node Labels,off" '.encode())
+    sock.sendall('backgroundColor gray '.encode())
+    sock.sendall('origin 0.0,0.0,0.0 '.encode())
+    sock.sendall('center 0.0,0,0.0,0.0,c '.encode())
+    sock.sendall('flyto 0.005,0.005,3000.0 '.encode())
 #    sock.sendall("follow all,on ")
 #    draw_sdt_nx(sock,G,node_size=20,alpha=0.7,edge_color="blue",width=0.3)
 # Get some networkx graph
@@ -45,7 +45,7 @@ def main(argv):
     newbs = []
     import operator
     import random
-    maxnode = max(dictbc.iteritems(), key=operator.itemgetter(1))[0]
+    maxnode = max(dictbc.items(), key=operator.itemgetter(1))[0]
 #map to normalize values between 0-1 for colors
     for val in bc:
         newbc.append(np.interp(val,[min(bc),max(bc)],[0,1]))
@@ -63,7 +63,7 @@ def main(argv):
 #    sock.close()
     step = 0.03
     while True:
-        location = G.node[maxnode]['pos']
+        location = G.nodes[maxnode]['pos']
         location[0] = location[0] + random.uniform(-step,step)
         if location[0] > 1.0:
              location[0] = 1.0
@@ -79,7 +79,7 @@ def main(argv):
              location[2] = 1.0
         elif  location[2] < 0.0:
              location[2] = 0.0
-        G.node[maxnode]['pos'] = location
+        G.nodes[maxnode]['pos'] = location
         pos=nx.get_node_attributes(G,'pos')
         G = nx.random_geometric_graph(400,0.2,pos=pos,dim=3)
         dictbc = nx.betweenness_centrality(G)
@@ -95,7 +95,7 @@ def main(argv):
         nbrs = G.neighbors(maxnode)
         for nbr in nbrs:   
             sdt_com = 'unlink ' + str(maxnode) + "," + str(nbr) + " "
-            sock.sendall(sdt_com)       
+            sock.sendall(sdt_com.encode())       
         draw_sdt_nx(sock,G,pos,
                 node_color=newbc,
                 node_size=newbs,
