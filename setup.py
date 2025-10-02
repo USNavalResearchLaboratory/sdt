@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 # Note that the 'mgen' package has a dependency
 # on the Protolib Python 'protokit' package and
